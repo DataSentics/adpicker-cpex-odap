@@ -12,11 +12,9 @@ parameters:
     #  table: "catalog.db.ids_table"
 
     entities:
-      # 1. rename your entity e.g. client, customer, account, ...
-      your_entity_name:
-        # 2. change to id column which identifies your entity
-        id_column: "your_id"
-        id_column_type: "long"
+        user:
+        id_column: "user_id"
+        id_column_type: "string"
 
   segmentfactory:
     catalog: "hive_metastore"
@@ -28,9 +26,7 @@ parameters:
       table: "segment_log"
 
     destinations:
-      # 3. rename destination to export to
       your_destination:
-        # 4. change to the name of your destination implementation .py file in the `export` folder
         type: "your_destination_type"
 
   usecasefactory:
