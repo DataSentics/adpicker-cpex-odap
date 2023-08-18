@@ -1,0 +1,21 @@
+paths:
+  sdm_table_paths:
+    sdm_preprocessed: "/mnt/aam-cpex-dev/silver/sdm_preprocessed.delta"
+    sdm_browser: "/mnt/aam-cpex-dev/silver/sdm/sdm_browser.delta"
+    sdm_device: "/mnt/aam-cpex-dev/silver/sdm/sdm_device.delta"
+    sdm_os: "/mnt/aam-cpex-dev/silver/sdm/sdm_os.delta"
+    sdm_url: "/mnt/aam-cpex-dev/silver/sdm/sdm_url.delta"
+
+    sdm_session: "/mnt/aam-cpex-dev/solutions/testing/sdm_session.delta"
+    sdm_pageview: "/mnt/aam-cpex-dev/solutions/testing/sdm_pageview.delta"
+    sdm_tokenized_domains: "/mnt/aam-cpex-dev/solutions/testing/sdm_tokenized_domains.delta"
+
+  piano_table_paths:
+    cpx_table_piano: "/mnt/aam-cpex-dev/bronze/cpex_piano.delta"
+
+  user_table_paths:
+    user_traits: "/mnt/aam-cpex-dev/solutions/testing/user_traits.delta"
+    user_segments: "/mnt/aam-cpex-dev/solutions/testing/user_segments.delta"
+
+  interests_table_paths:
+    interests_definition: "/mnt/aam-cpex-dev/silver/interests/interests_definition.delta"
