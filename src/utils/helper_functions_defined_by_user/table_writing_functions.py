@@ -4,6 +4,8 @@
 from typing import Optional, List
 from logging import Logger, getLogger
 from pyspark.sql import SparkSession
+from delta.tables import DeltaTable
+
 
 # Create a Spark session
 
@@ -52,10 +54,12 @@ def delta_table_exists(table_path):
     Parameters:
     table_path - the full path to the delta table(including its name)
     """
-
+    spark = SparkSession.builder.appName("DeltaTableExists").getOrCreate()
+    
     try:
-        DeltaTable.forPath(spark, table_path)
+        delta_table = DeltaTable.forPath(spark, table_path)
         return True
-    except:
+    except Exception as e:
         return False
     
+

@@ -77,8 +77,7 @@ def read_silver(
             )
             .filter(F.col('DATE') >= start_date).filter(F.col('DATE') <= end_date)
            )
-#the reading should be changed when we have the final source of table 
-df_bronze_cpex_piano = spark.read.format("delta").load(get_value_from_yaml("paths", "piano_table_paths", "cpx_table_piano"))
+df_bronze_cpex_piano = spark.read.format("delta").load(get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano"))
 
 df_silver_cpex_piano = read_silver(df_bronze_cpex_piano, dict_process_dates["start_date"], dict_process_dates["end_date"] )
 
@@ -140,8 +139,6 @@ df_user_traits = save_user_traits(df_aggregated_traits)
 
 schema_user_traits, info_user_traits = get_schema_user_traits()
 
-df_user_traits.printSchema()
-
 write_dataframe_to_table(df_user_traits, 
                          get_value_from_yaml("paths", "user_table_paths", "user_traits"), 
                          schema_user_traits, 
@@ -166,8 +163,6 @@ def save_user_segments(df: DataFrame):
 df_user_segments = save_user_segments(df_aggregated_segments)
 
 schema_user_segments, info_user_segments = get_schema_user_segments()
-
-df_user_segments.printSchema()
 
 write_dataframe_to_table(df_user_segments, 
                          get_value_from_yaml("paths", "user_table_paths", "user_segments"), 

@@ -72,7 +72,6 @@ def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str):
            )
 # if no end date provided then current date is taken
 
-#the reading should be changed when we have the final source of table 
 df_silver_sdm_pageview = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_pageview"))
 
 df_pageview = load_sdm_pageview(df_silver_sdm_pageview, widget_end_date, widget_n_days)
@@ -117,7 +116,6 @@ def read_interests(df: DataFrame, tokens_version):
 
     return loaded_interests
 
-#the reading should be changed when we have the final source of table 
 df_interests = spark.read.format("delta").load(get_value_from_yaml("paths", "interests_table_paths", "interests_definition"))
 
 subinterests = read_interests(df_interests, widget_tokens_version)
@@ -159,8 +157,6 @@ def create_tokenized_domains(df_url_tokenized: DataFrame, subinterests):
 df_tokenized_domains = create_tokenized_domains(df_url_tokenized, subinterests['tuple'])
 
 schema, info = get_schema()
-
-df_tokenized_domains.printSchema()
 
 write_dataframe_to_table(df_tokenized_domains, 
                          get_value_from_yaml("paths", "sdm_table_paths", "sdm_tokenized_domains"), 

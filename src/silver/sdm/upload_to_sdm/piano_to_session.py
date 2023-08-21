@@ -15,7 +15,6 @@ from yaml_functions import get_value_from_yaml
 
 # COMMAND ----------
 
-#the reading should be changed when we have the final source of table 
 df_preprocessed = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_preprocessed"))
 display(df_preprocessed)
 
@@ -43,6 +42,7 @@ def get_relevant_fields(df: DataFrame):
             )
            )
 df_relevant_fields = get_relevant_fields(df_preprocessed)
+display(df_relevant_fields)
 
 # COMMAND ----------
 
@@ -92,7 +92,6 @@ def session_table(
         )
     )
 
-#the reading should be changed when we have the final source of table 
 df_silver_sdm_browser = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_browser"))
 df_silver_sdm_device = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_device"))
 df_silver_sdm_os = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_os"))
