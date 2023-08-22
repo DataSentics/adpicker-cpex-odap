@@ -6,7 +6,7 @@ from pyspark.sql.dataframe import DataFrame
 from pyspark.sql import functions as F
 
 from schemas import get_schema_sdm_session
-from table_writing_functions import write_dataframe_to_table
+from table_writing_functions import write_dataframe_to_table, delta_table_exists
 from yaml_functions import get_value_from_yaml
 
 # COMMAND ----------
@@ -16,7 +16,6 @@ from yaml_functions import get_value_from_yaml
 # COMMAND ----------
 
 df_preprocessed = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_preprocessed"))
-display(df_preprocessed)
 
 # COMMAND ----------
 
@@ -42,7 +41,6 @@ def get_relevant_fields(df: DataFrame):
             )
            )
 df_relevant_fields = get_relevant_fields(df_preprocessed)
-display(df_relevant_fields)
 
 # COMMAND ----------
 
@@ -104,7 +102,7 @@ schema_sdm_session, info_sdm_session = get_schema_sdm_session()
 write_dataframe_to_table(df_session_table, 
                          get_value_from_yaml("paths", "sdm_table_paths", "sdm_session"), 
                          schema_sdm_session, 
-                         "append", 
+                         "overwrite", 
                          info_sdm_session['partition_by'], 
                          info_sdm_session['table_properties'])
 

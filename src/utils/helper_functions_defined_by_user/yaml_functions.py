@@ -1,9 +1,6 @@
 import os
 import yaml
 
-import sys
-sys.path.append('../../config/config.yaml/')
-
 # function to get a value from a .yaml file by passing name of keys
 def get_value_from_yaml(*keys):
     """
@@ -29,7 +26,7 @@ def get_value_from_yaml(*keys):
             if key in data:
                 data = data[key]
             else:
-                return None
+                raise KeyError(f"Key '{key}' not found in the YAML file.")
             
         return data
 

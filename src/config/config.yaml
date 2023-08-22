@@ -21,6 +21,10 @@ paths:
   interests_table_paths:
     interests_definition: "/mnt/aam-cpex-dev/solutions/testing/interests_definition.delta"
 
+
+
+
+
 jobs_config:
   regular_optimization:
     keep_history_n_days: 21

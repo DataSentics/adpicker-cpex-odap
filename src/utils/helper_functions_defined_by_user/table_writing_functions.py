@@ -1,15 +1,11 @@
-
-
-
 from typing import Optional, List
 from logging import Logger, getLogger
 from pyspark.sql import SparkSession
 from delta.tables import DeltaTable
 
+spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
 # Create a Spark session
-
-
 # will put the data from dataframe in delta table in th specified mode, also specifying metadata (partition and table properties)
 def write_dataframe_to_table(dataframe_source, table_destination, table_schema, writing_mode, partition: Optional[List[str]] = None, table_properties: Optional[str] = None):
 
@@ -27,7 +23,7 @@ def write_dataframe_to_table(dataframe_source, table_destination, table_schema, 
     """
 
     root_logger = getLogger()
-    spark = SparkSession.builder.appName("MyApp").getOrCreate()
+    
     
     if dataframe_source.schema == table_schema: # the schema of dataframe from where we want to write data 
 
@@ -44,7 +40,37 @@ def write_dataframe_to_table(dataframe_source, table_destination, table_schema, 
     else:
 
         root_logger.error("Schema mismatch")
+        compare_and_check_schemas(table_schema, dataframe_source.schema)
         raise ValueError("!! Data frame schema doesn't match schema of table you try to write in !!")
+        
+
+
+def compare_and_check_schemas(schema1, schema2):
+    """
+    This function will print a message with what is the difference between the table schema and dataframe schema 
+
+    Parameters:
+    schema1 - the schema of table in which we want to write data 
+    schema2 - the schema of dataframe from which we want to write the data in table 
+
+    """
+    fields1 = {field.name: field for field in schema1.fields}
+    fields2 = {field.name: field for field in schema2.fields}
+    mismatch_fields = []
+    
+    for field_name in fields1.keys() | fields2.keys():
+        field1 = fields1.get(field_name)
+        field2 = fields2.get(field_name)
+        
+        if field1 is None:
+            print(f"FIELD: '{field_name}' is present in DATAFRAME schema but not in TABLE schema.")
+        elif field2 is None:
+            print(f"FIELD: '{field_name}' is present in TABLE schema but not in DATAFRAME.")
+        else:
+            if field1.dataType != field2.dataType:
+                print(f"!! DataType mismatch !! TABLE schema: '{field_name}': {field1.dataType} | DATAFRAME schema: {field2.dataType} ")
+            if field1.nullable != field2.nullable:
+                print(f"!! Nullability mismatch !! TABLE schema: '{field_name}': {field1.nullable} | DATAFRAME schema: {field2.nullable}")
 
 
 def delta_table_exists(table_path):
@@ -54,8 +80,6 @@ def delta_table_exists(table_path):
     Parameters:
     table_path - the full path to the delta table(including its name)
     """
-    spark = SparkSession.builder.appName("DeltaTableExists").getOrCreate()
-    
     try:
         delta_table = DeltaTable.forPath(spark, table_path)
         return True
