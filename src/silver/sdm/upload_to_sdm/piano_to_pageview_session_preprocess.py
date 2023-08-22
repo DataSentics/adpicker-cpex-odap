@@ -4,7 +4,7 @@ import pyspark.sql.types as T
 from pyspark.sql.window import Window
 from pyspark.sql.dataframe import DataFrame
 from delta.tables import DeltaTable
-from logging import Logger, getLogger
+from logging import Logger
 import pandas as pd
 from pyspark.sql import SparkSession
 
@@ -20,12 +20,18 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
 from src.utils.helper_functions_defined_by_user._functions_nlp import (
     df_url_normalization,
 )
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+
 
 from schemas import (
     get_schema_sdm_preprocessed,
     get_schema_sdm_session,
     get_schema_sdm_pageview,
 )
+
+# COMMAND ----------
+
+root_logger = instantiate_logger()
 
 # COMMAND ----------
 
@@ -78,6 +84,7 @@ if not delta_table_exists(
         get_value_from_yaml("paths", "sdm_table_paths", "sdm_session"),
         schema,
         "default",
+        root_logger,
         info["partition_by"],
         info["table_properties"],
     )
@@ -96,6 +103,7 @@ if not delta_table_exists(
         get_value_from_yaml("paths", "sdm_table_paths", "sdm_pageview"),
         schema,
         "default",
+        root_logger, 
         info["partition_by"],
         info["table_properties"],
     )
@@ -177,8 +185,6 @@ df_bronze_cpex_piano = spark.read.format("delta").load(
 df_silver_sdm_pageview = spark.read.format("delta").load(
     get_value_from_yaml("paths", "sdm_table_paths", "sdm_pageview")
 )
-
-root_logger = getLogger()
 
 df_cleansed_data = read_cleansed_data(
     df_bronze_cpex_piano, df_silver_sdm_pageview, root_logger
@@ -562,6 +568,7 @@ write_dataframe_to_table(
     get_value_from_yaml("paths", "sdm_table_paths", "sdm_preprocessed"),
     schema_sdm_preprocessed,
     "overwrite",
+    root_logger,
     info_sdm_preprocessed["partition_by"],
     info_sdm_preprocessed["table_properties"],
 )

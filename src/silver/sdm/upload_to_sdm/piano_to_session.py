@@ -11,10 +11,15 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
 )
 
 from schemas import get_schema_sdm_session
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 # COMMAND ----------
 
 # MAGIC %md #### Load preprocessed
+
+# COMMAND ----------
+
+root_logger = instantiate_logger()
 
 # COMMAND ----------
 
@@ -117,6 +122,7 @@ write_dataframe_to_table(
     get_value_from_yaml("paths", "sdm_table_paths", "sdm_session"),
     schema_sdm_session,
     "append",
+    root_logger,
     info_sdm_session["partition_by"],
     info_sdm_session["table_properties"],
 )

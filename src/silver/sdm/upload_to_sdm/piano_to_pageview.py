@@ -9,6 +9,11 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+
+# COMMAND ----------
+
+root_logger = instantiate_logger()
 
 # COMMAND ----------
 
@@ -80,6 +85,7 @@ write_dataframe_to_table(
     get_value_from_yaml("paths", "sdm_table_paths", "sdm_pageview"),
     schema_sdm_pageview,
     "append",
+    root_logger,
     info_sdm_pageview["partition_by"],
     info_sdm_pageview["table_properties"],
 )

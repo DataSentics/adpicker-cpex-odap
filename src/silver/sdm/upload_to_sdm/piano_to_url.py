@@ -1,7 +1,7 @@
 # Databricks notebook source
 import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
-from logging import Logger, getLogger
+from logging import Logger
 from pyspark.ml.feature import NGram
 from datetime import timedelta
 
@@ -20,8 +20,13 @@ from src.utils.helper_functions_defined_by_user._functions_nlp import (
     df_url_to_adform_format,
     df_url_to_domain,
 )
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 from schemas import get_schema_sdm_url
+
+# COMMAND ----------
+
+root_logger = instantiate_logger()
 
 # COMMAND ----------
 
@@ -53,6 +58,7 @@ def create_url_table():
             get_value_from_yaml("paths", "sdm_table_paths", "sdm_url"),
             schema,
             "default",
+            root_logger,
             info["partition_by"],
             info["table_properties"],
         )
@@ -102,7 +108,7 @@ def read_cleansed_data(df_silver: DataFrame, df_url: DataFrame, logger: Logger):
 df_bronze_cpex_piano = spark.read.format("delta").load(
     get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano")
 )
-root_logger = getLogger()
+
 
 df_cleansed_data = read_cleansed_data(
     df_bronze_cpex_piano, df_silver_sdm_url, root_logger
@@ -388,6 +394,7 @@ write_dataframe_to_table(
     get_value_from_yaml("paths", "sdm_table_paths", "sdm_url"),
     schema_sdm_url,
     "append",
+    root_logger,
     info_sdm_url["partition_by"],
     info_sdm_url["table_properties"],
 )

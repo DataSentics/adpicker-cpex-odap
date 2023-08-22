@@ -10,7 +10,7 @@ from pyspark.sql.dataframe import DataFrame
 from pyspark.sql import SparkSession
 from collections import namedtuple
 from datetime import date, datetime, timedelta
-from logging import Logger, getLogger
+from logging import Logger
 
 from src.utils.helper_functions_defined_by_user.process_loaded_interests import (
     process_loaded_interests,
@@ -21,10 +21,15 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 from schema import get_schema
 
 Interest = namedtuple("Interest", ["keywords", "general_interest"])
+
+# COMMAND ----------
+
+root_logger = instantiate_logger()
 
 # COMMAND ----------
 
@@ -118,7 +123,6 @@ df_silver_sdm_url = spark.read.format("delta").load(
     get_value_from_yaml("paths", "sdm_table_paths", "sdm_url")
 )
 
-root_logger = getLogger()
 df_sdm_url = load_sdm_url(
     df_silver_sdm_url, widget_tokens_version, widget_use_bigrams, root_logger
 )
@@ -181,6 +185,7 @@ write_dataframe_to_table(
     get_value_from_yaml("paths", "sdm_table_paths", "sdm_tokenized_domains"),
     schema,
     "overwrite",
+    root_logger,
     info["partition_by"],
     info["table_properties"],
 )

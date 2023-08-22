@@ -9,7 +9,7 @@ from pyspark.sql import functions as F
 from pyspark.sql import types as T
 from pyspark.dbutils import DBUtils
 from delta.tables import DeltaTable
-from logging import Logger, getLogger
+from logging import Logger
 from datetime import datetime, timedelta
 from math import ceil
 from functools import reduce
@@ -24,8 +24,13 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 from schema_parse_to_delta import get_schema_cpex_piano_cleansed
+
+# COMMAND ----------
+
+root_logger = instantiate_logger()
 
 # COMMAND ----------
 
@@ -66,6 +71,7 @@ def create_bronze_cpex_piano(series_length):
                 get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano"),
                 schema,
                 "default",
+                root_logger,
                 info["partition_by"],
                 info["table_properties"],
             )
@@ -230,7 +236,6 @@ def get_jsons(relevant_folders, logger: Logger):
             logger.info(f"Delta table written to {save_path}.")
 
 
-root_logger = getLogger()
 get_jsons(relevant_folders_list, root_logger)
 
 # COMMAND ----------
@@ -299,7 +304,7 @@ df_raw_data = load_raw_delta(
     widget_series_length,
     df_max_upload_date,
     get_value_from_yaml("tables_options", "series_length", "n_hours_short"),
-    root_logger,
+    root_logger
 )
 
 # COMMAND ----------
@@ -319,8 +324,9 @@ def save(df: DataFrame, series_length):
             get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano"),
             schema,
             "append",
+            root_logger,
             info["partition_by"],
-            info["table_properties"],
+            info["table_properties"]
         )
 
     if series_length == "short":
@@ -330,8 +336,9 @@ def save(df: DataFrame, series_length):
             get_value_from_yaml("paths", "piano_table_paths", "cpex_table_short_piano"),
             schema,
             "overwrite",
+            root_logger,
             info["partition_by"],
-            info["table_properties"],
+            info["table_properties"]
         )
 
 
@@ -347,6 +354,4 @@ def delete_jsons(relevant_folders, logger: Logger):
         dbutils.fs.rm(folder_path, recurse=True)
         logger.info(f"Folder {folder_path} deleted with all tables.")
 
-
-root_logger = getLogger()
 delete_jsons(relevant_folders_list, root_logger)

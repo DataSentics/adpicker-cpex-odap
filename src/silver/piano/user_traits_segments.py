@@ -14,8 +14,13 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 from schema import get_schema_user_traits, get_schema_user_segments
+
+# COMMAND ----------
+
+root_logger = instantiate_logger()
 
 # COMMAND ----------
 
@@ -157,7 +162,8 @@ write_dataframe_to_table(
     get_value_from_yaml("paths", "user_table_paths", "user_traits"),
     schema_user_traits,
     "overwrite",
-    table_properties=info_user_traits["table_properties"],
+    root_logger,
+    table_properties=info_user_traits["table_properties"]
 )
 
 # COMMAND ----------
@@ -182,5 +188,6 @@ write_dataframe_to_table(
     get_value_from_yaml("paths", "user_table_paths", "user_segments"),
     schema_user_segments,
     "overwrite",
-    table_properties=info_user_segments["table_properties"],
+    root_logger,
+    table_properties=info_user_segments["table_properties"]
 )
