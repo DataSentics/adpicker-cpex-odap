@@ -255,14 +255,14 @@ def load_raw_delta(
             df = spark.read.format("delta").load(elem_path)
 
             # New data hotfix with nullability (schema enforcement) assurance
-            df_test = df_test.withColumn(
+            df = df.withColumn(
                 "userParameters",
                 F.when(
                     F.col("userParameters").isNotNull(),
                     F.array().cast(T.ArrayType(T.StringType())),
                 ).otherwise(F.lit(None)),
             )
-            df_test = df_test.withColumn(
+            df = df.withColumn(
                 "externalUserIds",
                 F.when(
                     F.col("externalUserIds").isNotNull(),
