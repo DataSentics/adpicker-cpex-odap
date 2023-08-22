@@ -252,10 +252,23 @@ def load_raw_delta(
 
         for elem in files_in_folder:
             elem_path = elem.path.split(":")[1]
-
             df = spark.read.format("delta").load(elem_path)
-            df = df.withColumn("userParameters", F.array().cast(T.ArrayType(T.StringType()))) ########## hotfix ############
-            df = df.withColumn("externalUserIds", F.array().cast(T.ArrayType(T.StringType()))) ########## more hotfix ############
+
+            # New data hotfix with nullability (schema enforcement) assurance
+            df_test = df_test.withColumn(
+                "userParameters",
+                F.when(
+                    F.col("userParameters").isNotNull(),
+                    F.array().cast(T.ArrayType(T.StringType())),
+                ).otherwise(F.lit(None)),
+            )
+            df_test = df_test.withColumn(
+                "externalUserIds",
+                F.when(
+                    F.col("externalUserIds").isNotNull(),
+                    F.array().cast(T.ArrayType(T.StringType())),
+                ).otherwise(F.lit(None)),
+            )
             df_to_union.append(df)
             logger.info(f"Source file: {elem_path} appended")
 
@@ -306,7 +319,7 @@ df_raw_data = load_raw_delta(
     widget_series_length,
     df_max_upload_date,
     get_value_from_yaml("tables_options", "series_length", "n_hours_short"),
-    root_logger
+    root_logger,
 )
 
 # COMMAND ----------
