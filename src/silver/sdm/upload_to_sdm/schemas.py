@@ -231,7 +231,3 @@ def get_schema_sdm_url():
         }
         }
     return schema, info
-    
-
-
-

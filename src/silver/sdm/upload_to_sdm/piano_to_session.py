@@ -5,6 +5,7 @@ sys.path.append('../../../utils/helper_functions_defined_by_user/')
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql import functions as F
 
+
 from schemas import get_schema_sdm_session
 from table_writing_functions import write_dataframe_to_table, delta_table_exists
 from yaml_functions import get_value_from_yaml
@@ -98,11 +99,10 @@ df_session_table = session_table(df_relevant_fields, df_silver_sdm_browser, df_s
 
 #we get the schema and infos of dataframe from which we write in table 
 schema_sdm_session, info_sdm_session = get_schema_sdm_session()
-
+df_session_table.printSchema()
 write_dataframe_to_table(df_session_table, 
                          get_value_from_yaml("paths", "sdm_table_paths", "sdm_session"), 
                          schema_sdm_session, 
-                         "overwrite", 
+                         "append", 
                          info_sdm_session['partition_by'], 
                          info_sdm_session['table_properties'])
-

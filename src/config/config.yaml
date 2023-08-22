@@ -24,7 +24,6 @@ paths:
 
 
 
-
 jobs_config:
   regular_optimization:
     keep_history_n_days: 21
