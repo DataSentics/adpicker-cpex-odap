@@ -8,11 +8,9 @@ It should be deleted after the main pipeline is refactored.
 import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
 from collections import namedtuple
-import sys
-sys.path.append('../helper_functions_defined_by_user/')
 
-from _functions_nlp import df_stemming
-from _stop_words import unwanted_tokens
+from  src.utils.helper_functions_defined_by_user._functions_nlp import df_stemming
+from  src.utils.helper_functions_defined_by_user._stop_words import unwanted_tokens
 
 chars_from = (
     "ÀÁÂÃÄÅČÇĎÈÉÊËÍÌÏÎĹĽŇÑÒÓÔÕÖŔŘŠŤÙÚŮÛŰÜÝŸŽàáâãäåčçďèéêëíìïîĺľňñòóôõöŕřšťùúůûűüýÿž"

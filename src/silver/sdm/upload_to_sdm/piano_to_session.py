@@ -1,14 +1,16 @@
 # Databricks notebook source
-import sys
-sys.path.append('../../../utils/helper_functions_defined_by_user/')
-
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql import functions as F
 
+from src.utils.helper_functions_defined_by_user.table_writing_functions import (
+    write_dataframe_to_table,
+    delta_table_exists,
+)
+from src.utils.helper_functions_defined_by_user.yaml_functions import (
+    get_value_from_yaml,
+)
 
 from schemas import get_schema_sdm_session
-from table_writing_functions import write_dataframe_to_table, delta_table_exists
-from yaml_functions import get_value_from_yaml
 
 # COMMAND ----------
 
@@ -16,7 +18,9 @@ from yaml_functions import get_value_from_yaml
 
 # COMMAND ----------
 
-df_preprocessed = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_preprocessed"))
+df_preprocessed = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "sdm_table_paths", "sdm_preprocessed")
+)
 
 # COMMAND ----------
 
@@ -25,22 +29,21 @@ df_preprocessed = spark.read.format("delta").load(get_value_from_yaml("paths", "
 # COMMAND ----------
 
 def get_relevant_fields(df: DataFrame):
-    return (df
-            .withColumn("flag_active_session", F.lit(True))
-            .select(
-                'session_id',
-                F.col('SESSION_START_TIME').alias("session_start_datetime"),
-                F.col('DATE').alias("session_date"),
-                F.col('SESSION_END_TIME').alias("session_end_datetime"),
-                F.col("flag_active_session"),
-                'user_id',
-                'browser_id',
-                'device_id',
-                'os_id',
-                F.lit(None).cast('long').alias('geo_id'),
-                F.lit(None).cast('long').alias('traffic_source_id'),
-            )
-           )
+    return df.withColumn("flag_active_session", F.lit(True)).select(
+        "session_id",
+        F.col("SESSION_START_TIME").alias("session_start_datetime"),
+        F.col("DATE").alias("session_date"),
+        F.col("SESSION_END_TIME").alias("session_end_datetime"),
+        F.col("flag_active_session"),
+        "user_id",
+        "browser_id",
+        "device_id",
+        "os_id",
+        F.lit(None).cast("long").alias("geo_id"),
+        F.lit(None).cast("long").alias("traffic_source_id"),
+    )
+
+
 df_relevant_fields = get_relevant_fields(df_preprocessed)
 
 # COMMAND ----------
@@ -71,19 +74,19 @@ def session_table(
             "device_full_specification",
             "device_brand_name",
             "device_marketing_name",
-            F.lit(None).cast('string').alias("device_model_name"),
-            F.lit(None).cast('string').alias("city"),
-            F.lit(None).cast('string').alias("continent"),
-            F.lit(None).cast('string').alias("subcontinent"),
-            F.lit(None).cast('string').alias("country"),
-            F.lit(None).cast('string').alias("region"),
-            F.lit(None).cast('string').alias("metro"),
+            F.lit(None).cast("string").alias("device_model_name"),
+            F.lit(None).cast("string").alias("city"),
+            F.lit(None).cast("string").alias("continent"),
+            F.lit(None).cast("string").alias("subcontinent"),
+            F.lit(None).cast("string").alias("country"),
+            F.lit(None).cast("string").alias("region"),
+            F.lit(None).cast("string").alias("metro"),
             "os_name",
             "os_version",
-            F.lit(None).cast('string').alias("traffic_source_campaign"),
-            F.lit(None).cast('string').alias("traffic_source_medium"),
-            F.lit(None).cast('string').alias("traffic_source_source"),
-            F.lit(None).cast('long').alias("traffic_source_id"),
+            F.lit(None).cast("string").alias("traffic_source_campaign"),
+            F.lit(None).cast("string").alias("traffic_source_medium"),
+            F.lit(None).cast("string").alias("traffic_source_source"),
+            F.lit(None).cast("long").alias("traffic_source_id"),
             "os_id",
             "geo_id",
             "device_id",
@@ -91,18 +94,29 @@ def session_table(
         )
     )
 
-df_silver_sdm_browser = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_browser"))
-df_silver_sdm_device = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_device"))
-df_silver_sdm_os = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_os"))
 
-df_session_table = session_table(df_relevant_fields, df_silver_sdm_browser, df_silver_sdm_device, df_silver_sdm_os)
+df_silver_sdm_browser = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "sdm_table_paths", "sdm_browser")
+)
+df_silver_sdm_device = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "sdm_table_paths", "sdm_device")
+)
+df_silver_sdm_os = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "sdm_table_paths", "sdm_os")
+)
 
-#we get the schema and infos of dataframe from which we write in table 
+df_session_table = session_table(
+    df_relevant_fields, df_silver_sdm_browser, df_silver_sdm_device, df_silver_sdm_os
+)
+
+# we get the schema and infos of dataframe from which we write in table
 schema_sdm_session, info_sdm_session = get_schema_sdm_session()
 df_session_table.printSchema()
-write_dataframe_to_table(df_session_table, 
-                         get_value_from_yaml("paths", "sdm_table_paths", "sdm_session"), 
-                         schema_sdm_session, 
-                         "append", 
-                         info_sdm_session['partition_by'], 
-                         info_sdm_session['table_properties'])
+write_dataframe_to_table(
+    df_session_table,
+    get_value_from_yaml("paths", "sdm_table_paths", "sdm_session"),
+    schema_sdm_session,
+    "append",
+    info_sdm_session["partition_by"],
+    info_sdm_session["table_properties"],
+)

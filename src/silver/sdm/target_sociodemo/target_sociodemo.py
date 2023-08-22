@@ -5,14 +5,17 @@
 # COMMAND ----------
 
 import pyspark.sql.functions as F
-import sys
-sys.path.append('../../../utils/helper_functions_defined_by_user/')
-
 from pyspark.sql.dataframe import DataFrame
 from datetime import date, datetime, timedelta
+
+from src.utils.helper_functions_defined_by_user.table_writing_functions import (
+    write_dataframe_to_table,
+)
+from src.utils.helper_functions_defined_by_user.yaml_functions import (
+    get_value_from_yaml,
+)
+
 from schema import get_schema
-from table_writing_functions import write_dataframe_to_table
-from yaml_functions import get_value_from_yaml
 
 # COMMAND ----------
 
@@ -44,19 +47,23 @@ def load_silver(df: DataFrame, end_date: str, n_days: str):
     # to deal for potential minor mismatch between day (from file upload) and DATE (extracted from EVENT_TIME) column
     start_date_safe = end_date - timedelta(days=int(n_days) + 2)
 
-    return (df
-            .filter(F.col("day") >= start_date_safe)
-            .select(
-                "AGE", "GENDER",
-                F.col("DEVICE").alias("USER_ID"),
-                F.col("OWNER_NAME").alias("PUBLISHER"),
-                F.col("EVENT_TIME").alias("TIMESTAMP"),
-                F.to_date(F.col("EVENT_TIME")).alias("DATE"),
-            )
-            .filter((F.col("DATE") >= start_date) & (F.col("DATE") <= end_date))
-           )
-    
-df_bronze_cpex_piano = spark.read.format("delta").load(get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano"))
+    return (
+        df.filter(F.col("day") >= start_date_safe)
+        .select(
+            "AGE",
+            "GENDER",
+            F.col("DEVICE").alias("USER_ID"),
+            F.col("OWNER_NAME").alias("PUBLISHER"),
+            F.col("EVENT_TIME").alias("TIMESTAMP"),
+            F.to_date(F.col("EVENT_TIME")).alias("DATE"),
+        )
+        .filter((F.col("DATE") >= start_date) & (F.col("DATE") <= end_date))
+    )
+
+
+df_bronze_cpex_piano = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano")
+)
 df_silver_cpex_piano = load_silver(df_bronze_cpex_piano, widget_end_date, widget_n_days)
 
 # COMMAND ----------
@@ -66,18 +73,29 @@ df_silver_cpex_piano = load_silver(df_bronze_cpex_piano, widget_end_date, widget
 # COMMAND ----------
 
 def preprocessing(df: DataFrame):
-    return (df
-            .withColumn('AGE', F.col('AGE').cast('int'))
-            .withColumn('AGE', F.when((F.col('AGE') <0) | (F.col('AGE') > 100), None).otherwise(F.col('AGE')))
-            .withColumn('AGE', F.col('AGE').cast('string'))
-            .withColumn('AGE', F.when(F.col('AGE').isNull(), 'unknown').otherwise(F.col('AGE')))
-            # 1 = female, 2 = male but in piano 1 = male
-            .withColumn('GENDER', F.when((F.col('GENDER').isNull()) | (F.col('GENDER') == "0"), 'unknown')
-                        .when(F.col('GENDER') == "1", "2")
-                        .when(F.col('GENDER') == "2", "1")  
-                        .otherwise(F.col('GENDER')))
-           )
-    
+    return (
+        df.withColumn("AGE", F.col("AGE").cast("int"))
+        .withColumn(
+            "AGE",
+            F.when((F.col("AGE") < 0) | (F.col("AGE") > 100), None).otherwise(
+                F.col("AGE")
+            ),
+        )
+        .withColumn("AGE", F.col("AGE").cast("string"))
+        .withColumn(
+            "AGE", F.when(F.col("AGE").isNull(), "unknown").otherwise(F.col("AGE"))
+        )
+        # 1 = female, 2 = male but in piano 1 = male
+        .withColumn(
+            "GENDER",
+            F.when((F.col("GENDER").isNull()) | (F.col("GENDER") == "0"), "unknown")
+            .when(F.col("GENDER") == "1", "2")
+            .when(F.col("GENDER") == "2", "1")
+            .otherwise(F.col("GENDER")),
+        )
+    )
+
+
 df_preprocessing = preprocessing(df_silver_cpex_piano)
 
 # COMMAND ----------
@@ -86,13 +104,13 @@ df_preprocessing = preprocessing(df_silver_cpex_piano)
 
 # COMMAND ----------
 
-
-
 schema, info = get_schema()
 
-write_dataframe_to_table(df_preprocessing, 
-                         get_value_from_yaml("paths", "sdm_table_paths", "sdm_sociodemo_targets"), 
-                         schema, 
-                         "overwrite",
-                         info['partition_by'],
-                         info['table_properties'])
+write_dataframe_to_table(
+    df_preprocessing,
+    get_value_from_yaml("paths", "sdm_table_paths", "sdm_sociodemo_targets"),
+    schema,
+    "overwrite",
+    info["partition_by"],
+    info["table_properties"],
+)

@@ -32,7 +32,7 @@ import requests
 from pprint import pprint
 
 from nltk.stem.cistem import Cistem
-from _functions_general import check_dbfs_existence
+from src.utils.helper_functions_defined_by_user._functions_general import check_dbfs_existence
 
 # Functions originally in _functions_nlp
 decode_udf = udf(lambda val: urlParse.unquote(val))
