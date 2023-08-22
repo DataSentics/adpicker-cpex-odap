@@ -254,6 +254,8 @@ def load_raw_delta(
             elem_path = elem.path.split(":")[1]
 
             df = spark.read.format("delta").load(elem_path)
+            df = df.withColumn("userParameters", F.array().cast(T.ArrayType(T.StringType()))) ########## hotfix ############
+            df = df.withColumn("externalUserIds", F.array().cast(T.ArrayType(T.StringType()))) ########## more hotfix ############
             df_to_union.append(df)
             logger.info(f"Source file: {elem_path} appended")
 
