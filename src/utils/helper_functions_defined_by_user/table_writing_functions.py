@@ -29,7 +29,7 @@ def write_dataframe_to_table(
 
     """
 
-    if dataframe_source.schema == table_schema:
+    if compare_and_check_schemas(table_schema, dataframe_source.schema, logger):
 
         logger_writing_table_status(
             delta_table_exists(f"{table_destination}"), writing_mode, logger
@@ -73,6 +73,7 @@ def compare_and_check_schemas(schema1, schema2, logger: logging.Logger):
     fields1 = {field.name: field for field in schema1.fields}
     fields2 = {field.name: field for field in schema2.fields}
     mismatch_fields = []
+    schema_compatibility_check = True
 
     for field_name in fields1.keys() | fields2.keys():
         field1 = fields1.get(field_name)
@@ -82,19 +83,28 @@ def compare_and_check_schemas(schema1, schema2, logger: logging.Logger):
             logger.error(
                 f"FIELD: '{field_name}' is present in DATAFRAME schema but not in TABLE schema."
             )
+            schema_compatibility_check = False
+
         elif field2 is None:
             logger.error(
                 f"FIELD: '{field_name}' is present in TABLE schema but not in DATAFRAME."
             )
+            schema_compatibility_check = False
+
         else:
             if field1.dataType != field2.dataType:
                 logger.error(
                     f"DataType mismatch! TABLE schema: '{field_name}': {field1.dataType} | DATAFRAME schema: '{field_name}' : {field2.dataType} "
                 )
+                schema_compatibility_check = False
+
             if field1.nullable != field2.nullable:
                 logger.error(
                     f"Nullability mismatch! TABLE schema: '{field_name}': {field1.nullable} | DATAFRAME schema: '{field_name}' : {field2.nullable}"
                 )
+                schema_compatibility_check = False
+    
+    return schema_compatibility_check
 
 
 def delta_table_exists(table_path):

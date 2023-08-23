@@ -246,7 +246,7 @@ def load_raw_delta(
 
     df_to_union = []
     for folder in relevant_folders:
-
+    
         # load from delta folder inside relevant folder:
         files_in_folder = dbutils.fs.ls(folder.split(":")[1] + "delta/")
 
@@ -355,7 +355,6 @@ def save(df: DataFrame, series_length):
             info["partition_by"],
             info["table_properties"]
         )
-
 
 save(df_raw_data, widget_series_length)
 
