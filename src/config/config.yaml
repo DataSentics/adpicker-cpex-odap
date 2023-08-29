@@ -25,6 +25,7 @@ paths:
     income_url_scores: "/mnt/aam-cpex-dev/silver/income/income_url_scores.delta"
     income_interest_scores: "/mnt/aam-cpex-dev/silver/income/income_interest_scores.delta"
     income_other_scores: "/mnt/aam-cpex-dev/silver/income/income_other_scores.delta"
+    income_interest_coeffs: "/mnt/aam-cpex-dev/silver/income/income_interest_coeffs.delta"
 
   education_table_paths:
     education_interest_scores: "/mnt/aam-cpex-dev/silver/education/education_interest_scores.delta"
@@ -125,6 +126,7 @@ featurestorebundle:
     user_entity:
       id_column: "user_id"
       id_column_type: "string"
+  entity_time_column: "timestamp"
   widgets:
     defaults:
       timestamp: "2020-12-12"
