@@ -19,10 +19,17 @@ paths:
     user_segments: "/mnt/aam-cpex-dev/solutions/testing/user_segments.delta"
 
   interests_table_paths:
-    interests_definition: "/mnt/aam-cpex-dev/solutions/testing/interests_definition.delta"
+    interests_definition: "/mnt/aam-cpex-dev/silver/interests/interests_definition.delta"
+  
+  income_table_paths:
+    income_url_scores: "/mnt/aam-cpex-dev/silver/income/income_url_scores.delta"
+    income_interest_scores: "/mnt/aam-cpex-dev/silver/income/income_interest_scores.delta"
+    income_other_scores: "/mnt/aam-cpex-dev/silver/income/income_other_scores.delta"
 
-
-
+  education_table_paths:
+    education_interest_scores: "/mnt/aam-cpex-dev/silver/education/education_interest_scores.delta"
+    education_url_scores: "/mnt/aam-cpex-dev/silver/education/education_url_scores.delta"
+    education_other_scores: "/mnt/aam-cpex-dev/silver/education/education_other_scores.delta"
 
 jobs_config:
   regular_optimization:
@@ -94,7 +101,40 @@ jobs_config:
         optimize: False
         keep_history: False
 
+featurestorebundle:
+  db_name: '%kernel.environment%_feature_store'
+  base_path: '%feature_store.base_path%'
+  checkpoint:
+    default_checkpoint_dir: '/mnt/aam-cpex-%kernel.environment%/gold/feature_store/checkpoints'
+  feature:
+    table:
+      name_template: 'features_{entity}'
+      path_template: '%featurestorebundle.base_path%/features/{entity}.delta'
+    backend: 'delta_path'
+  metadata:
+    backend: 'delta_path'
+  target:
+    table:
+      name_template: 'targets_{entity}'
+      path_template: '%feature_store.base_path%/target/{entity}.delta'
+    enum_table:
+      name: 'targets_enum'
+      path: '%feature_store.base_path%/target/targets_enum.delta'
+    backend: 'delta_path'
+  entities:
+    user_entity:
+      id_column: "user_id"
+      id_column_type: "string"
+  widgets:
+    defaults:
+      timestamp: "2020-12-12"
+      use_bigrams: "false"
+      tokens_version: "cleaned_unique"
+  time_windows: ["7d"]
+
+  checkpointing:
+    base_dir: '/mnt/aam-cpex-%kernel.environment%/gold/feature_store/checkpoints'
+
 tables_options:
-    series_length:
-      n_hours_short: 72
-      
+  series_length:
+    n_hours_short: 72
