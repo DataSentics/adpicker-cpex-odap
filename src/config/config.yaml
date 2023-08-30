@@ -23,14 +23,24 @@ paths:
   
   income_table_paths:
     income_url_scores: "/mnt/aam-cpex-dev/silver/income/income_url_scores.delta"
+    income_url_coeffs: "/mnt/aam-cpex-dev/silver/income/income_url_coeffs.delta"
     income_interest_scores: "/mnt/aam-cpex-dev/silver/income/income_interest_scores.delta"
-    income_other_scores: "/mnt/aam-cpex-dev/silver/income/income_other_scores.delta"
     income_interest_coeffs: "/mnt/aam-cpex-dev/silver/income/income_interest_coeffs.delta"
+    income_other_scores: "/mnt/aam-cpex-dev/silver/income/income_other_scores.delta"
+    income_other_coeffs: "/mnt/aam-cpex-dev/silver/income/income_other_coeffs.delta"
+    
+    
 
   education_table_paths:
     education_interest_scores: "/mnt/aam-cpex-dev/silver/education/education_interest_scores.delta"
+    education_interest_coeffs: "/mnt/aam-cpex-dev/silver/education/education_interest_coeffs.delta"
     education_url_scores: "/mnt/aam-cpex-dev/silver/education/education_url_scores.delta"
+    education_url_coeffs: "/mnt/aam-cpex-dev/silver/education/education_url_coeffs.delta"
     education_other_scores: "/mnt/aam-cpex-dev/silver/education/education_other_scores.delta"
+    education_other_coeffs: "/mnt/aam-cpex-dev/silver/education/education_other_coeffs.delta"
+
+  location_table_paths:
+    location_traits_map: "/mnt/aam-cpex-dev/silver/location/location_traits_map.delta"
 
 jobs_config:
   regular_optimization:

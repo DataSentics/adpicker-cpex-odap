@@ -1,11 +1,11 @@
 # Databricks notebook source
 # MAGIC %md 
 # MAGIC
-# MAGIC # Income models - URL score calculation
+# MAGIC # Education models - URL score calculation
 # MAGIC
-# MAGIC This notebook serves to calculate URL scores for income models. The most common URLs are given a score based on marketing surveys (stored in azure storage). These scores are then joined to users' pageview and these values are averaged for each user, scaled by total number of sites visited. We transform and standardize those values to produce final URL scores for each income bracket. 
+# MAGIC This notebook serves to calculate URL scores for education models. The most common URLs are given a score based on marketing surveys (stored in azure storage). These scores are then joined to users' pageview and these values are averaged for each user, scaled by total number of sites visited. We transform and standardize those values to produce final URL scores for each education bracket. 
 # MAGIC
-# MAGIC Three income categories are defined: Low (0-25k CZK/mon.), Mid (25k-45k CZK/mon.), High (45k+ CZK/mon.).
+# MAGIC Four education categories are defined: ZS (zakladní škola and less), SS_no (střední škola bez maturity), SS_yes (střední škola s maturitou), VS (vysoká škola).
 
 # COMMAND ----------
 
@@ -15,36 +15,34 @@
 
 # COMMAND ----------
 
-from pyspark.sql.dataframe import DataFrame
-from pyspark.ml.feature import VectorAssembler, StandardScaler
-from pyspark.ml.functions import vector_to_array
-import pyspark.sql.functions as F
 
 import numpy as np
-from datetime import date, timedelta, datetime
-from scipy.stats import boxcox
-from logging import Logger
+import pyspark.sql.functions as F
 
 from src.utils.helper_functions_defined_by_user._abcde_utils import (
     standardize_column_sigmoid,
     calculate_count_coefficient,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 
-
+from datetime import date, timedelta, datetime
+from pyspark.sql.dataframe import DataFrame
+from pyspark.ml.feature import VectorAssembler, StandardScaler
+from pyspark.ml.functions import vector_to_array
+from scipy.stats import boxcox
+from logging import Logger
 
 # COMMAND ----------
 
 # MAGIC %md 
 # MAGIC
 # MAGIC ## Config
-# MAGIC
-# MAGIC Configure suffixes for income model brackets and sharpness of sigmoidal standardization function.
+# MAGIC Configure suffixes for education model brackets and sharpness of sigmoidal standardization function.
 
 # COMMAND ----------
 
-INCOME_MODELS_SUFFIXES = ["low", "mid", "high"]
+EDUCATION_MODELS_SUFFIXES = ["zs", "ss_no", "ss_yes", "vs"]
 SHARPNESS = 1
 
 # COMMAND ----------
@@ -71,6 +69,12 @@ widget_n_days = dbutils.widgets.get("n_days")
 # COMMAND ----------
 
 # Current date taken if not explicitly specified
+@dp.transformation(
+    dp.read_table("silver.sdm_pageview"),
+    dp.get_widget_value("timestamp"),
+    dp.get_widget_value("n_days"),
+    display=False,
+)
 def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger):
     # process end date
     try:
@@ -83,30 +87,19 @@ def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger):
     # calculate start date
     start_date = end_date - timedelta(days=int(n_days))
 
-    return (
-        df.filter(
-            (F.col("page_screen_view_date") >= start_date)
-            & (F.col("page_screen_view_date") < end_date)
-        )
-        .select(
-            "user_id",
-            "full_url",
-            "URL_NORMALIZED",
-            F.col("page_screen_view_date").alias("DATE"),
-            "flag_publisher",
-            F.lit(end_date).cast("timestamp").alias("timestamp"),
-        )
+    return df.filter(
+        (F.col("page_screen_view_date") >= start_date)
+        & (F.col("page_screen_view_date") < end_date)
+    ).select(
+        "user_id",
+        "full_url",
+        "URL_NORMALIZED",
+        F.col("page_screen_view_date").alias("DATE"),
+        "flag_publisher",
+        F.lit(end_date).cast("timestamp").alias("timestamp"),
     )
-
 df_sdm_pageview = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_pageview"))
 df_load_sdm_pageview = load_sdm_pageview(df_sdm_pageview, widget_timestamp, widget_n_days, root_logger)
-
-# COMMAND ----------
-
-def check_row_number(df, logger):
-    logger.info(f"Loaded {df.count()} pageviews.")
-
-check_row_number(df_load_sdm_pageview, root_logger)
 
 # COMMAND ----------
 
@@ -122,6 +115,7 @@ def load_sdm_url(df: DataFrame):
     )
 
 df_sdm_url = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_url"))
+df_load_sdm_url = load_sdm_url(df_sdm_url)
 
 # COMMAND ----------
 
@@ -135,14 +129,7 @@ df_sdm_url = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_t
 def join_datasets(df1, df2):
     return df1.join(df2, on="URL_NORMALIZED", how="left")
 
-df_join_datasets = join_datasets(df_load_sdm_pageview, df_sdm_url)
-
-# COMMAND ----------
-
-def check_row_number_joined(df, logger):
-    logger.info(f"Number of rows after join: {df.count()}.")
-
-check_row_number_joined(df_join_datasets, root_logger)
+df_join_datasets = join_datasets(df_load_sdm_pageview, df_load_sdm_url)
 
 # COMMAND ----------
 
@@ -156,24 +143,25 @@ check_row_number_joined(df_join_datasets, root_logger)
 def load_url_scores(df):
     return df.withColumnRenamed("domain", "URL_DOMAIN_2_LEVEL")
 
-df_income_url_coeffs = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "income_url_coeffs"))
+df_education_url_coeffs = spark.read.format("delta").load(get_value_from_yaml("paths", "education_table_paths", "education_url_coeffs"))
+df_load_url_scores = load_url_scores(df_education_url_coeffs)
 
 # COMMAND ----------
 
 def join_with_scores(df1, df2):
     return (
         df1.join(df2, on="URL_DOMAIN_2_LEVEL", how="left")
-        .fillna(0, subset=[f"score_{model}" for model in INCOME_MODELS_SUFFIXES])
+        .fillna(0, subset=[f"score_{model}" for model in EDUCATION_MODELS_SUFFIXES])
         .select(
             "user_id",
             "timestamp",
             "URL_DOMAIN_2_LEVEL",
             "URL_NORMALIZED",
-            *[f"score_{model}" for model in INCOME_MODELS_SUFFIXES],
+            *[f"score_{model}" for model in EDUCATION_MODELS_SUFFIXES],
         )
     )
 
-df_join_with_scores = join_with_scores(df_join_datasets, df_income_url_coeffs)
+df_join_with_scores = join_with_scores(df_join_datasets, df_load_url_scores)
 
 # COMMAND ----------
 
@@ -188,7 +176,7 @@ def collect_urls_for_users(df):
     return df.groupby("user_id").agg(
         *[
             F.mean(f"score_{model}").alias(f"score_average_{model}")
-            for model in INCOME_MODELS_SUFFIXES
+            for model in EDUCATION_MODELS_SUFFIXES
         ],
         F.count("timestamp").alias("url_count"),
         F.collect_list("URL_DOMAIN_2_LEVEL").alias("collected_urls"),
@@ -231,7 +219,7 @@ def calculate_nonstd_url_scores(df):
             (F.col("count_coefficient") * F.col(f"score_average_{model}")).alias(
                 f"url_score_nonstd_{model}"
             )
-            for model in INCOME_MODELS_SUFFIXES
+            for model in EDUCATION_MODELS_SUFFIXES
         ],
     )
 
@@ -243,20 +231,21 @@ df_calculate_nonstd_url_scores = calculate_nonstd_url_scores(df_calculate_scalin
 # MAGIC
 # MAGIC ## Transform and standardize scores
 # MAGIC
-# MAGIC Use Box-Cox transform to improve distribution of the score and then standardize using `StandardScaler`.
+# MAGIC Use Box-Cox transform to improve distribution of the score and then standardize using `StandardScaler`. 
 # MAGIC
 # MAGIC The values for Box-Cox transformation are shifted to be positive via a static constant (0.01); the magnitude of the shift should not matter ([see link](https://stats.stackexchange.com/questions/399435/which-constant-to-add-when-applying-box-cox-transformation-to-negative-values)).
 
 # COMMAND ----------
 
 def box_cox_transform(df):
-    nonstd_columns = [f"url_score_nonstd_{model}" for model in INCOME_MODELS_SUFFIXES]
-    
+    nonstd_columns = [
+        f"url_score_nonstd_{model}" for model in EDUCATION_MODELS_SUFFIXES
+    ]
     df_pandas = df.select(
         "user_id", "timestamp", "collected_urls", *nonstd_columns
     ).toPandas()
-    
-    for col in nonstd_columns:        
+
+    for col in nonstd_columns:
         scores = np.array(df_pandas[col]).reshape(-1)
         scores = (
             scores + np.abs(np.min(scores)) + 0.01
@@ -272,8 +261,10 @@ df_box_cox_transform = box_cox_transform(df_calculate_nonstd_url_scores)
 # COMMAND ----------
 
 def standard_scaler(df):
-    nonstd_columns = ["url_score_nonstd_" + model for model in INCOME_MODELS_SUFFIXES]
-    std_columns = ["url_score_std_" + model for model in INCOME_MODELS_SUFFIXES]
+    nonstd_columns = [
+        "url_score_nonstd_" + model for model in EDUCATION_MODELS_SUFFIXES
+    ]
+    std_columns = ["url_score_std_" + model for model in EDUCATION_MODELS_SUFFIXES]
 
     vec_ass = VectorAssembler(
         inputCols=nonstd_columns, outputCol="features", handleInvalid="skip"
@@ -305,7 +296,6 @@ df_standard_scaler = standard_scaler(df_box_cox_transform)
 
 # COMMAND ----------
 
-@dp.transformation(standard_scaler)
 def url_score_final(df):
     return df.select(
         "user_id",
@@ -315,7 +305,7 @@ def url_score_final(df):
             standardize_column_sigmoid(f"url_score_std_{model}", SHARPNESS).alias(
                 f"final_url_score_{model}"
             )
-            for model in INCOME_MODELS_SUFFIXES
+            for model in EDUCATION_MODELS_SUFFIXES
         ],
     )
 
@@ -323,15 +313,10 @@ df_url_score_final = url_score_final(df_standard_scaler)
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC
-# MAGIC ## Save final table
-
-# COMMAND ----------
-
 #TO BE MODIFIED
+
 @dp.transformation(url_score_final)
-@dp.table_overwrite("silver.income_url_scores")
+@dp.table_overwrite("silver.education_url_scores")
 def save_scores(df, logger: Logger):
     logger.info(f"Saving {df.count()} rows.")
     return df
