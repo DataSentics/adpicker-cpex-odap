@@ -233,4 +233,4 @@ def features_income_model(df, features_name):
         *features_name,
     )
 
-df_features_income_model(df_standardize_edu_score, list(metadata['features']))
+df_features_income_model(df_standardize_edu_score, list(metadata['features'].keys()))
