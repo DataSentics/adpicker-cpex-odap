@@ -18,10 +18,10 @@
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
 
-# from adpickercpex.lib.FeatureStoreTimestampGetter import FeatureStoreTimestampGetter
 from src.utils.helper_functions_defined_by_user._abcde_utils import convert_traits_to_location_features
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+from schemas import get_education_other_scores
 
 
 # COMMAND ----------
@@ -75,19 +75,12 @@ print(list_web_features_list)
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.transformation(get_web_features_list, user_entity, dp.get_widget_value("timestamp"))
-def read_web_features_from_fs(
-    web_features, entity, timestamp, getter: FeatureStoreTimestampGetter
-):
-    return getter.get_for_timestamp(
-        entity_name=entity.name,
-        timestamp=timestamp,
-        features=web_features,
-        skip_incomplete_rows=True,
-    )
+def read_fs(feature_store, list_features):
 
-df_read_web_features_from_fs = 
+    return feature_store.select('user_id', 'timestamp', *list_features).filter(F.col("timestamp") == F.lit(F.current_date()))
+#this reading will be modified 
+df = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df_read_web_features_from_fs = read_fs(df, list_web_features_list)
 
 # COMMAND ----------
 
@@ -277,9 +270,19 @@ df_calculate_final_scores = calculate_final_scores(df_multiply_scores)
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.transformation(calculate_final_scores)
-@dp.table_overwrite("silver.education_other_scores")
 def save_scores(df, logger: Logger):
     logger.info(f"Saving {df.count()} rows.")
     return df
+
+
+df_save_scores = save_scores(df_calculate_final_scores, root_logger)
+schema, info = get_education_other_scores()
+
+write_dataframe_to_table(
+    df_save_scores,
+    get_value_from_yaml("paths", "education_table_paths", "education_other_scores"),
+    schema,
+    "overwrite",
+    root_logger,
+    table_properties=info["table_properties"],
+)

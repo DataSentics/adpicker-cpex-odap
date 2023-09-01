@@ -3,11 +3,9 @@
 
 # COMMAND ----------
 
-
 import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
 
-# from adpickercpex.lib.FeatureStoreTimestampGetter import FeatureStoreTimestampGetter
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 
 publishers_list = ['eco']
@@ -15,7 +13,7 @@ publishers_list = ['eco']
 # COMMAND ----------
 
 dbutils.widgets.dropdown("target_name", "<no target>", ["<no target>"], "01. target name")
-dbutils.widgets.text("timestamp", "2020-12-12", "02. timestamp")
+dbutils.widgets.text("timestamp", "2023-03-10", "02. timestamp")
 dbutils.widgets.dropdown("sample_data", "complete", ["complete", "sample"], "03. sample data")
 
 # COMMAND ----------
@@ -46,15 +44,13 @@ df_sdm_sociodemo_targets = spark.read.format("delta").load(get_value_from_yaml("
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.transformation(user_entity, dp.get_widget_value("timestamp"))
-def read_fs(entity, timestamp, feature_store: FeatureStoreTimestampGetter):
-    return (
-        feature_store
-        .get_for_timestamp(entity_name=entity.name, timestamp=timestamp, features=[], skip_incomplete_rows=True)
-    )
+def read_fs(feature_store):
 
-df_fs = 
+    return feature_store.select('user_id', 'timestamp').filter(F.col("timestamp") == F.lit(F.current_date()))
+#this reading will be modified 
+df = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df_fs = read_fs(df)
+display(df_fs)
 
 # COMMAND ----------
 
@@ -73,6 +69,7 @@ def process_publishers(df: DataFrame):
     return df
 
 df_process_publishers = process_publishers(df_sdm_sociodemo_targets)
+display(df_process_publishers)
 
 # COMMAND ----------
 
@@ -96,6 +93,7 @@ def process_age_categories(df: DataFrame):
            )
     
 df_process_age_categories = process_age_categories(df_process_publishers)
+display(df_process_age_categories)
 
 # COMMAND ----------
 
@@ -120,6 +118,7 @@ def aggregate_targets(df: DataFrame, df_fs: DataFrame):
            )
     
 df_aggregate_targets = aggregate_targets(df_process_age_categories, df_fs)
+display(df_aggregate_targets)
 
 # COMMAND ----------
 
@@ -140,7 +139,7 @@ def features_sociodemo_targets(df: DataFrame, table_name, category_name):
     }
 
     features_dict['features']["sociodemo_targets_gender"] = {
-        "description": 'Sociodemo target: gender',,
+        "description": 'Sociodemo target: gender',
         "fillna_with": None
     }
 
@@ -152,3 +151,6 @@ def features_sociodemo_targets(df: DataFrame, table_name, category_name):
                 'sociodemo_targets_gender',
             )
            )
+
+df_features_sociodemo_targets = features_sociodemo_targets(df_aggregate_targets, "user", "sociodemo_target_features")
+display(df_features_sociodemo_targets)

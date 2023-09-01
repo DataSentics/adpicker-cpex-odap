@@ -8,7 +8,6 @@ from pyspark.sql.dataframe import DataFrame
 from pyspark.dbutils import DBUtils
 from pyspark.sql.session import SparkSession
 
-# from adpickercpex.lib.FeatureStoreTimestampGetter import FeatureStoreTimestampGetter
 
 from src.utils.helper_functions_defined_by_user._DB_connection_functions import load_mysql_table
 from src.utils.helper_functions_defined_by_user._functions_ml import process_multiple_segments_input
@@ -86,7 +85,7 @@ def get_features(lookalike_models_df: DataFrame, table_name, category_name):
     return features_dict
 
 metadata = get_features(df_load_lookalikes_models, "user", "lookalike_target_features")
-
+display(metadata)
 
 
 # COMMAND ----------
@@ -95,14 +94,13 @@ metadata = get_features(df_load_lookalikes_models, "user", "lookalike_target_fea
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.transformation(user_entity, dp.get_widget_value("timestamp"))
-def read_fs(entity, timestamp, feature_store: FeatureStoreTimestampGetter):
-    return (feature_store
-            .get_for_timestamp(entity_name=entity.name, timestamp=timestamp, features=[], skip_incomplete_rows=True)
-           )
+def read_fs(feature_store):
 
-df_fs = 
+    return feature_store.select('user_id', 'timestamp').filter(F.col("timestamp") == F.lit(F.current_date()))
+
+df = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df_fs = read_fs(df)
+display(df_fs)
 
 # COMMAND ----------
 
@@ -129,9 +127,10 @@ def lookalikes_target(df_fs: DataFrame, df_traits: DataFrame, df_models: DataFra
                              .withColumn(f"lookalike_target_{type_dmp_tp}_{id_dmp_tp}_{client_name}", F.lit(1))
                              .select(get_value_from_yaml("featurestorebundle", "entities", "user_entity", "id_column"), f"lookalike_target_{type_dmp_tp}_{id_dmp_tp}_{client_name}")
                              .dropDuplicates()
+
                             )
 
-            # join to feature store recored
+            # join to feature store recore
             df_fs = (df_fs
                      .join(df_traits_row, how='left', on=get_value_from_yaml("featurestorebundle", "entities", "user_entity", "id_column"))
                     )
@@ -142,10 +141,10 @@ def lookalikes_target(df_fs: DataFrame, df_traits: DataFrame, df_models: DataFra
     return df_fs.fillna(0)
 
 df_lookalikes_target = lookalikes_target(df_fs, df_user_traits, df_load_lookalikes_models, root_logger)
+display(df_lookalikes_target)
 
 # COMMAND ----------
 
-@dp.transformation(lookalikes_target, get_features.result['features_names'])
 def array_of_lals(df: DataFrame, feature_names):
     for feature_name in feature_names:
         df = df.withColumn(f'temp_{feature_name}', F.when(F.col(feature_name) == 1, feature_name.replace('lookalike_target_', '')).otherwise(None))
@@ -156,6 +155,7 @@ def array_of_lals(df: DataFrame, feature_names):
            )
     
 df_array_of_lals = array_of_lals(df_lookalikes_target,list(metadata['features'].keys()))
+display(df_array_of_lals)
 
 # COMMAND ----------
 

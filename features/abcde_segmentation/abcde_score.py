@@ -15,7 +15,6 @@
 
 import pyspark.sql.functions as F
 
-# from adpickercpex.lib.FeatureStoreTimestampGetter import FeatureStoreTimestampGetter
 from pyspark.sql.window import Window
 
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
@@ -57,22 +56,13 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 
 # COMMAND ----------
 
-#TO BE MODIFIED
+def read_fs(feature_store):
+    perc_features = [f"income_model_perc_{model}" for model in INCOME_MODELS_SUFFIXES] + [f"edu_model_perc_{model}" for model in EDUCATION_MODELS_SUFFIXES]
 
-@dp.transformation(user_entity, dp.get_widget_value("timestamp"))
-def fetch_percentiles_from_fs(entity, timestamp, fs: FeatureStoreTimestampGetter):
-    perc_features = [
-        f"income_model_perc_{model}" for model in INCOME_MODELS_SUFFIXES
-    ] + [f"edu_model_perc_{model}" for model in EDUCATION_MODELS_SUFFIXES]
-
-    return fs.get_for_timestamp(
-        entity_name=entity.name,
-        timestamp=timestamp,
-        features=perc_features,
-        skip_incomplete_rows=True,
-    )
-
-dffetch_percentiles_from_fs = 
+    return feature_store.select('user_id', 'timestamp', *perc_features).filter(F.col("timestamp") == F.lit(F.current_date()))
+#this reading will be modified 
+df = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df_fetch_percentiles_from_fs = read_fs(df)
 
 # COMMAND ----------
 
@@ -106,7 +96,7 @@ def calculate_combinations(df):
         *[col for level in INCOME_MODELS_SUFFIXES for col in _calc_for_level(level)],
     )
 
-df_calculate_ombinations = calculate_combinations(dffetch_percentiles_from_fs)
+df_calculate_ombinations = calculate_combinations(df_fetch_percentiles_from_fs)
 
 # COMMAND ----------
 

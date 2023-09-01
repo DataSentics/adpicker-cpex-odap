@@ -29,8 +29,6 @@ paths:
     income_other_scores: "/mnt/aam-cpex-dev/silver/income/income_other_scores.delta"
     income_other_coeffs: "/mnt/aam-cpex-dev/silver/income/income_other_coeffs.delta"
     
-    
-
   education_table_paths:
     education_interest_scores: "/mnt/aam-cpex-dev/silver/education/education_interest_scores.delta"
     education_interest_coeffs: "/mnt/aam-cpex-dev/silver/education/education_interest_coeffs.delta"
@@ -41,6 +39,9 @@ paths:
 
   location_table_paths:
     location_traits_map: "/mnt/aam-cpex-dev/silver/location/location_traits_map.delta"
+
+  feature_store_paths:
+    user_entity_fs: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta"
 
 jobs_config:
   regular_optimization:

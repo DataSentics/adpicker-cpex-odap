@@ -162,5 +162,4 @@ def features_digi_interests(joined_interests_with_stats: DataFrame, interest_nam
         *interest_names,
     )
 
-    
 df_features_digi_interests(df_joined_interests_with_stats, list(metadata['features'].keys()))

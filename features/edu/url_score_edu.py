@@ -32,6 +32,7 @@ from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml.functions import vector_to_array
 from scipy.stats import boxcox
 from logging import Logger
+from schemas import get_education_url_scores
 
 # COMMAND ----------
 
@@ -69,12 +70,6 @@ widget_n_days = dbutils.widgets.get("n_days")
 # COMMAND ----------
 
 # Current date taken if not explicitly specified
-@dp.transformation(
-    dp.read_table("silver.sdm_pageview"),
-    dp.get_widget_value("timestamp"),
-    dp.get_widget_value("n_days"),
-    display=False,
-)
 def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger):
     # process end date
     try:
@@ -313,10 +308,19 @@ df_url_score_final = url_score_final(df_standard_scaler)
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-
-@dp.transformation(url_score_final)
-@dp.table_overwrite("silver.education_url_scores")
 def save_scores(df, logger: Logger):
     logger.info(f"Saving {df.count()} rows.")
     return df
+
+
+df_save_scores = save_scores(df_url_score_final, root_logger)
+schema, info = get_income_interest_scores()
+
+write_dataframe_to_table(
+    df_save_scores,
+    get_value_from_yaml("paths", "education_table_paths", "education_url_scores"),
+    schema,
+    "overwrite",
+    root_logger,
+    table_properties=info["table_properties"],
+)

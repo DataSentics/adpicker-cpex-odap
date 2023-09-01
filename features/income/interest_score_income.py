@@ -19,12 +19,13 @@ import numpy as np
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
 
-# from adpickercpex.lib.FeatureStoreTimestampGetter import FeatureStoreTimestampGetter
 from src.utils.helper_functions_defined_by_user._abcde_utils import standardize_column_sigmoid
 
 from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml.functions import vector_to_array
 from scipy.stats import boxcox
+
+from schemas import get_income_interest_scores
 
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
@@ -83,21 +84,17 @@ def features_to_load(df):
     lst = df.select("interest").rdd.map(lambda row: row[0]).collect()
     return lst
 
-df_features_to_load = features_to_load(df_income_interest_coeffs)
+lst_features_to_load = features_to_load(df_income_interest_coeffs)
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.transformation(user_entity, features_to_load, dp.get_widget_value("timestamp"))
-def read_fs(entity, interest_features, timestamp, fs: FeatureStoreTimestampGetter):
-    return fs.get_for_timestamp(
-        entity_name=entity.name,
-        timestamp=timestamp,
-        features=interest_features,
-        skip_incomplete_rows=True,
-    )
+def read_fs(feature_store, list_features):
 
-df_fs = 
+    return feature_store.select('user_id', 'timestamp', *list_features).filter(F.col("timestamp") == F.lit(F.current_date()))
+#this reading will be modified 
+df = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df_fs = read_fs(df, lst_features_to_load)
+display(df_fs)
 
 # COMMAND ----------
 
@@ -124,7 +121,6 @@ df_fs_wide_to_long = fs_wide_to_long(df_fs, df_features_to_load)
 
 # COMMAND ----------
 
-@dp.transformation(fs_wide_to_long, load_interest_scores)
 def add_interest_scores(df_long, df_scores):
     return df_long.join(df_scores, on="interest", how="left").select(
         "user_id",
@@ -147,7 +143,6 @@ df_add_interest_scores = add_interest_scores(df_fs_wide_to_long, df_income_inter
 
 # COMMAND ----------
 
-@dp.transformation(add_interest_scores)
 def sum_interest_scores(df):
     return df.groupby("user_id").agg(
         F.max("timestamp").alias("timestamp"),
@@ -227,7 +222,6 @@ df_standard_scalar = standard_scaler(df_box_cox_transform)
 
 # COMMAND ----------
 
-@dp.transformation(standard_scaler)
 def interest_score_final(df):
     return df.select(
         "user_id",
@@ -250,10 +244,18 @@ df_interest_score_final = interest_score_final(df_standard_scalar)
 
 # COMMAND ----------
 
-#TO BE MODIFIED
+# def save_scores(df, logger):
+#     logger.info(f"Saving {df.count()} rows.")
+#     return df
 
-@dp.transformation(interest_score_final)
-@dp.table_overwrite("silver.income_interest_scores")
-def save_scores(df, logger: Logger):
-    logger.info(f"Saving {df.count()} rows.")
-    return df
+# df_save_scores = save_scores(df_interest_score_final, root_logger)
+# schema, info = get_income_interest_scores()
+
+# write_dataframe_to_table(
+#     df_save_scores,
+#     get_value_from_yaml("paths", "income_table_paths", "income_interest_scores"),
+#     schema,
+#     "overwrite",
+#     root_logger,
+#     table_properties=info["table_properties"],
+# )

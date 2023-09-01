@@ -19,7 +19,6 @@ from pyspark.sql import types as T
 from pyspark.sql.window import Window
 from typing import List
 
-# from adpickercpex.lib.FeatureStoreTimestampGetter import FeatureStoreTimestampGetter
 from src.utils.helper_functions_defined_by_user import URL_lists 
 from src.utils.helper_functions_defined_by_user._functions_ml import ith
 from src.utils.helper_functions_defined_by_user._functions_helper import replace_categorical_levels
@@ -127,22 +126,12 @@ df_features_to_load = get_features_to_load(list_categories, df_fs_metadata)
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.transformation(user_entity, dp.get_widget_value("timestamp"), get_features_to_load)
-def read_fs(
-    entity,
-    fs_date,
-    features_to_load,
-    feature_store: FeatureStoreTimestampGetter,  
-):
-    df = feature_store.get_for_timestamp(
-        entity_name=entity.name,
-        timestamp=fs_date,
-        features=features_to_load,
-        skip_incomplete_rows=True,
-    )
-    return df
-df_fs = 
+def read_fs(feature_store, list_features):
+
+    return feature_store.select('user_id', 'timestamp', list_features).filter(F.col("timestamp") == F.lit(F.current_date()))
+#this reading will be modified 
+df = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df_fs = read_fs(df, df_features_to_load)
 
 # COMMAND ----------
 
@@ -286,32 +275,28 @@ df_replace_rare_values = replace_rare_values(df_create_url_flags, df_get_data_fe
 
 #TO BE MODIFIED
 @dp.notebook_function("%models.sociodemo%")
-def get_features(models_dict):
+def get_features(models_dict, table_name, category_name):
+    features_dict = {
+        "table":  f"{table_name}",
+        "category": f"{category_name}",
+        "features":{}
+        }
+
     models_list = list(models_dict.keys()) + ['gender_male']
 
-    features_tupple = (
-            feature_definition for model_name in models_list for feature_definition in (
-                (f"sociodemo_perc_{model_name}", f"sociodemo percentile for: {model_name}", -1.0),
-                (f"sociodemo_prob_{model_name}", f"sociodemo probability for: {model_name}", None),
-            )
-    )
-
-    return {
-        "features": [
-            dp.fs.Feature(
-                name,
-                description,
-                fillna_with=na_val,
-                type="numerical",
-            )
-            for name, description, na_val in features_tupple
-        ],
-        "names": [
-            f"sociodemo_perc_{model_name}" for model_name in models_list
-        ] + [
-            f"sociodemo_prob_{model_name}" for model_name in models_list
-        ]
+    for model_name in models_list:
+        features_dict['features'][f"sociodemo_perc_{model_name}"] = {
+        "description": f"sociodemo percentile for: {model_name}",
+        "fillna_with": -1.0
     }
+    for model_name in models_list:
+        features_dict['features'][f"sociodemo_prob_{model_name}"] = {
+        "description": f"sociodemo probability for: {model_name}",
+        "fillna_with": None
+    }
+    return features_dict
+
+metadata = get_features("?????", "user", "sociodemo_features")
 
 # COMMAND ----------
 
@@ -324,7 +309,7 @@ def get_features(models_dict):
 
 #TO BE MODIFIED
 @dp.transformation(replace_rare_values, "%models.sociodemo%")
-def apply_model(df: DataFrame, models_dict, logger: Logger):
+def apply_model(df: DataFrame, models_dict, logger):
     for model in models_dict:
         logger.info(f"Applying sociodemo model {model}, with path {models_dict[model]}")
         try:
@@ -374,6 +359,8 @@ def apply_model(df: DataFrame, models_dict, logger: Logger):
     )
     return df
 
+df_apply_model = apply_model(df_replace_rare_values, "????", root_logger)
+
 # COMMAND ----------
 
 # MAGIC %md 
@@ -383,18 +370,13 @@ def apply_model(df: DataFrame, models_dict, logger: Logger):
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.transformation(apply_model, get_features.result["names"], user_entity)
-@feature(
-    *get_features.result["features"],
-    category="sociodemo",
-)
 def features_sociodemo(
-    df: DataFrame, features_names, entity
+    df: DataFrame, features_names
 ):
 
     return df.select(
-        entity.id_column,
-        entity.time_column,
-        *features_names,
+        get_value_from_yaml("featurestorebundle", "entities", "user_entity", "id_column"),
+        get_value_from_yaml("featurestorebundle", "entity_time_column"),
+        *features_name,
     )
+df_featurs_sociodemo = features_socioemo(df_apply_model, list(metadata['features'].keys()))

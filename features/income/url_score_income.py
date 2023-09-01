@@ -31,6 +31,7 @@ from src.utils.helper_functions_defined_by_user._abcde_utils import (
 )
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+from schemas import get_income_url_scores
 
 
 
@@ -305,7 +306,6 @@ df_standard_scaler = standard_scaler(df_box_cox_transform)
 
 # COMMAND ----------
 
-@dp.transformation(standard_scaler)
 def url_score_final(df):
     return df.select(
         "user_id",
@@ -329,9 +329,17 @@ df_url_score_final = url_score_final(df_standard_scaler)
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.transformation(url_score_final)
-@dp.table_overwrite("silver.income_url_scores")
-def save_scores(df, logger: Logger):
+def save_scores(df, logger):
     logger.info(f"Saving {df.count()} rows.")
     return df
+
+df_save_scores = save_scores(df_url_score_final, root_logger)
+schema, info = get_income_interest_scores()
+
+write_dataframe_to_table(
+    df_save_scores,
+    get_value_from_yaml("paths", "income_table_paths", "income_url_scores"),
+    schema,
+    "overwrite",
+    root_logger,
+    table_properties=info["table_properties"],)

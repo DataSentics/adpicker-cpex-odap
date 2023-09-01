@@ -14,7 +14,6 @@ import mlflow
 import json
 from mlflow.tracking import MlflowClient
 
-# from adpickercpex.lib.FeatureStoreTimestampGetter import FeatureStoreTimestampGetter
 from src.utils.helper_functions_defined_by_user._functions_ml import ith
 from src.utils.helper_functions_defined_by_user._DB_connection_functions import load_mysql_table
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
@@ -25,8 +24,12 @@ scalers = [Normalizer, StandardScalerModel, MinMaxScalerModel, MaxAbsScalerModel
 
 # COMMAND ----------
 
+# MAGIC %md Widgets
+
+# COMMAND ----------
+
 dbutils.widgets.dropdown("target_name", "<no target>", ["<no target>"], "01. target name")
-dbutils.widgets.text("timestamp", "2020-12-12", "02. timestamp")
+dbutils.widgets.text("timestamp", " 2023-08-31", "02. timestamp")
 dbutils.widgets.dropdown("sample_data", "complete", ["complete", "sample"], "03. sample data")
 dbutils.widgets.dropdown("replace_nulls", "yes",["yes", "no"], "replace nulls by zero")
 
@@ -39,20 +42,7 @@ widget_replace_nulls = dbutils.widgets.get("replace_nulls")
 
 # COMMAND ----------
 
-# MAGIC %md Widgets
-
-# COMMAND ----------
-
-def get_features_to_load(categories, df):
-    df_features = (df
-                   .filter(F.col('category').isin(categories))
-                  )
-    
-    return [row.feature for row in df_features.collect()]
-
-categories = ['digital_interest', 'digital_general', 'digital_device']
-df_metadata = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/metadata/metadata.delta")
-list_get_features_to_load = get_features_to_load(categories, df)
+root_logger = instantiate_logger()
 
 # COMMAND ----------
 
@@ -60,16 +50,26 @@ list_get_features_to_load = get_features_to_load(categories, df)
 
 # COMMAND ----------
 
+def get_features_to_load(categories, df):
+
+    df_features = (df.filter(F.col('category').isin(categories)))
+    
+    return [row.feature for row in df_features.collect()]
+
+categories = ['digital_interest', 'digital_general', 'digital_device']
+df_metadata = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/metadata/metadata.delta")
+list_get_features_to_load = get_features_to_load(categories, df_metadata)
+print(list_get_features_to_load)
+display(df_metadata)
+
+# COMMAND ----------
+
 # MAGIC %md ####Using feature store loader to load interests
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.transformation(user_entity, dp.get_widget_value('replace_nulls'), dp.get_widget_value("timestamp"), get_features_to_load)
-def read_fs(entity, replace_nulls, fs_date, features_to_load, feature_store: FeatureStoreTimestampGetter, logger: Logger):
-    df = (feature_store
-          .get_for_timestamp(entity_name=entity.name, timestamp=fs_date, features=features_to_load, skip_incomplete_rows=True)
-         )
+def read_fs(replace_nulls, fs_date, features_to_load, logger, feature_store):
+    df = feature_store.select('user_id', 'timestamp', *features_to_load).filter(F.col("timestamp") == F.lit(F.current_date()))
 
     # convert string with publishers names to array
     df = df.withColumn("owner_names", F.split(F.col("owner_names_7d"), ","))
@@ -82,7 +82,10 @@ def read_fs(entity, replace_nulls, fs_date, features_to_load, feature_store: Fea
 
     return df
 
-df_fs =
+
+feature_store = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df_fs = read_fs(dp.get_widget_value('replace_nulls'), dp.get_widget_value("timestamp"), list_get_features_to_load, root_logger, feature_store)
+display(df_fs)
 
 # COMMAND ----------
 
@@ -103,7 +106,8 @@ def load_lookalikes_to_score():
 
     return most_recent_params.join(dmp_params, on=["TP_DMP_id", "id"], how="left")
 
-df_load_lookalikes_to_score = load_lookalikes_to_score
+df_load_lookalikes_to_score = load_lookalikes_to_score()
+display(df_load_lookalikes_to_score)
 
 # COMMAND ----------
 
@@ -126,7 +130,7 @@ def get_prediction_cols(lookalike_models_df: DataFrame, table_name, category_nam
         "type": "numerical"
         }
 
-      for _, row in df.iterrows():
+    for _, row in df.iterrows():
         features_dict[f"lookalike_perc_{row['TP_DMP_type']}_{row['TP_DMP_id']}_{row['client_name']}"] = {
         "description": f"lookalike percentile for: {row['TP_DMP_type']}_{row['TP_DMP_id']}, client: {row['client_name']}",
         "fillna_with": -1.0,
@@ -137,6 +141,7 @@ def get_prediction_cols(lookalike_models_df: DataFrame, table_name, category_nam
     return features_dict
 
 metadata = get_prediction_cols(df_load_lookalikes_to_score, "user", "lookalike_featues")
+display(metadata)
 
 # COMMAND ----------
 
@@ -144,15 +149,13 @@ metadata = get_prediction_cols(df_load_lookalikes_to_score, "user", "lookalike_f
 
 # COMMAND ----------
 
-@dp.transformation(read_fs, get_prediction_cols.result['features_names'])
 def drop_prediction_cols(df: DataFrame, prediction_names):
     return df.drop(*prediction_names)
 
-df_drop_prediction_cols = drop_prediction_cols(df_fs, list(metadata['featurs'].keys()))
+df_drop_prediction_cols = drop_prediction_cols(df_fs, list(metadata['features'].keys()))
 
 # COMMAND ----------
 
-@dp.transformation(drop_prediction_cols, load_lookalikes_to_score)
 def lookalikes_scoring(df: DataFrame, df_models: DataFrame, logger):
     # Cookies scoring
     df_models = df_models.toPandas()
@@ -219,6 +222,7 @@ def lookalikes_scoring(df: DataFrame, df_models: DataFrame, logger):
     return df
 
 df_lookalikes_scoring =lookalikes_scoring(df_drop_prediction_cols, df_load_lookalikes_to_score, root_logger)
+display(df_load_lookalikes_to_score)
 
 # COMMAND ----------
 
