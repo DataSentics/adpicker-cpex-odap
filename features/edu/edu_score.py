@@ -233,4 +233,13 @@ def features_income_model(df, features_name):
         *features_name,
     )
 
-df_features_income_model(df_standardize_edu_score, list(metadata['features'].keys()))
+df_final = features_income_model(df_standardize_edu_score, list(metadata['features'].keys()))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ###Metadata
+
+# COMMAND ----------
+
+metadata = get_features(EDUCATION_MODELS_SUFFIXES, "user", "edu_score_features")

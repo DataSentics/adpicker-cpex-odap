@@ -319,7 +319,7 @@ def url_score_final(df):
         ],
     )
 
-df_url_score_final = url_score_final(df_standard_scaler)
+df_final = url_score_final(df_standard_scaler)
 
 # COMMAND ----------
 
@@ -333,7 +333,7 @@ def save_scores(df, logger):
     logger.info(f"Saving {df.count()} rows.")
     return df
 
-df_save_scores = save_scores(df_url_score_final, root_logger)
+df_save_scores = save_scores(df_final, root_logger)
 schema, info = get_income_interest_scores()
 
 write_dataframe_to_table(

@@ -101,7 +101,7 @@ widget_sample_data = dbutils.widgets.get("sample_data")
 
 # COMMAND ----------
 
-df_fs_metadata = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/metadata/metadata.delta")
+df_fs_metadata = spark.read.format("delta").load(get_value_from_yaml("paths", "feature_store_paths", "metadata"))
 display(df_fs_metadata)
 
 # COMMAND ----------
@@ -130,7 +130,7 @@ def read_fs(feature_store, list_features):
 
     return feature_store.select('user_id', 'timestamp', list_features).filter(F.col("timestamp") == F.lit(F.current_date()))
 #this reading will be modified 
-df = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df = spark.read.format("delta").load(get_value_from_yaml("paths", "feature_store_paths", "user_entity_fs"))
 df_fs = read_fs(df, df_features_to_load)
 
 # COMMAND ----------
@@ -379,4 +379,4 @@ def features_sociodemo(
         get_value_from_yaml("featurestorebundle", "entity_time_column"),
         *features_name,
     )
-df_featurs_sociodemo = features_socioemo(df_apply_model, list(metadata['features'].keys()))
+df_final = features_socioemo(df_apply_model, list(metadata['features'].keys()))

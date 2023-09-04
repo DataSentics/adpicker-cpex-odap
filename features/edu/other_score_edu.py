@@ -69,7 +69,7 @@ def get_web_features_list(fs: dp.fs.FeatureStore):
     feat_list = fs.get_metadata().filter(F.col("category").isin(DEVICES))
     return [element.feature for element in feat_list.collect()]
 
-df_metadata = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/metadata/metadata.delta")
+df_metadata = spark.read.format("delta").load(get_value_from_yaml("paths", "feature_store_paths", "metadata"))
 list_web_features_list = get_web_features_list(df_metadata)
 print(list_web_features_list)
 
@@ -79,7 +79,7 @@ def read_fs(feature_store, list_features):
 
     return feature_store.select('user_id', 'timestamp', *list_features).filter(F.col("timestamp") == F.lit(F.current_date()))
 #this reading will be modified 
-df = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df = spark.read.format("delta").load(get_value_from_yaml("paths", "feature_store_paths", "user_entity_fs"))
 df_read_web_features_from_fs = read_fs(df, list_web_features_list)
 
 # COMMAND ----------
@@ -121,7 +121,7 @@ df_get_web_binary_features =get_web_binary_features(df_read_web_features_from_fs
 
 # COMMAND ----------
 
-df_location_traits_map = spark.read.format("delta").load("/mnt/aam-cpex-dev/silver/location/location_traits_map.delta")
+df_location_traits_map = spark.read.format("delta").load(get_value_from_yaml("paths", "location_table_paths", "location_traits_map")
 
 # COMMAND ----------
 
@@ -260,7 +260,7 @@ def calculate_final_scores(df):
         F.max("timestamp").alias("timestamp"),
     )
 
-df_calculate_final_scores = calculate_final_scores(df_multiply_scores)
+df_scores = calculate_final_scores(df_multiply_scores)
 
 # COMMAND ----------
 
@@ -275,7 +275,7 @@ def save_scores(df, logger: Logger):
     return df
 
 
-df_save_scores = save_scores(df_calculate_final_scores, root_logger)
+df_save_scores = save_scores(df_scores, root_logger)
 schema, info = get_education_other_scores()
 
 write_dataframe_to_table(

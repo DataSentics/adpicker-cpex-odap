@@ -88,7 +88,7 @@ def read_fs(feature_store, list_features):
 
     return feature_store.select('user_id', 'timestamp', *list_features).filter(F.col("timestamp") == F.lit(F.current_date()))
 #this reading will be modified 
-df = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df = spark.read.format("delta").load(get_value_from_yaml("paths", "feature_store_paths", "user_entity_fs"))
 df_fs = read_fs(df, lst_features_to_load)
 
 # COMMAND ----------
@@ -229,7 +229,7 @@ def interest_score_final(df):
         ],
     )
 
-df_interest_score_final = interest_score_final(df_standard_scaler)
+df_final = interest_score_final(df_standard_scaler)
 
 # COMMAND ----------
 
@@ -243,7 +243,7 @@ def save_scores(df, logger):
     logger.info(f"Saving {df.count()} rows.")
     return df
 
-df_save_scores = save_scores(df_interest_score_final, root_logger)
+df_save_scores = save_scores(df_final, root_logger)
 schema, info = get_education_interest_scores()
 
 write_dataframe_to_table(
