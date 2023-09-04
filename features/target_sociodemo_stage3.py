@@ -157,5 +157,11 @@ display(df_final)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC
+# MAGIC #### Metadata
+
+# COMMAND ----------
+
 metadata = features_sociodemo_targets(df_aggregate_targets, "user", "sociodemo_target_features")[1]
 display(metadata)
