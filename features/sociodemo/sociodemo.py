@@ -273,8 +273,6 @@ df_replace_rare_values = replace_rare_values(df_create_url_flags, df_get_data_fe
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.notebook_function("%models.sociodemo%")
 def get_features(models_dict, table_name, category_name):
     features_dict = {
         "table":  f"{table_name}",
@@ -296,7 +294,7 @@ def get_features(models_dict, table_name, category_name):
     }
     return features_dict
 
-metadata = get_features("?????", "user", "sociodemo_features")
+metadata = get_features(get_value_from_yaml("paths", "models", "sociodemo"), "user", "sociodemo_features")
 
 # COMMAND ----------
 
@@ -307,8 +305,6 @@ metadata = get_features("?????", "user", "sociodemo_features")
 
 # COMMAND ----------
 
-#TO BE MODIFIED
-@dp.transformation(replace_rare_values, "%models.sociodemo%")
 def apply_model(df: DataFrame, models_dict, logger):
     for model in models_dict:
         logger.info(f"Applying sociodemo model {model}, with path {models_dict[model]}")
@@ -359,7 +355,7 @@ def apply_model(df: DataFrame, models_dict, logger):
     )
     return df
 
-df_apply_model = apply_model(df_replace_rare_values, "????", root_logger)
+df_apply_model = apply_model(df_replace_rare_values, get_value_from_yaml("paths", "models", "sociodemo"), root_logger)
 
 # COMMAND ----------
 
@@ -380,3 +376,12 @@ def features_sociodemo(
         *features_name,
     )
 df_final = features_socioemo(df_apply_model, list(metadata['features'].keys()))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ###Metadata
+
+# COMMAND ----------
+
+metadata = get_features(get_value_from_yaml("paths", "models", "sociodemo"), "user", "sociodemo_features")

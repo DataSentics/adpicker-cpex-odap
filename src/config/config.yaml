@@ -44,6 +44,18 @@ paths:
     user_entity_fs: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta"
     metadata: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/metadata/metadata.delta"
 
+
+  models:
+    sociodemo:
+      ageGroup_0_17: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_0'
+      ageGroup_18_24: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_1'
+      ageGroup_25_34: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_2'
+      ageGroup_35_44: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_3'
+      ageGroup_45_54: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_4'
+      ageGroup_55_64: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_5'
+      ageGroup_65_100: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_6'
+      gender_female: 'dbfs:/databricks/mlflow-tracking/3954795528264193/5132fe5240224803bf71f660a3e3ce19/artifacts/model_gender_Logreg'
+
 jobs_config:
   regular_optimization:
     keep_history_n_days: 7

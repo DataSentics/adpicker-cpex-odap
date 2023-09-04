@@ -61,7 +61,7 @@ def read_fs(feature_store):
 
     return feature_store.select('user_id', 'timestamp', *perc_features).filter(F.col("timestamp") == F.lit(F.current_date()))
 #this reading will be modified 
-df = spark.read.format("delta").load("abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta")
+df = spark.read.format("delta").load(get_value_from_yaml("paths", "feature_store_paths", "user_entity_fs"))
 df_fetch_percentiles_from_fs = read_fs(df)
 
 # COMMAND ----------
@@ -184,4 +184,13 @@ def features_abcde_model(df, features_name):
         *features_name,
     )
 
-df_features_abcde_model = features_abcde_model(df_calculate_percentiles, list(metadata['features']))
+df_final = features_abcde_model(df_calculate_percentiles, list(metadata['features']))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ###Metadata
+
+# COMMAND ----------
+
+metadata = get_features(ABCDE_MODELS_PREFIXES, "user", "abcde_score_features")
