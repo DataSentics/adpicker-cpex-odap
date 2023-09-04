@@ -42,6 +42,7 @@ paths:
 
   feature_store_paths:
     user_entity_fs: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta"
+    metadata: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/metadata/metadata.delta"
 
 jobs_config:
   regular_optimization:
