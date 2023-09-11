@@ -92,11 +92,11 @@ print(list_features_to_load)
 # COMMAND ----------
 
 def read_fs(fs_date,features_to_load):
-    fs_stage2 = (
-        spark.read.table("odap_features_user.user_stage2")
+    fs_stage1 = (
+        spark.read.table("odap_features_user.user_stage1")
         .select("user_id", "timestamp", *features_to_load)
         .filter(F.col("timestamp") == widget_timestamp))
-    return fs_stage2
+    return fs_stage1
 
 df_fs = read_fs(widget_timestamp, list_features_to_load)
 display(df_fs)
