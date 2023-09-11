@@ -67,6 +67,7 @@ def calculate_device_features(df):
     ).withColumn("timestamp", F.lit(F.current_date()))
     return df_grouped
 
+
 df_final = calculate_device_features(df_session_filtered)
 
 # COMMAND ----------
@@ -77,15 +78,15 @@ df_final = calculate_device_features(df_session_filtered)
 # COMMAND ----------
 
 metadata = {
-    "table": "user",
+    "table": "user_stage1",
     "category": "digital_device",
     "features": {
-        f"web_analytics_num_distinct_device_categories_{time_window_str}": {
-            "description": f"Number of distinct device categories (mobile, desktop, tablet, ...) in last {time_window}.",
+        "web_analytics_num_distinct_device_categories_{time_window_str}": {
+            "description": "Number of distinct device categories (mobile, desktop, tablet, ...) in last {time_window_str}.",
             "fillna_with": 0,
         },
-        f"web_analytics_channel_device_count_distinct_{time_window_str}": {
-            "description": f"Number of distinct devices used by client in last {time_window_str}.",
+        "web_analytics_channel_device_count_distinct_{time_window_str}": {
+            "description": "Number of distinct devices used by client in last {time_window_str}.",
             "fillna_with": 0,
         },
     },

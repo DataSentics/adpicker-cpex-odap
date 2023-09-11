@@ -81,7 +81,7 @@ widget_sample_data = dbutils.widgets.get("sample_data")
 def run_education_model_notebooks(timestamp):
 
     dbutils.notebook.run(
-        "interest_score_edu",
+        "../features/stage2/edu/interest_score_edu",
         10000,
         {
             "timestamp": timestamp,
@@ -89,7 +89,7 @@ def run_education_model_notebooks(timestamp):
     )
 
     dbutils.notebook.run(
-        "url_score_edu",
+        "../features/stage2/edu/url_score_edu",
         10000,
         {
             "timestamp": timestamp,
@@ -97,7 +97,7 @@ def run_education_model_notebooks(timestamp):
     )
 
     dbutils.notebook.run(
-        "other_score_edu",
+        "../features/stage2/edu/other_score_edu",
         10000,
         {
             "timestamp": timestamp,
@@ -226,7 +226,6 @@ metadata = get_features(EDUCATION_MODELS_SUFFIXES, "user", "edu_score_features")
 
 def features_income_model(df, features_name):
     
-
     return df.select(
         get_value_from_yaml("featurestorebundle", "entities", "user_entity", "id_column"),
         get_value_from_yaml("featurestorebundle", "entity_time_column"),
@@ -242,4 +241,17 @@ df_final = features_income_model(df_standardize_edu_score, list(metadata['featur
 
 # COMMAND ----------
 
-metadata = get_features(EDUCATION_MODELS_SUFFIXES, "user", "edu_score_features")
+metadata = {
+    "table": "user_stage2",
+    "category": "education_score_features",
+    "features": {
+        "edu_model_score_{category}": {
+            "description": "Education model score: {category} education level",
+            "fillna_with": None,
+        },
+        "edu_model_perc_{category}": {
+            "description": "Income model percentile: {category} education level",
+            "fillna_with": -1.0,
+        },
+    },
+}

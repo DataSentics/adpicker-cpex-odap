@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Pageview features - web visits
+# MAGIC # Pageview features - last blog visit
 # MAGIC This notebook creates the following features from `sdm_pageview` table, all in chosen last *n*-day window:
-# MAGIC - web_analytics_total_visits
+# MAGIC - web_analytics_blog_last_visit_date
 
 # COMMAND ----------
 
@@ -45,20 +45,23 @@ df_pageview_filtered = df_sdm_pageview.filter(F.col("page_screen_view_date") >= 
 
 # COMMAND ----------
 
-def calculate_distinct_web_visits(df):
-    df_grouped = (
-        df.filter(~F.col("full_url").contains("blog"))
-        .groupby("user_id")
-        .agg(
-            F.count_distinct("page_screen_view_timestamp").alias(
-                f"web_analytics_total_visits_{time_window_str}"
-            )
-        )
+def calculate_days_since_blog_visit(df):
+    df_days_column = df.withColumn(
+        "days_since_blog_view",
+        F.when(
+            F.col("full_url").contains("blog"),
+            F.datediff(F.current_date(), F.col("page_screen_view_date")),
+        ).otherwise(None),
     )
-    return df_grouped
 
+    df_group = df_days_column.groupby("user_id").agg(
+        F.min("days_since_blog_view").alias(
+            f"web_analytics_blog_days_since_last_visit_{time_window_str}"
+        )
+    ).withColumn("timestamp", F.lit(F.current_date()))
+    return df_group
 
-df_final = calculate_distinct_web_visits(df_pageview_filtered)
+df_final = calculate_days_since_blog_visit(df_pageview_filtered)
 
 # COMMAND ----------
 
@@ -69,12 +72,12 @@ df_final = calculate_distinct_web_visits(df_pageview_filtered)
 # COMMAND ----------
 
 metadata = {
-    "table": "user",
+    "table": "user_stage1",
     "category": "digital_device",
     "features": {
-        f"web_analytics_total_visits_{time_window_str}": {
-            "description": f"Number of total web page visits by the client in last {time_window_str}.",
-            "fillna_with": 0,
+        "web_analytics_blog_days_since_last_visit_{time_window_str}": {
+            "description": "Number of days since the last visit of the blog on the web page in last {time_window_str}.",
+            "fillna_with": None,
         },
     },
 }

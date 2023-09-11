@@ -75,7 +75,7 @@ def calculate_visit_time_most_common(df_session_with_visit_period):
     return df
 
 
-df_visit_time = calculate_visit_time_most_common(df_session_with_visit_period)
+df_final = calculate_visit_time_most_common(df_session_with_visit_period)
 
 # COMMAND ----------
 
@@ -86,11 +86,11 @@ df_visit_time = calculate_visit_time_most_common(df_session_with_visit_period)
 # COMMAND ----------
 
 metadata = {
-    "table": "user",
+    "table": "user_stage1",
     "category": "digital_device",
     "features": {
-        f"web_analytics_visit_time_most_common_{time_window_str}": {
-            "description": f"Most common part of the day when visiting website in last {time_window_str}.",
+        "web_analytics_visit_time_most_common_{time_window_str}": {
+            "description": "Most common part of the day when visiting website in last {time_window_str}.",
             "fillna_with": None,
         },
     },

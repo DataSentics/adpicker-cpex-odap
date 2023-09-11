@@ -5,11 +5,18 @@
 
 from collections import namedtuple
 from pyspark.sql.dataframe import DataFrame
+
 import pyspark.sql.functions as F
 
-from src.utils.helper_functions_defined_by_user.process_loaded_interests import process_loaded_interests
-from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
-from src.utils.helper_functions_defined_by_user.indexes_calculator import indexes_calculator
+from src.utils.helper_functions_defined_by_user.yaml_functions import (
+    get_value_from_yaml,
+)
+from src.utils.helper_functions_defined_by_user.process_loaded_interests import (
+    process_loaded_interests,
+)
+from src.utils.helper_functions_defined_by_user.indexes_calculator import (
+    indexes_calculator,
+)
 
 Interest = namedtuple("Interest", ["keywords", "general_interest"])
 
@@ -36,7 +43,6 @@ widget_use_biagrams = dbutils.widgets.get("use_biagrams")
 # COMMAND ----------
 
 def tokenized_domains(df: DataFrame, entity, timestamp):
-
     return (df.withColumn(entity, F.lit(timestamp)))
     
 df_sdm_tokenized_domains = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_tokenized_domains"))
@@ -49,18 +55,37 @@ df_tokenized_domains = tokenized_domains(df_sdm_tokenized_domains, "timestamp", 
 # COMMAND ----------
 
 def read_interests(df: DataFrame, tokens_version):
-    
-    loaded_interests = process_loaded_interests(df=df, general_interests=True, keyword_variant=tokens_version)
+    loaded_interests = process_loaded_interests(df=df, general_interests=False, keyword_variant=tokens_version)
 
     return loaded_interests
 
-df_intersts_definition = spark.read.format("delta").load(get_value_from_yaml("paths", "interests_table_paths", "interests_definition"))
-
-dict_interests = read_interests(df_intersts_definition, widget_tokens_version)
+df_interests_definition = spark.read.format("delta").load(get_value_from_yaml("paths", "interests_table_paths", "interests_definition"))
+dict_interests = read_interests(df_interests_definition, widget_tokens_version)
 
 # COMMAND ----------
 
-# MAGIC %md Define features
+# MAGIC %md 
+# MAGIC #### Define metadata
+
+# COMMAND ----------
+
+def get_features(dict_with_interests: dict, table_name, category_name):
+    features_dict = {
+    "table":  f"{table_name}",
+    "category": f"{category_name}",
+    "features":{}
+    }
+
+    for subinterest, interest in dict_with_interests.items():
+         features_dict['features'][f"{subinterest}"] = {
+        "description": f"General Interest: {interest.general_interest}; Subinterest: {subinterest.replace('_', ' ')}",
+        "fillna_with": 0.0,
+        "type": "numerical"
+    }
+    return features_dict
+
+
+metadata = get_features(dict_interests["tuple"], "user_stage1", "subinterest_affinity_features")
 
 # COMMAND ----------
 
@@ -119,8 +144,12 @@ df_joined_interests_with_stats = get_joined_interests_with_stats(df_tokenized_do
 
 # COMMAND ----------
 
-def features_digi_interests(joined_interests_with_stats: DataFrame, interest_names: list, 
-                            id_column="user_id", time_column="timestamp"):
+def features_digi_interests(
+    joined_interests_with_stats: DataFrame,
+    interest_names: list,
+    id_column="user_id",
+    time_column="timestamp",
+):
     interest_affinities = indexes_calculator(
         joined_interests_with_stats,
         interest_names,
@@ -134,7 +163,10 @@ def features_digi_interests(joined_interests_with_stats: DataFrame, interest_nam
         *interest_names,
     )
 
-df_final = features_digi_interests(df_joined_interests_with_stats, list(metadata['features'].keys()))
+
+df_final = features_digi_interests(
+    df_joined_interests_with_stats, list(metadata["features"].keys())
+).withColumn("timestamp", F.current_date()) 
 
 # COMMAND ----------
 
@@ -144,21 +176,13 @@ df_final = features_digi_interests(df_joined_interests_with_stats, list(metadata
 
 # COMMAND ----------
 
-def get_features(dict_with_interests: dict, table_name, category_name):
-    features_dict = {
-    "table":  f"{table_name}",
-    "category": f"{category_name}",
-    "features":{}
-    }
-
-    for subinterest, interest in dict_with_interests.items():
-         features_dict['features'][f"{subinterest}"] = {
-        "description": f"General Interest: {interest.general_interest}; Subinterest: {subinterest.replace('_', ' ')}",
-        "fillna_with": 0.0,
-        "type": "numerical"
-    }
-    return features_dict
-
-# COMMAND ----------
-
-metadata = get_features(dict_interests['tuple'], "user", "general_interest_affinity_features" )
+metadata = {
+    "table": "user_stage1",
+    "category": "subinterest_affinity_features",
+    "features": {
+         "ad_interest_affinity_{interest}": {
+            "description": "Subinterest: ad interest affinity {interest}", 
+            "fillna_with": 0.0
+         }
+     }
+}

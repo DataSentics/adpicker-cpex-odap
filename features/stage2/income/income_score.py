@@ -82,7 +82,7 @@ widget_sample_data = dbutils.widgets.get("sample_data")
 def run_income_model_notebooks(timestamp):
 
     dbutils.notebook.run(
-        "interest_score_income",
+        "../features/stage2/income/interest_score_income",
         10000,
         {
             "timestamp": timestamp,
@@ -90,7 +90,7 @@ def run_income_model_notebooks(timestamp):
     )
 
     dbutils.notebook.run(
-        "url_score_income",
+        "../features/stage2/income/url_score_income",
         10000,
         {
             "timestamp": timestamp,
@@ -98,7 +98,7 @@ def run_income_model_notebooks(timestamp):
     )
 
     dbutils.notebook.run(
-        "other_score_income",
+        "../features/stage2/income/other_score_income",
         10000,
         {
             "timestamp": timestamp,
@@ -129,7 +129,7 @@ def join_all_tables(interest_final, url_final, other_final, logger):
         .na.drop()
     )
 
-    logger.info(f"Share of full rows: {100*df.count()/interest_final.count()}%.")
+    logger.info(f"Share of full rows: {100 * df.count() / interest_final.count()}%.")
     return df
 
 df_income_interest_scores = spark.read.format("delta").load(get_value_from_yaml("paths", "income_table_paths", "income_interest_scores"))
@@ -201,14 +201,14 @@ def get_features(sufixes, table_name, category_name):
         }
     
     for model in sufixes:
-        features_dict['features'][f"income_model_score_{model}"] = {
+        features_dict["features"][f"income_model_score_{model}"] = {
         "description": f"Income model score: {model.capitalize()} income users",
         "fillna_with": None,
         "type": "numerical"
         }
 
     for model in sufixes:
-        features_dict['features'][f"income_model_perc_{model}"] = {
+        features_dict["features"][f"income_model_perc_{model}"] = {
         "description": f"Income model percentile: {model.capitalize()} income users",
         "fillna_with": -1.0,
         "type": "numerical"
@@ -216,7 +216,7 @@ def get_features(sufixes, table_name, category_name):
 
     return features_dict
 
-metadata = get_features(INCOME_MODELS_SUFFIXES, "user", "income_score_features" )
+metadata = get_features(INCOME_MODELS_SUFFIXES, "user", "income_score_features")
 
 # COMMAND ----------
 
@@ -225,7 +225,6 @@ metadata = get_features(INCOME_MODELS_SUFFIXES, "user", "income_score_features" 
 # MAGIC ## Write features
 
 # COMMAND ----------
-
 
 def features_income_model(df, features_name):
 
@@ -245,4 +244,17 @@ df_final = features_income_model(df_standardize_income_score, list(metadata["fea
 
 # COMMAND ----------
 
-metadata = get_features(INCOME_MODELS_SUFFIXES, "user", "income_score_features" )
+metadata = {
+    "table": "user_stage2",
+    "category": "income_score_features",
+    "features": {
+        "income_model_score_{category}": {
+            "description": "Income model score: {category} income users",
+            "fillna_with": None,
+        },
+        "income_model_perc_{category}": {
+            "description": "Income model percentile: {category} income users",
+            "fillna_with": -1.0,
+        },
+    },
+}

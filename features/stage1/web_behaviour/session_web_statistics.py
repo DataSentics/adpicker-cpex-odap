@@ -81,14 +81,13 @@ def calculate_web_statistics(df):
             ),
             2,
         ),
-    )
+    ).withColumn("timestamp", F.lit(F.current_date()))
 
     cols_to_drop = [f"distinct_cookies_{time_window_str}", f"min_session_start_{time_window_str}", f"max_session_start_{time_window_str}"]
     return df_web_statistics.drop(*cols_to_drop)
 
 
-df_web_statistics = calculate_web_statistics(df_session_filtered)
-df_web_statistics.display()
+df_final = calculate_web_statistics(df_session_filtered)
 
 # COMMAND ----------
 
@@ -98,19 +97,19 @@ df_web_statistics.display()
 # COMMAND ----------
 
 metadata = {
-    "table": "user",
+    "table": "user_stage1",
     "category": "digital_device",
     "features": {
-        f"web_analytics_time_on_site_average_{time_window_str}": {
-            "description": f"Average duration of the web session in last {time_window_str} expressed in seconds.",
+        "web_analytics_time_on_site_avg_{time_window_str}": {
+            "description": "Average duration of the web session in last {time_window_str} expressed in seconds.",
             "fillna_with": 0,
         },
-        f"web_analytics_web_active_{time_window_str}": {
-            "description": f"Indicator whether the client was active on web in last {time_window_str}.",
+        "web_analytics_web_active_{time_window_str}": {
+            "description": "Indicator whether the client was active on web in last {time_window_str}.",
             "fillna_with": 0,
         },
-        f"web_analytics_web_security_affinity_{time_window_str}": {
-            "description": f"Score of how much the client cares about web security in last {time_window_str}.",
+        "web_analytics_web_security_affinity_{time_window_str}": {
+            "description": "Score of how much the client cares about web security in last {time_window_str}.",
             "fillna_with": 0,
         },
     },

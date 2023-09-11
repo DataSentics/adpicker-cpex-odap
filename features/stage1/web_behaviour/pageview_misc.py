@@ -92,7 +92,7 @@ def calculate_pageview_misc(df):
             f"owner_names_{time_window_str}", F.concat_ws(",", F.col("owner_name_set"))
         )
         .drop("owner_name_set")
-    )
+    ).withColumn("timestamp", F.lit(F.current_date()))
     return df_grouped
 
 
@@ -107,23 +107,23 @@ df_final = calculate_pageview_misc(df_pageview_with_search_engine)
 # COMMAND ----------
 
 metadata = {
-    "table": "user",
+    "table": "user_stage1",
     "category": "digital_device",
     "features": {
-        f"web_analytics_pageviews_sum_{time_window_str}": {
-            "description": f"Total number of viewed pageviews on a bank website in last {time_window_str}.",
+        "web_analytics_pageviews_sum_{time_window_str}": {
+            "description": "Total number of viewed pageviews on a bank website in last {time_window_str}.",
             "fillna_with": 0,
         },
-        f"web_analytics_page_search_engine_most_common{time_window_str}": {
-            "description": f"Most common page screen search engine used by client in last {time_window_str}.",
+        "web_analytics_page_search_engine_most_common{time_window_str}": {
+            "description": "Most common page screen search engine used by client in last {time_window_str}.",
             "fillna_with": None,
         },
-        f"web_analytics_page_search_engine_last_used_{time_window_str}": {
-            "description": f"Last page screen search engine used by client in last {time_window_str}.",
+        "web_analytics_page_search_engine_last_used_{time_window_str}": {
+            "description": "Last page screen search engine used by client in last {time_window_str}.",
             "fillna_with": None,
         },
-        f"owner_names_{time_window_str}": {
-            "description": f"List of publishers in last {time_window_str}.",
+        "owner_names_{time_window_str}": {
+            "description": "List of publishers in last {time_window_str}.",
             "fillna_with": "unknown"
         },
     },

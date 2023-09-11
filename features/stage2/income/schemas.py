@@ -48,7 +48,7 @@ def get_income_url_scores():
             T.StructField('user_id', T.StringType(),True),
             T.StructField('timestamp', T.TimestampType(),True),
              T.StructField('collected_urls', T.ArrayType(T.StringType(),True), True),
-            T.StructField('final_other_score_low', T.DoubleType(),True),
+            T.StructField('final_url_score_low', T.DoubleType(),True),
             T.StructField('final_url_score_mid', T.DoubleType(),True),
             T.StructField('final_url_score_high', T.DoubleType(),True),
             

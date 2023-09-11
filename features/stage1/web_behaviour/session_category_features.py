@@ -94,6 +94,7 @@ def calculate_category_features(df):
     ).withColumn("timestamp", F.lit(F.current_date()))
     return df_grouped
 
+
 df_final = calculate_category_features(df_session_filtered)
 
 # COMMAND ----------
@@ -105,31 +106,15 @@ df_final = calculate_category_features(df_session_filtered)
 # COMMAND ----------
 
 metadata = {
-    "table": "user",
+    "table": "user_stage1",
     "category": "digital_device",
     "features": {
-        f"web_analytics_device_type_most_common_{time_window_str}": {
-            "description": f"Most common device type used by client in last {time_window_str}.",
+        "web_analytics_device_{element}_most_common_{time_window_str}": {
+            "description": "Most common device {element} used by client in last {time_window_str}.",
             "fillna_with": None,
         },
-        f"web_analytics_device_type_last_used_{time_window_str}": {
-            "description": f"Last device type used by client in last {time_window_str}.",
-            "fillna_with": None,
-        },
-        f"web_analytics_device_browser_most_common_{time_window_str}": {
-            "description": f"Most common browser used by client in last {time_window_str}.",
-            "fillna_with": None,
-        },
-        f"web_analytics_device_browser_last_used_{time_window_str}": {
-            "description": f"Last browser used by client in last {time_window_str}.",
-            "fillna_with": None,
-        },
-        f"web_analytics_device_os_most_common_{time_window_str}": {
-            "description": f"Most common device operating system used by client in last {time_window_str}.",
-            "fillna_with": None,
-        },
-        f"web_analytics_device_os_last_used_{time_window_str}": {
-            "description":  f"Last device operating system used by client in last {time_window_str}.",
+        "web_analytics_device_{element}_last_used_{time_window_str}": {
+            "description": "Last device {element} used by client in the last {time_window_str}.",
             "fillna_with": None,
         },
     },

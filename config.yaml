@@ -13,8 +13,8 @@ parameters:
 
     entities:
         user:
-        id_column: "user_id"
-        id_column_type: "string"
+          id_column: "user_id"
+          id_column_type: "string"
 
   segmentfactory:
     catalog: "hive_metastore"

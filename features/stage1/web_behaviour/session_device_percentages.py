@@ -19,6 +19,8 @@ import pyspark.sql.functions as F
 import re
 
 from pyspark.sql.window import Window
+from functools import reduce 
+from operator import add
 
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
@@ -70,18 +72,18 @@ def calculate_device_percentage(df):
     df_percentages = df_summed
     for device in device_list:
         df_percentages = df_percentages.withColumn(
-            f"{device}_avg_users_{time_window_str}",
+            f"web_analytics_{device}_user_{time_window_str}",
             F.round(F.col(f"count_{device}_{time_window_str}") / F.col("total"), 1),
         )
     cols_to_drop = [
         "total",
         *[f"count_{device}_{time_window_str}" for device in device_list],
     ]
-    df_final = df_percentages.drop(*cols_to_drop)
+    df_final = df_percentages.drop(*cols_to_drop).withColumn("timestamp", F.lit(F.current_date()))
     return df_final
 
 
-df_device_percentage = calculate_device_percentage(df_session_filtered)
+df_final = calculate_device_percentage(df_session_filtered)
 
 # COMMAND ----------
 
@@ -92,23 +94,11 @@ df_device_percentage = calculate_device_percentage(df_session_filtered)
 # COMMAND ----------
 
 metadata = {
-    "table": "user",
+    "table": "user_stage1",
     "category": "digital_device",
     "features": {
-        f"web_analytics_mobile_user_{time_window_str}": {
-            "description": f"Percentage of mobile visits in last {time_window_str}.",
-            "fillna_with": 0,
-        },
-        f"web_analytics_desktop_user_{time_window_str}": {
-            "description": f"Percentage of desktop visits in last {time_window_str}.",
-            "fillna_with": 0,
-        },
-        f"web_analytics_tablet_user_{time_window_str}": {
-            "description": f"Percentage of tablet visits in last {time_window_str}.",
-            "fillna_with": 0,
-        },
-        f"web_analytics_smart_tv_user_{time_window_str}": {
-            "description": f"Percentage of smart_tv visits in last {time_window_str}.",
+        "web_analytics_{device}_user_{time_window_str}": {
+            "description": "Percentage of {device} visits in last {time_window_str}.",
             "fillna_with": 0,
         },
     },

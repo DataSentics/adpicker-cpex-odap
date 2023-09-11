@@ -31,9 +31,8 @@ from src.utils.helper_functions_defined_by_user._abcde_utils import (
 )
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
 from schemas import get_income_url_scores
-
-
 
 # COMMAND ----------
 
@@ -154,10 +153,11 @@ check_row_number_joined(df_join_datasets, root_logger)
 
 # COMMAND ----------
 
-def load_url_scores(df):
+def load_url_scores():
+    df = spark.read.format("delta").load(get_value_from_yaml("paths", "income_table_paths", "income_url_coeffs")) 
     return df.withColumnRenamed("domain", "URL_DOMAIN_2_LEVEL")
 
-df_income_url_coeffs = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "income_url_coeffs"))
+df_income_url_coeffs = load_url_scores()
 
 # COMMAND ----------
 
@@ -334,7 +334,7 @@ def save_scores(df, logger):
     return df
 
 df_save_scores = save_scores(df_final, root_logger)
-schema, info = get_income_interest_scores()
+schema, info = get_income_url_scores() 
 
 write_dataframe_to_table(
     df_save_scores,

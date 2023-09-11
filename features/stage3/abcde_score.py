@@ -12,7 +12,6 @@
 
 # COMMAND ----------
 
-
 import pyspark.sql.functions as F
 
 from pyspark.sql.window import Window
@@ -56,13 +55,20 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 
 # COMMAND ----------
 
-def read_fs(feature_store):
-    perc_features = [f"income_model_perc_{model}" for model in INCOME_MODELS_SUFFIXES] + [f"edu_model_perc_{model}" for model in EDUCATION_MODELS_SUFFIXES]
+def read_fs():
+    perc_features = [
+        f"income_model_perc_{model}" for model in INCOME_MODELS_SUFFIXES
+    ] + [f"edu_model_perc_{model}" for model in EDUCATION_MODELS_SUFFIXES]
+    
+    fs_stage2 = (
+        spark.read.table("odap_features_user.user_stage2")
+        .select("user_id", "timestamp", *perc_features)
+        .filter(F.col("timestamp") == widget_timestamp)
+    )
+    return fs_stage2
 
-    return feature_store.select('user_id', 'timestamp', *perc_features).filter(F.col("timestamp") == F.lit(F.current_date()))
-#this reading will be modified 
-df = spark.read.format("delta").load(get_value_from_yaml("paths", "feature_store_paths", "user_entity_fs"))
-df_fetch_percentiles_from_fs = read_fs(df)
+df_fs = read_fs()
+df_fs.display()
 
 # COMMAND ----------
 
@@ -96,7 +102,7 @@ def calculate_combinations(df):
         *[col for level in INCOME_MODELS_SUFFIXES for col in _calc_for_level(level)],
     )
 
-df_calculate_ombinations = calculate_combinations(df_fetch_percentiles_from_fs)
+df_calculate_combinations = calculate_combinations(df_fs)
 
 # COMMAND ----------
 
@@ -114,7 +120,7 @@ def define_brackets(df):
         F.greatest("low_zs", "low_ss_no").alias("E_score"),
     )
 
-df_define_brackets = define_brackets(df_calculate_ombinations)
+df_define_brackets = define_brackets(df_calculate_combinations)
 
 # COMMAND ----------
 
@@ -138,53 +144,7 @@ def calculate_percentiles(df):
         ],
     )
 
-df_calculate_percentiles = calculate_percentiles(df_define_brackets)
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC
-# MAGIC ## Define and write features
-
-# COMMAND ----------
-
-def get_features(sufixes, table_name, category_name):
-
-    features_dict = {
-    "table":  f"{table_name}",
-    "category": f"{category_name}",
-    "features":{}
-    }
-
-    for model in sufixes:
-        features_dict['features'][f"{model}_score"] = {
-        "description": f"ABCDE model score: Segment {model.upper()}",
-        "fillna_with": None,
-        "type": "numerical"
-        }
-    
-    for model in sufixes:
-        features_dict['features'][f"{model}_perc"] = {
-        "description": f"ABCDE model percentile: Segment {model.upper()}",
-        "fillna_with": -1.0,
-        "type": "numerical"
-        }
-
-    return features_dict
-
-metadata = get_features(ABCDE_MODELS_PREFIXES, "user", "abcde_score_features")
-
-# COMMAND ----------
-
-def features_abcde_model(df, features_name):
-    
-    return df.select(
-        get_value_from_yaml("featurestorebundle", "entities", "user_entity", "id_column"),
-        get_value_from_yaml("featurestorebundle", "entity_time_column"),
-        *features_name,
-    )
-
-df_final = features_abcde_model(df_calculate_percentiles, list(metadata['features']))
+df_final = calculate_percentiles(df_define_brackets)
 
 # COMMAND ----------
 
@@ -193,4 +153,17 @@ df_final = features_abcde_model(df_calculate_percentiles, list(metadata['feature
 
 # COMMAND ----------
 
-metadata = get_features(ABCDE_MODELS_PREFIXES, "user", "abcde_score_features")
+metadata =  {
+    "table":  "user_stage3",
+    "category": "ABCDE_score_features",
+    "features": {
+        "{category}_score": {
+            "description": "ABCDE model score: Segment {category}",
+            "fillna_with": None,
+        },
+        "{category}_perc": {
+            "description": "ABCDE model percentile: Segment {category}",
+            "fillna_with": -1.0,
+        },
+    }
+    }
