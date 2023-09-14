@@ -1,0 +1,14 @@
+name: test-action
+on:
+  push:
+    branches:
+      - github_actions_branch
+
+jobs:
+  print-job:
+    name: My Job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print smth
+        run:
+          echo "this is a test"
