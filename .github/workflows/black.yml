@@ -1,9 +1,10 @@
 name: black-formatter
-run-name: Triggered by @${{ github.actor }}
+run-name: Check code format merged by @${{ github.actor }}
 on:
-  push:
+  pull_request:
     branches:
-      - github_actions_branch
+      - main
+      - develop
 
 jobs:
   black:
