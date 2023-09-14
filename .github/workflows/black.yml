@@ -1,16 +1,23 @@
-name: black-formatter
-run-name: Check code format merged by @${{ github.actor }}
+name: Black Install Check
+
 on:
-  pull_request:
+  push:
     branches:
-      - main
-      - develop
+      - github_actions_branch
 
 jobs:
-  black:
-    name: runner / black formatter
+  black-check:
+    name: Check Python scripts formatting with Black
     runs-on: ubuntu-latest
+
     steps:
-      - uses: rickstaa/action-black@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          black_args: ". --check"
+          python-version: 3.11.4  # Replace 'x' with your desired Python version
+
+      - name: Install dependencies
+        run: pip install black
