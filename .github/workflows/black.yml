@@ -1,9 +1,10 @@
 name: Black Install Check
 
 on:
-  push:
+  pull_request:
     branches:
-      - github_actions_branch
+      - develop
+      - main
 
 jobs:
   black-check:
