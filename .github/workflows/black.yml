@@ -1,11 +1,12 @@
-name: test-action
+name: black-formatter
+run-name: Triggered by @${{ github.actor }}
 on:
   push:
     branches:
       - github_actions_branch
 
 jobs:
-  linter_name:
+  black:
     name: runner / black formatter
     runs-on: ubuntu-latest
     steps:
