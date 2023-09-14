@@ -5,10 +5,8 @@ on:
       - github_actions_branch
 
 jobs:
-  print-job:
-    name: My Job
+  linter_name:
+    name: runner / black formatter
     runs-on: ubuntu-latest
     steps:
-      - name: Print smth
-        run:
-          echo "this is a test"
+      - uses: rickstaa/action-black@v1
