@@ -1,5 +1,20 @@
 import os
 import yaml
+import re 
+
+
+def find_and_replace_percent_substrings(source_string):
+    pattern = r"%(.*?)%"
+    matches = re.findall(pattern, source_string)
+
+    for find in matches: 
+        try:
+            replacement = os.getenv(find)
+            source_string = re.sub(f"%{find}%", os.getenv(find), source_string)
+        except TypeError: 
+            raise Exception("Could not replace special substring; check if substring is defined in cluster environment variables.")
+
+    return source_string
 
 # function to get a value from a .yaml file by passing name of keys
 def get_value_from_yaml(*keys):
@@ -27,7 +42,11 @@ def get_value_from_yaml(*keys):
                 data = data[key]
             else:
                 raise KeyError(f"Key '{key}' not found in the YAML file.")
-            
+
+        if isinstance(data, str):
+            final_string = find_and_replace_percent_substrings(data)    
+            return final_string
+
         return data
 
 
