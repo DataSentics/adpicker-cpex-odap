@@ -26,7 +26,7 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
 )
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
-from schema_parse_to_delta import get_schema_cpex_piano_cleansed
+from src.schemas.bronze_schema import get_schema_cpex_piano_cleansed
 
 # COMMAND ----------
 
@@ -60,7 +60,7 @@ widget_series_length = dbutils.widgets.get("series_length")
 def create_bronze_cpex_piano(series_length):
     if series_length == "long":
         if not delta_table_exists(
-            get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano")
+            get_value_from_yaml("paths", "cpex_table_piano")
         ):
 
             schema, info = get_schema_cpex_piano_cleansed()
@@ -68,7 +68,7 @@ def create_bronze_cpex_piano(series_length):
 
             write_dataframe_to_table(
                 df_empty,
-                get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano"),
+                get_value_from_yaml("paths", "cpex_table_piano"),
                 schema,
                 "default",
                 root_logger,
@@ -92,7 +92,7 @@ def max_upload_date(df: DataFrame, series_length):
 
 
 df_bronze_cpex_piano = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano")
+    get_value_from_yaml("paths", "cpex_table_piano")
 )
 df_max_upload_date = max_upload_date(df_bronze_cpex_piano, widget_series_length)
 
@@ -243,6 +243,9 @@ get_jsons(relevant_folders_list, root_logger)
 def load_raw_delta(
     relevant_folders, series_length, destination_max_date, n_hours_short, logger: Logger
 ):
+    fetched_schema, info = get_schema_cpex_piano_cleansed()
+    user_params_expected_schema = fetched_schema["userParameters"].simpleString().split(":", 1)[1]
+    external_id_expected_schema = fetched_schema["externalUserIds"].simpleString().split(":", 1)[1]
 
     df_to_union = []
     for folder in relevant_folders:
@@ -254,21 +257,29 @@ def load_raw_delta(
             elem_path = elem.path.split(":")[1]
             df = spark.read.format("delta").load(elem_path)
 
-            # New data hotfix with nullability (schema enforcement) assurance
-            df = df.withColumn(
-                "userParameters",
-                F.when(
-                    F.col("userParameters").isNotNull(),
-                    F.array().cast(T.ArrayType(T.StringType())),
-                ).otherwise(F.lit(None)),
-            )
-            df = df.withColumn(
-                "externalUserIds",
-                F.when(
-                    F.col("externalUserIds").isNotNull(),
-                    F.array().cast(T.ArrayType(T.StringType())),
-                ).otherwise(F.lit(None)),
-            )
+            # Standardize schema of array<struct> columns
+            user_params_schema = df.select("userParameters").dtypes[0][1]
+            external_id_schema = df.select("externalUserIds").dtypes[0][1]
+
+            if external_id_schema == external_id_expected_schema:
+                df = df.withColumn("externalUserIds", 
+                               F.array(F.struct((F.col("externalUserIds.id")[0]).alias("id"), 
+                                                (F.col("externalUserIds.type")[0]).alias("type"))
+                               ))
+            else: raise Exception(f"Schema mismatch in externalUserIds column on path {elem_path}!")
+            
+            if user_params_schema == user_params_expected_schema:
+                df = df.withColumn("userParameters", 
+                               F.array(F.struct((F.col("userParameters.group")[0]).alias("group"), 
+                                                (F.col("userParameters.item")[0]).alias("item"))
+                                       ))
+            elif user_params_schema == "array<string>":
+                df = df.withColumn("userParameters", 
+                                   F.array(F.struct(F.lit(None).cast("string").alias("group"), 
+                                                    F.lit(None).cast("string").alias("item"))
+                                           ))
+            else: raise Exception(f"Schema mismatch in userParameters column on path {elem_path}!")
+
             df_to_union.append(df)
             logger.info(f"Source file: {elem_path} appended")
 
@@ -336,7 +347,7 @@ def save(df: DataFrame, series_length):
 
         write_dataframe_to_table(
             df,
-            get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano"),
+            get_value_from_yaml("paths", "cpex_table_piano"),
             schema,
             "append",
             root_logger,
@@ -348,7 +359,7 @@ def save(df: DataFrame, series_length):
 
         write_dataframe_to_table(
             df,
-            get_value_from_yaml("paths", "piano_table_paths", "cpex_table_short_piano"),
+            get_value_from_yaml("paths", "cpex_table_short_piano"),
             schema,
             "overwrite",
             root_logger,
