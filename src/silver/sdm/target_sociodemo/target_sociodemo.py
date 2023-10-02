@@ -17,7 +17,7 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 
-from schema import get_schema
+from src.schemas.sociodemo_target_schema import get_sociodemo_target_schema
 
 # COMMAND ----------
 
@@ -68,7 +68,7 @@ def load_silver(df: DataFrame, end_date: str, n_days: str):
 
 
 df_bronze_cpex_piano = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano")
+    get_value_from_yaml("paths", "cpex_table_piano")
 )
 df_silver_cpex_piano = load_silver(df_bronze_cpex_piano, widget_end_date, widget_n_days)
 
@@ -110,11 +110,11 @@ df_preprocessing = preprocessing(df_silver_cpex_piano)
 
 # COMMAND ----------
 
-schema, info = get_schema()
+schema, info = get_sociodemo_target_schema()
 
 write_dataframe_to_table(
     df_preprocessing,
-    get_value_from_yaml("paths", "sdm_table_paths", "sdm_sociodemo_targets"),
+    get_value_from_yaml("paths", "sdm_sociodemo_targets"),
     schema,
     "overwrite",
     root_logger,

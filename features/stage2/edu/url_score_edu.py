@@ -33,7 +33,7 @@ from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml.functions import vector_to_array
 from scipy.stats import boxcox
 from logging import Logger
-from schemas import get_education_url_scores
+from src.schemas.education_schemas import get_education_url_scores
 
 # COMMAND ----------
 
@@ -94,7 +94,7 @@ def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger):
         "flag_publisher",
         F.lit(end_date).cast("timestamp").alias("timestamp"),
     )
-df_sdm_pageview = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_pageview"))
+df_sdm_pageview = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_pageview"))
 df_load_sdm_pageview = load_sdm_pageview(df_sdm_pageview, widget_timestamp, widget_n_days, root_logger)
 
 # COMMAND ----------
@@ -110,7 +110,7 @@ def load_sdm_url(df: DataFrame):
         "URL_NORMALIZED", "URL_TITLE", "URL_DOMAIN_1_LEVEL", "URL_DOMAIN_2_LEVEL"
     )
 
-df_sdm_url = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_url"))
+df_sdm_url = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_url"))
 df_load_sdm_url = load_sdm_url(df_sdm_url)
 
 # COMMAND ----------
@@ -139,7 +139,10 @@ df_join_datasets = join_datasets(df_load_sdm_pageview, df_load_sdm_url)
 def load_url_scores(df):
     return df.withColumnRenamed("domain", "URL_DOMAIN_2_LEVEL")
 
-df_education_url_coeffs = spark.read.format("delta").load(get_value_from_yaml("paths", "education_table_paths", "education_url_coeffs"))
+
+df_education_url_coeffs = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "education_url_coeffs")
+)
 df_load_url_scores = load_url_scores(df_education_url_coeffs)
 
 # COMMAND ----------
@@ -319,7 +322,7 @@ schema, info = get_education_url_scores()
 
 write_dataframe_to_table(
     df_save_scores,
-    get_value_from_yaml("paths", "education_table_paths", "education_url_scores"),
+    get_value_from_yaml("paths", "education_url_scores"),
     schema,
     "overwrite",
     root_logger,

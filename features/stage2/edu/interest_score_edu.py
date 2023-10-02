@@ -26,7 +26,7 @@ from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml.functions import vector_to_array
 from scipy.stats import boxcox
-from schemas import get_education_interest_scores
+from src.schemas.education_schemas import get_education_interest_scores
 
 # COMMAND ----------
 
@@ -67,7 +67,7 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 # COMMAND ----------
 
 df_education_interest_coeffs = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "education_table_paths", "education_interest_coeffs")
+    get_value_from_yaml("paths", "education_interest_coeffs")
 )
 
 # COMMAND ----------
@@ -84,15 +84,6 @@ def features_to_load(df):
     return lst
 
 lst_features_to_load = features_to_load(df_education_interest_coeffs)
-
-# COMMAND ----------
-
-# def read_fs(feature_store, list_features):
-
-#     return feature_store.select('user_id', 'timestamp', *list_features).filter(F.col("timestamp") == F.lit(F.current_date()))
-#this reading will be modified 
-# df = spark.read.format("delta").load(get_value_from_yaml("paths", "feature_store_paths", "user_entity_fs"))
-# df_fs = read_fs(df, lst_features_to_load)
 
 # COMMAND ----------
 
@@ -264,7 +255,7 @@ schema, info = get_education_interest_scores()
 
 write_dataframe_to_table(
     df_save_scores,
-    get_value_from_yaml("paths", "education_table_paths", "education_interest_scores"),
+    get_value_from_yaml("paths", "education_interest_scores"),
     schema,
     "overwrite",
     root_logger,

@@ -23,7 +23,7 @@ from src.utils.helper_functions_defined_by_user._abcde_utils import convert_trai
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-from schemas import get_education_other_scores
+from src.schemas.education_schemas import get_education_other_scores
 
 
 # COMMAND ----------
@@ -75,21 +75,8 @@ def get_web_features_list(df):
     feat_list = df.filter(F.col("category").isin(DEVICES))
     return [element.feature for element in feat_list.collect()]
 
-df_metadata = spark.read.format("delta").load(get_value_from_yaml("paths", "feature_store_paths", "metadata"))
+df_metadata = spark.read.format("delta").load(get_value_from_yaml("paths", "metadata"))
 list_web_features_list = get_web_features_list(df_metadata)
-
-# quick hotfix before metadata repair
-list_web_features_list.remove("web_analytics_time_on_site_avg_7d")
-list_web_features_list.append("web_analytics_time_on_site_average_7d")
-
-# COMMAND ----------
-
-# def read_fs(feature_store, list_features):
-
-#     return feature_store.select('user_id', 'timestamp', *list_features).filter(F.col("timestamp") == F.lit(F.current_date()))
-#this reading will be modified 
-# df = spark.read.format("delta").load(get_value_from_yaml("paths", "feature_store_paths", "user_entity_fs"))
-# df_read_web_features_from_fs = read_fs(df, list_web_features_list)
 
 # COMMAND ----------
 
@@ -143,11 +130,15 @@ df_get_web_binary_features =get_web_binary_features(df_read_web_features)
 
 # COMMAND ----------
 
-df_location_traits_map = spark.read.format("delta").load(get_value_from_yaml("paths", "location_table_paths", "location_traits_map"))
+df_location_traits_map = (
+    spark.read.format("delta")
+    .load(get_value_from_yaml("paths", "location_traits_map"))
+    .withColumnRenamed("TRAIT", "segment_id")
+)
 
 # COMMAND ----------
 
-df_user_traits = spark.read.format("delta").load(get_value_from_yaml("paths", "user_table_paths", "user_traits"))
+df_user_traits = spark.read.format("delta").load(get_value_from_yaml("paths", "user_segments_path"))
 
 # COMMAND ----------
 
@@ -159,7 +150,7 @@ df_user_traits = spark.read.format("delta").load(get_value_from_yaml("paths", "u
 
 def join_location(df, df_map):
     return (
-        df.join(df_map, on="TRAIT", how="left")
+        df.join(df_map, on="segment_id", how="left")
         .withColumn("Prague", F.col("Name").like("%Praha%"))
         .withColumn("Kraj", F.col("Name").like("%kraj%"))
         .withColumn("City", F.col("Name").like("%City%"))
@@ -182,7 +173,6 @@ def aggregate_users(df):
         df.groupby("USER_ID")
         .agg(
             F.collect_set("Name").alias("locations"),
-            F.max(F.to_timestamp("END_DATE")).alias("timestamp"),
             F.max("Prague").alias("prague_flag"),
             F.max("City").alias("city_flag"),
             F.max("Kraj").alias("region_flag"),
@@ -207,7 +197,7 @@ df_aggregate_users = aggregate_users(df_join_location)
 
 def get_location(df):
     return convert_traits_to_location_features(df).select(
-        "USER_ID", "timestamp", "locations", "num_locations", "location_col"
+        "USER_ID", "locations", "num_locations", "location_col"
     )
 
 df_get_location = get_location(df_aggregate_users)
@@ -232,7 +222,7 @@ df_get_location_binary_features = get_location_binary_features(df_get_location)
 # COMMAND ----------
 
 def join_data(df_web, df_location):
-    return df_web.join(df_location, how="left", on=["user_id", "timestamp"]).fillna(
+    return df_web.join(df_location, how="left", on=["user_id"]).fillna(
         value=0
     )
 
@@ -248,7 +238,9 @@ df_join_data = join_data(df_get_web_binary_features, df_get_location_binary_feat
 
 # COMMAND ----------
 
-df_education_other_coeffs = spark.read.format("delta").load(get_value_from_yaml("paths", "education_table_paths", "education_other_coeffs"))
+df_education_other_coeffs = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "education_other_coeffs")
+)
 
 # COMMAND ----------
 
@@ -283,6 +275,7 @@ def calculate_final_scores(df):
     )
 
 df_final = calculate_final_scores(df_multiply_scores)
+df_final.display()
 
 # COMMAND ----------
 
@@ -302,7 +295,7 @@ schema, info = get_education_other_scores()
 
 write_dataframe_to_table(
     df_save_scores,
-    get_value_from_yaml("paths", "education_table_paths", "education_other_scores"),
+    get_value_from_yaml("paths", "education_other_scores"),
     schema,
     "overwrite",
     root_logger,

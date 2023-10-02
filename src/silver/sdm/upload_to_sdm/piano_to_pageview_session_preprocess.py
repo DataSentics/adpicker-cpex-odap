@@ -21,9 +21,7 @@ from src.utils.helper_functions_defined_by_user._functions_nlp import (
     df_url_normalization,
 )
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-
-
-from schemas import (
+from src.schemas.sdm_schemas import (
     get_schema_sdm_preprocessed,
     get_schema_sdm_session,
     get_schema_sdm_pageview,
@@ -73,7 +71,7 @@ web_browsers = ["mozilla", "safari", "edge", "opera", "seznam", "chrome"]
 # COMMAND ----------
 
 if not delta_table_exists(
-    get_value_from_yaml("paths", "sdm_table_paths", "sdm_session")
+    get_value_from_yaml("paths", "sdm_session")
 ):
 
     schema, info = get_schema_sdm_session()
@@ -81,7 +79,7 @@ if not delta_table_exists(
 
     write_dataframe_to_table(
         df_empty,
-        get_value_from_yaml("paths", "sdm_table_paths", "sdm_session"),
+        get_value_from_yaml("paths", "sdm_session"),
         schema,
         "default",
         root_logger,
@@ -92,7 +90,7 @@ if not delta_table_exists(
 # COMMAND ----------
 
 if not delta_table_exists(
-    get_value_from_yaml("paths", "sdm_table_paths", "sdm_pageview")
+    get_value_from_yaml("paths", "sdm_pageview")
 ):
 
     schema, info = get_schema_sdm_pageview()
@@ -100,7 +98,7 @@ if not delta_table_exists(
 
     write_dataframe_to_table(
         df_empty,
-        get_value_from_yaml("paths", "sdm_table_paths", "sdm_pageview"),
+        get_value_from_yaml("paths", "sdm_pageview"),
         schema,
         "default",
         root_logger, 
@@ -151,10 +149,11 @@ def read_cleansed_data(df: DataFrame, df_pageview: DataFrame, logger: Logger):
         datetime_col="page_screen_view_timestamp",
         last_n_days=20,
     )
+
     logger.info(
         f"maximal date in silver.sdm_session before append: {destination_max_date}"
     )
-
+    
     if destination_max_date is not None:
         df = df.filter(
             F.col("day") >= F.to_date(F.lit(destination_max_date.date()))
@@ -180,15 +179,39 @@ def read_cleansed_data(df: DataFrame, df_pageview: DataFrame, logger: Logger):
 
 # reading path must be changed with the final path
 df_bronze_cpex_piano = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "piano_table_paths", "cpex_table_piano")
+    get_value_from_yaml("paths", "cpex_table_piano")
 )
 df_silver_sdm_pageview = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_table_paths", "sdm_pageview")
+    get_value_from_yaml("paths", "sdm_pageview")
 )
 
 df_cleansed_data = read_cleansed_data(
     df_bronze_cpex_piano, df_silver_sdm_pageview, root_logger
 )
+
+# COMMAND ----------
+
+# df_cleansed_data.printSchema()
+# df_graph = df_cleansed_data.filter(F.col("DEVICE") == "").groupby("DATE").count().toPandas().sort_values(by="DATE")
+# print(df_cleansed_data.count())
+# print(df_cleansed_data.filter(F.col("DEVICE") == "").count())
+
+# import seaborn as sns
+
+
+# sns.set(rc={"figure.figsize": (11.7, 8.27)})
+# g = sns.lineplot(data=df_graph, x="DATE", y="count")
+
+# display(df_graph)
+
+# COMMAND ----------
+
+def filter_empty_ids(df):
+    df_filtered = df.filter(F.col("DEVICE") != "")
+    return df_filtered
+
+
+df_filtered_data = filter_empty_ids(df_cleansed_data)
 
 # COMMAND ----------
 
@@ -327,7 +350,7 @@ def calculate_device_features(df: DataFrame):
     )
 
 
-df_calculate_device_feature = calculate_device_features(df_cleansed_data)
+df_calculate_device_feature = calculate_device_features(df_filtered_data)
 
 # COMMAND ----------
 
@@ -565,7 +588,7 @@ schema_sdm_preprocessed, info_sdm_preprocessed = get_schema_sdm_preprocessed()
 
 write_dataframe_to_table(
     df_save_preprocessed_table,
-    get_value_from_yaml("paths", "sdm_table_paths", "sdm_preprocessed"),
+    get_value_from_yaml("paths", "sdm_preprocessed"),
     schema_sdm_preprocessed,
     "overwrite",
     root_logger,

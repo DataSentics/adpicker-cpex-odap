@@ -1,127 +1,110 @@
 paths:
-  sdm_table_paths:
-    sdm_preprocessed: "/mnt/aam-cpex-dev/solutions/testing/sdm_preprocessed.delta"
-    sdm_browser: "/mnt/aam-cpex-dev/solutions/testing/sdm_browser.delta"
-    sdm_device: "/mnt/aam-cpex-dev/solutions/testing/sdm_device.delta"
-    sdm_os: "/mnt/aam-cpex-dev/solutions/testing/sdm_os.delta"
-    sdm_url: "/mnt/aam-cpex-dev/solutions/testing/sdm_url.delta"
-    sdm_session: "/mnt/aam-cpex-dev/solutions/testing/sdm_session.delta"
-    sdm_pageview: "/mnt/aam-cpex-dev/solutions/testing/sdm_pageview.delta"
-    sdm_tokenized_domains: "/mnt/aam-cpex-dev/solutions/testing/sdm_tokenized_domains.delta"
-    sdm_sociodemo_targets: "/mnt/aam-cpex-dev/solutions/testing/sdm_sociodemo_targets.delta"
+  sdm_preprocessed: "/mnt/aam-cpex-dev/solutions/testing/sdm_preprocessed.delta"
+  sdm_browser: "/mnt/aam-cpex-dev/solutions/testing/sdm_browser.delta"
+  sdm_device: "/mnt/aam-cpex-dev/solutions/testing/sdm_device.delta"
+  sdm_os: "/mnt/aam-cpex-dev/solutions/testing/sdm_os.delta"
+  sdm_url: "/mnt/aam-cpex-dev/solutions/testing/sdm_url.delta"
+  sdm_session: "/mnt/aam-cpex-dev/solutions/testing/sdm_session.delta"
+  sdm_pageview: "/mnt/aam-cpex-dev/solutions/testing/sdm_pageview.delta"
+  sdm_tokenized_domains: "/mnt/aam-cpex-dev/solutions/testing/sdm_tokenized_domains.delta"
+  sdm_sociodemo_targets: "/mnt/aam-cpex-dev/solutions/testing/sdm_sociodemo_targets.delta"
 
-  piano_table_paths:
-    cpex_table_piano: "/mnt/aam-cpex-dev/solutions/testing/cpex_piano.delta"
-    cpex_table_short_piano: "/mnt/aam-cpex-dev/solutions/testing/cpex_piano_short.delta"
+  cpex_table_piano: "/mnt/aam-cpex-dev/solutions/testing/cpex_piano.delta"
+  cpex_table_short_piano: "/mnt/aam-cpex-dev/solutions/testing/cpex_piano_short.delta"
 
-  user_table_paths:
-    user_traits: "/mnt/aam-cpex-dev/solutions/testing/user_traits.delta"
-    user_segments: "/mnt/aam-cpex-dev/solutions/testing/user_segments.delta"
+  user_segments_path: "/mnt/aam-cpex-dev/solutions/testing/user_segments_piano.delta"
+  lookalike_path: "/mnt/aam-cpex-dev/silver/lookalike/lookalike.delta"
 
-  interests_table_paths:
-    interests_definition: "/mnt/aam-cpex-dev/silver/interests/interests_definition.delta"
+  interests_definition: "/mnt/aam-cpex-dev/silver/interests/interests_definition.delta"
   
-  income_table_paths:
-    income_url_scores: "/mnt/aam-cpex-dev/silver/income/income_url_scores.delta"
-    income_url_coeffs: "/mnt/aam-cpex-dev/silver/income/income_url_coeffs.delta"
-    income_interest_scores: "/mnt/aam-cpex-dev/silver/income/income_interest_scores.delta"
-    income_interest_coeffs: "/mnt/aam-cpex-dev/silver/income/income_interest_coeffs.delta"
-    income_other_scores: "/mnt/aam-cpex-dev/silver/income/income_other_scores.delta"
-    income_other_coeffs: "/mnt/aam-cpex-dev/silver/income/income_other_coeffs.delta"
+  income_url_scores: "/mnt/aam-cpex-dev/silver/income/income_url_scores.delta"
+  income_url_coeffs: "/mnt/aam-cpex-dev/silver/income/income_url_coeffs.delta"
+  income_interest_scores: "/mnt/aam-cpex-dev/silver/income/income_interest_scores.delta"
+  income_interest_coeffs: "/mnt/aam-cpex-dev/silver/income/income_interest_coeffs.delta"
+  income_other_scores: "/mnt/aam-cpex-dev/silver/income/income_other_scores.delta"
+  income_other_coeffs: "/mnt/aam-cpex-dev/silver/income/income_other_coeffs.delta"
     
-  education_table_paths:
-    education_interest_scores: "/mnt/aam-cpex-dev/silver/education/education_interest_scores.delta"
-    education_interest_coeffs: "/mnt/aam-cpex-dev/silver/education/education_interest_coeffs.delta"
-    education_url_scores: "/mnt/aam-cpex-dev/silver/education/education_url_scores.delta"
-    education_url_coeffs: "/mnt/aam-cpex-dev/silver/education/education_url_coeffs.delta"
-    education_other_scores: "/mnt/aam-cpex-dev/silver/education/education_other_scores.delta"
-    education_other_coeffs: "/mnt/aam-cpex-dev/silver/education/education_other_coeffs.delta"
+  education_interest_scores: "/mnt/aam-cpex-dev/silver/education/education_interest_scores.delta"
+  education_interest_coeffs: "/mnt/aam-cpex-dev/silver/education/education_interest_coeffs.delta"
+  education_url_scores: "/mnt/aam-cpex-dev/silver/education/education_url_scores.delta"
+  education_url_coeffs: "/mnt/aam-cpex-dev/silver/education/education_url_coeffs.delta"
+  education_other_scores: "/mnt/aam-cpex-dev/silver/education/education_other_scores.delta"
+  education_other_coeffs: "/mnt/aam-cpex-dev/silver/education/education_other_coeffs.delta"
 
-  location_table_paths:
-    location_traits_map: "/mnt/aam-cpex-dev/silver/location/location_traits_map.delta"
+  location_traits_map: "/mnt/aam-cpex-dev/silver/location/location_traits_map.delta"
 
-  feature_store_paths:
-    user_entity_fs: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta"
-    metadata: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/metadata/metadata.delta"
-
+  user_entity_fs: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta"
+  metadata: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/metadata/metadata.delta"
 
   models:
     sociodemo:
-      ageGroup_0_17: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_0'
-      ageGroup_18_24: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_1'
-      ageGroup_25_34: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_2'
-      ageGroup_35_44: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_3'
-      ageGroup_45_54: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_4'
-      ageGroup_55_64: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_5'
-      ageGroup_65_100: 'dbfs:/databricks/mlflow-tracking/3954795528263881/b4adc4e79b57440bb4cbc62e96c40dfd/artifacts/model_age_LogReg_6'
-      gender_female: 'dbfs:/databricks/mlflow-tracking/3954795528264193/5132fe5240224803bf71f660a3e3ce19/artifacts/model_gender_Logreg'
+      dev:
+        ageGroup_0_17: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_0'
+        ageGroup_18_24: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_1'
+        ageGroup_25_34: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_2'
+        ageGroup_35_44: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_3'
+        ageGroup_45_54: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_4'
+        ageGroup_55_64: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_5'
+        ageGroup_65_100: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_6'
+        gender_male: 'dbfs:/databricks/mlflow-tracking/3954795528264193/73d32166c9e04c0594775e0397dc0031/artifacts/model_gender_Logreg'
 
 jobs_config:
   regular_optimization:
     keep_history_n_days: 7
     vacuum_n_hours: 240
     tables_options:
-      bronze.cpex_piano:
+      cpex_table_piano:
         vacuum: True
         optimize: True
         keep_history: True
         date_column: 'day'
-      silver.cpex_aam_cleansed:
-        vacuum: True
-        optimize: True
-        keep_history: True
-        date_column: 'day'
-      silver.sdm_session:
+      sdm_session:
         vacuum: True
         optimize: True
         keep_history: True
         date_column: 'session_date'
-      silver.sdm_pageview:
+      sdm_pageview:
         vacuum: True
         optimize: True
         keep_history: True
         date_column: 'page_screen_view_date'
-      silver.sdm_url:
+      sdm_url:
         vacuum: True
         optimize: True
         keep_history: False
-      silver.sdm_sociodemo_targets:
+      sdm_sociodemo_targets:
         vacuum: True
         optimize: False
         keep_history: False
-      silver.user_traits:
+      user_segments_path:
         vacuum: True
         optimize: False
         keep_history: False
-      silver.user_segments:
+      sdm_preprocessed:
         vacuum: True
         optimize: False
         keep_history: False
-      silver.sdm_preprocessed:
+      income_interest_scores:
         vacuum: True
         optimize: False
         keep_history: False
-      silver.income_interest_scores:
+      income_url_scores:
         vacuum: True
         optimize: False
         keep_history: False
-      silver.income_url_scores:
+      income_other_scores:
         vacuum: True
         optimize: False
         keep_history: False
-      silver.income_other_scores:
+      education_interest_scores:
         vacuum: True
         optimize: False
         keep_history: False
-      silver.education_interest_scores:
+      education_url_scores:
         vacuum: True
         optimize: False
         keep_history: False
-      silver.education_url_scores:
-        vacuum: True
-        optimize: False
-        keep_history: False
-      silver.education_other_scores:
+      education_other_scores:
         vacuum: True
         optimize: False
         keep_history: False

@@ -131,11 +131,23 @@ def join_all_tables(interest_final, url_final, other_final, logger):
     logger.info(f"Share of full rows: {100 * df.count() / interest_final.count()}%.")
     return df
 
-df_education_interest_scores = spark.read.format("delta").load(get_value_from_yaml("paths", "education_table_paths", "education_interest_scores"))
-df_education_url_scores = spark.read.format("delta").load(get_value_from_yaml("paths", "education_table_paths", "education_url_scores"))
-df_education_other_scores = spark.read.format("delta").load(get_value_from_yaml("paths", "education_table_paths", "education_other_scores"))
 
-df_join_all_tables = join_all_tables(df_education_interest_scores, df_education_url_scores, df_education_other_scores, root_logger)
+df_education_interest_scores = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "education_interest_scores")
+)
+df_education_url_scores = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "education_url_scores")
+)
+df_education_other_scores = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "education_other_scores")
+)
+
+df_join_all_tables = join_all_tables(
+    df_education_interest_scores,
+    df_education_url_scores,
+    df_education_other_scores,
+    root_logger,
+)
 
 # COMMAND ----------
 

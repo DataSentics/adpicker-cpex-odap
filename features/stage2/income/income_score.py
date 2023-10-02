@@ -132,12 +132,20 @@ def join_all_tables(interest_final, url_final, other_final, logger):
     logger.info(f"Share of full rows: {100 * df.count() / interest_final.count()}%.")
     return df
 
-df_income_interest_scores = spark.read.format("delta").load(get_value_from_yaml("paths", "income_table_paths", "income_interest_scores"))
-df_income_url_scores = spark.read.format("delta").load(get_value_from_yaml("paths", "income_table_paths", "income_url_scores"))
-df_income_other_scores = spark.read.format("delta").load(get_value_from_yaml("paths", "income_table_paths", "income_other_scores"))
 
-df_join_all_tables = join_all_tables(df_income_interest_scores, df_income_url_scores, df_income_other_scores, root_logger)
+df_income_interest_scores = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "income_interest_scores")
+)
+df_income_url_scores = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "income_url_scores")
+)
+df_income_other_scores = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "income_other_scores")
+)
 
+df_join_all_tables = join_all_tables(
+    df_income_interest_scores, df_income_url_scores, df_income_other_scores, root_logger
+)
 
 # COMMAND ----------
 
@@ -215,6 +223,7 @@ def get_features(sufixes, table_name, category_name):
         }
 
     return features_dict
+
 
 metadata = get_features(INCOME_MODELS_SUFFIXES, "user", "income_score_features")
 
