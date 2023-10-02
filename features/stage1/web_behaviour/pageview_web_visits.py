@@ -59,7 +59,6 @@ def calculate_distinct_web_visits(df):
 
 
 df_final = calculate_distinct_web_visits(df_pageview_filtered)
-df_final.display()
 
 # COMMAND ----------
 

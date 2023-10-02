@@ -58,7 +58,7 @@ def calculate_web_statistics(df):
 
     df_grouped = df_temp_features.groupby("user_id").agg(
         F.round(F.mean("session_duration")).alias(
-            f"web_analytics_time_on_site_average_{time_window_str}"
+            f"web_analytics_time_on_site_avg_{time_window_str}"
         ),
         F.lit(1).alias(f"web_analytics_web_active_{time_window_str}"),
         F.lit(1).alias(f"distinct_cookies_{time_window_str}"),
