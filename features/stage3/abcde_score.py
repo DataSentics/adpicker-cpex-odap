@@ -68,7 +68,6 @@ def read_fs():
     return fs_stage2
 
 df_fs = read_fs()
-df_fs.display()
 
 # COMMAND ----------
 
