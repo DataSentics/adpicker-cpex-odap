@@ -1,10 +1,9 @@
 from pyspark.sql import types as T
-# from datalakebundle.imports import TableSchema
 from typing import List, Dict, Optional
 from logging import Logger, getLogger
 
 def get_schema_sdm_preprocessed():
-    # Define the schema
+    
     schema = T.StructType( [
             T.StructField('USER_ID', T.StringType(),True),
             T.StructField('SESSION_ID', T.LongType(),False),
@@ -52,8 +51,6 @@ def get_schema_sdm_preprocessed():
     return schema, info
 
 
-
-# schema - session
 def get_schema_sdm_session():
     schema =  T.StructType([
 
@@ -96,7 +93,7 @@ def get_schema_sdm_session():
     }
     return schema, info
 
-# schema - device
+
 def get_schema_sdm_device():
     schema = T.StructType(
         [
@@ -115,7 +112,7 @@ def get_schema_sdm_device():
     }
     return schema, info
 
-# schema - browser
+
 def get_schema_sdm_browser():
     schema = T.StructType(
         [
@@ -131,7 +128,7 @@ def get_schema_sdm_browser():
     }
     return schema, info
 
-# schema - os
+
 def get_schema_sdm_os():
     schema = T.StructType(
         [
@@ -148,7 +145,7 @@ def get_schema_sdm_os():
     }
     return schema, info
 
-# schema - pageview
+
 def get_schema_sdm_pageview():
 
     schema = T.StructType(
@@ -182,7 +179,7 @@ def get_schema_sdm_pageview():
     }
     return schema, info
 
-# schema - url
+
 def get_schema_sdm_url():
     schema = T.StructType(
         [
@@ -229,5 +226,25 @@ def get_schema_sdm_url():
     "table_properties": {
         'delta.autoOptimize.optimizeWrite': 'true'
         }
+        }
+    return schema, info
+
+
+def get_schema_sdm_tokenized_domains():
+    schema = T.StructType(
+        [
+            T.StructField("USER_ID", T.StringType(), True),
+            T.StructField("TOKENS", T.ArrayType(T.StringType()), True),
+            T.StructField("URL_NORMALIZED", T.StringType(), True),
+            T.StructField("DATE", T.DateType(), True),
+            T.StructField("TOKEN", T.StringType(), True),
+        ])
+
+    info = {
+    "primary_key":[],
+    "partition_by":['DATE'], # INSERT PARTITION KEY(s) HERE (OPTIONAL)
+    "table_properties": {
+        'delta.autoOptimize.optimizeWrite': 'true'
+    }
         }
     return schema, info

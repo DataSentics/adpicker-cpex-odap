@@ -63,4 +63,3 @@ def get_income_url_scores():
             }
     }
     return schema, info
-

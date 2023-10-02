@@ -13,8 +13,8 @@ def get_education_interest_scores():
     
     # Define additional information
     info ={
-        "primary_key": ['SESSION_ID'],
-        "partition_by": ['DATE'], # INSERT PARTITION KEY(s) HERE (OPTIONAL)
+        "primary_key": [''],
+        "partition_by": [''], # INSERT PARTITION KEY(s) HERE (OPTIONAL)
         "table_properties": {
             'delta.autoOptimize.optimizeWrite': 'true'
             }
@@ -35,8 +35,8 @@ def get_education_other_scores():
     
     # Define additional information
     info ={
-        "primary_key": ['SESSION_ID'],
-        "partition_by": ['DATE'], # INSERT PARTITION KEY(s) HERE (OPTIONAL)
+        "primary_key": [''],
+        "partition_by": [''], # INSERT PARTITION KEY(s) HERE (OPTIONAL)
         "table_properties": {
             'delta.autoOptimize.optimizeWrite': 'true'
             }
@@ -60,8 +60,8 @@ def get_education_url_scores():
     
     # Define additional information
     info ={
-        "primary_key": ['SESSION_ID'],
-        "partition_by": ['DATE'], # INSERT PARTITION KEY(s) HERE (OPTIONAL)
+        "primary_key": [''],
+        "partition_by": [''], # INSERT PARTITION KEY(s) HERE (OPTIONAL)
         "table_properties": {
             'delta.autoOptimize.optimizeWrite': 'true'
             }

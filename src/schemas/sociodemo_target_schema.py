@@ -1,7 +1,7 @@
 from pyspark.sql import types as T
 
-# schema - session
-def get_schema():
+
+def get_sociodemo_target_schema():
     schema = T.StructType(
         [
             T.StructField('AGE', T.StringType(),True),
