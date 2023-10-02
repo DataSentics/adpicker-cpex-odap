@@ -3,6 +3,7 @@ import logging
 def instantiate_logger():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
+    logger.handlers.clear()
     
     # Create a formatter with timestamp
     formatter = logging.Formatter(
