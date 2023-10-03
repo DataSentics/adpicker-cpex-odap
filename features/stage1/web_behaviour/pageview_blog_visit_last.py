@@ -28,7 +28,7 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
 # COMMAND ----------
 
 df_sdm_pageview =  spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_table_paths", "sdm_pageview")
+    get_value_from_yaml("paths", "sdm_pageview")
 )
 
 time_window_str = get_value_from_yaml("featurestorebundle", "time_windows")[0]

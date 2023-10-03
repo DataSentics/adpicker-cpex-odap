@@ -39,7 +39,7 @@ def tokenized_domains(df: DataFrame, entity, timestamp):
 
     return (df.withColumn(entity, F.lit(timestamp)))
     
-df_sdm_tokenized_domains = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_table_paths", "sdm_tokenized_domains"))
+df_sdm_tokenized_domains = spark.read.format("delta").load(get_value_from_yaml("paths","sdm_tokenized_domains"))
 df_tokenized_domains = tokenized_domains(df_sdm_tokenized_domains, "timestamp", widget_timestamp)
 
 # COMMAND ----------
@@ -54,7 +54,7 @@ def read_interests(df: DataFrame, tokens_version):
 
     return loaded_interests
 
-df_intersts_definition = spark.read.format("delta").load(get_value_from_yaml("paths", "interests_table_paths", "interests_definition"))
+df_intersts_definition = spark.read.format("delta").load(get_value_from_yaml("paths","interests_definition"))
 
 dict_interests = read_interests(df_intersts_definition, widget_tokens_version)
 
