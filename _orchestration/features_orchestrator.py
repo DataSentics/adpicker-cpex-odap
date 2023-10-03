@@ -3,8 +3,10 @@
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC create widget text timestamp default "2023-01-01"
+from datetime import date
+
+dbutils.widgets.text("timestamp", "2023-01-01")
+timestamp = str(date.today())
 
 # COMMAND ----------
 

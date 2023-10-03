@@ -8,9 +8,6 @@ parameters:
     metadata:
       table: "metadata"
       
-    #ids:
-    #  table: "catalog.db.ids_table"
-
     entities:
         user:
           id_column: "user_id"
