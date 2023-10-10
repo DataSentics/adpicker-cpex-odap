@@ -15,7 +15,6 @@
 
 # COMMAND ----------
 
-
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 
@@ -60,15 +59,11 @@ root_logger = instantiate_logger()
 
 # COMMAND ----------
 
-dbutils.widgets.dropdown("target_name", "<no target>", ["<no target>"], "01. target name")
-dbutils.widgets.text("timestamp", "2020-12-12", "02. timestamp")
-dbutils.widgets.dropdown("sample_data", "complete", ["complete", "sample"], "03. sample data")
+dbutils.widgets.text("timestamp", "")
 
 # COMMAND ----------
 
-widget_target_name = dbutils.widgets.get("target_name")
-widget_timestamp = dbutils.widgets.get("timestamp")
-widget_sample_data = dbutils.widgets.get("sample_data")
+timestamp = dbutils.widgets.get("timestamp")
 
 # COMMAND ----------
 
@@ -78,34 +73,46 @@ widget_sample_data = dbutils.widgets.get("sample_data")
 
 # COMMAND ----------
 
+def check_for_daily_run(scores_table, timestamp): 
+    path = get_value_from_yaml("paths", scores_table)
+    df_scores = spark.read.format("delta").load(path).filter(F.col("timestamp") == timestamp)
+    if df_scores.count() > 0:
+        return True
+    else:
+        return False
+
+# COMMAND ----------
 
 def run_income_model_notebooks(timestamp):
 
-    dbutils.notebook.run(
-        "../features/stage2/income/interest_score_income",
-        10000,
-        {
-            "timestamp": timestamp,
-        },
-    )
+    if check_for_daily_run("income_interest_scores", timestamp) == False:
+        dbutils.notebook.run(
+            "../src/solutions/income/interest_score_income",
+            10000,
+            {
+                "timestamp": timestamp,
+            },
+        )
 
-    dbutils.notebook.run(
-        "../features/stage2/income/url_score_income",
-        10000,
-        {
-            "timestamp": timestamp,
-        },
-    )
+    if check_for_daily_run("income_url_scores", timestamp) == False: 
+        dbutils.notebook.run(
+            "../src/solutions/income/url_score_income",
+            10000,
+            {
+                "timestamp": timestamp,
+            },
+        )
 
-    dbutils.notebook.run(
-        "../features/stage2/income/other_score_income",
-        10000,
-        {
-            "timestamp": timestamp,
-        },
-    )
+    if check_for_daily_run("income_other_scores", timestamp) == False:
+        dbutils.notebook.run(
+            "../src/solutions/income/other_score_income",
+            10000,
+            {
+                "timestamp": timestamp,
+            },
+        )
 
-run_income_model_notebooks(widget_timestamp)
+run_income_model_notebooks(timestamp)
 
 # COMMAND ----------
 

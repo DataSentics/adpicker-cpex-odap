@@ -21,6 +21,7 @@ from src.utils.helper_functions_defined_by_user._abcde_utils import convert_trai
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
 from src.schemas.income_schemas import get_income_other_scores
 
 # COMMAND ----------
@@ -280,7 +281,7 @@ def calculate_final_scores(df):
         F.max("timestamp").alias("timestamp"),
     )
 
-df_final = calculate_final_scores(df_multiply_scores)
+df_result = calculate_final_scores(df_multiply_scores)
 
 # COMMAND ----------
 
@@ -294,7 +295,7 @@ def save_scores(df, logger):
     logger.info(f"Saving {df.count()} rows.")
     return df.withColumn("timestamp", F.to_timestamp("timestamp"))
 
-df_save_scores = save_scores(df_final, root_logger)
+df_save_scores = save_scores(df_result, root_logger)
 schema, info = get_income_other_scores()
 
 write_dataframe_to_table(

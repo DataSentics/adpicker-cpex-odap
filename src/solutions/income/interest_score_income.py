@@ -1,10 +1,10 @@
 # Databricks notebook source
 # MAGIC %md 
 # MAGIC
-# MAGIC # Education models - interest score calculation
-# MAGIC This notebook serves to calculate interest scores for education models. Each interest is given a score based on marketing surveys (stored in azure storage). These scores are then multiplied by users' interest affinities and these values are summed for each user.  We transform and standardize those values to produce final interest scores for each education bracket. 
+# MAGIC # Income models - interest score calculation
+# MAGIC This notebook serves to calculate interest scores for income models. Each interest is given a score based on marketing surveys (stored in azure storage). These scores are then multiplied by users' interest affinities and these values are summed for each user.  We transform and standardize those values to produce final interest scores for each income bracket. 
 # MAGIC
-# MAGIC Four education categories are defined: ZS (zakladní škola and less), SS_no (střední škola bez maturity), SS_yes (střední škola s maturitou), VS (vysoká škola).
+# MAGIC Three income categories are defined: Low (0-25k CZK/mon.), Mid (25k-45k CZK/mon.), High (45k+ CZK/mon.). 
 
 # COMMAND ----------
 
@@ -19,25 +19,28 @@ import pyspark.pandas as ps
 import pyspark.sql.functions as F
 
 from src.utils.helper_functions_defined_by_user._abcde_utils import standardize_column_sigmoid
-from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
-from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
-from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml.functions import vector_to_array
 from scipy.stats import boxcox
-from src.schemas.education_schemas import get_education_interest_scores
+
+from src.schemas.income_schemas import get_income_interest_scores
+
+from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
+from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
 
 # COMMAND ----------
 
 # MAGIC %md 
 # MAGIC
 # MAGIC ## Config
-# MAGIC Configure suffixes for education model brackets and sharpness of sigmoidal standardization function.
+# MAGIC Configure suffixes for income model brackets and sharpness of sigmoidal standardization function.
 
 # COMMAND ----------
 
-EDUCATION_MODELS_SUFFIXES = ["zs", "ss_no", "ss_yes", "vs"]
+INCOME_MODELS_SUFFIXES = ["low", "mid", "high"]
 SHARPNESS = 1
 
 # COMMAND ----------
@@ -66,8 +69,8 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 
 # COMMAND ----------
 
-df_education_interest_coeffs = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "education_interest_coeffs")
+df_income_interest_coeffs = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "income_interest_coeffs")
 )
 
 # COMMAND ----------
@@ -83,7 +86,7 @@ def features_to_load(df):
     lst = df.select("interest").rdd.map(lambda row: row[0]).collect()
     return lst
 
-lst_features_to_load = features_to_load(df_education_interest_coeffs)
+lst_features_to_load = features_to_load(df_income_interest_coeffs)
 
 # COMMAND ----------
 
@@ -125,23 +128,23 @@ df_fs_wide_to_long = fs_wide_to_long(df_fs, lst_features_to_load)
 
 def add_interest_scores(df_long, df_scores):
     return df_long.join(df_scores, on="interest", how="left").select(
-        "interest",
         "user_id",
         "timestamp",
+        "interest",
         *[
             (F.col("value") * F.col(f"score_{model}")).alias(f"scaled_score_{model}")
-            for model in EDUCATION_MODELS_SUFFIXES
+            for model in INCOME_MODELS_SUFFIXES
         ],
     )
 
-df_add_interest_scores = add_interest_scores(df_fs_wide_to_long, df_education_interest_coeffs)
+df_add_interest_scores = add_interest_scores(df_fs_wide_to_long, df_income_interest_coeffs)
 
 # COMMAND ----------
 
 # MAGIC %md 
 # MAGIC
 # MAGIC ## Sum values by user
-# MAGIC Sum interest scores mulitplied by interest affinites for each user to create non-standardized interest score for each education category.
+# MAGIC Sum interest scores mulitplied by interest affinites for each user to create non-standardized interest score for each income category.
 
 # COMMAND ----------
 
@@ -150,7 +153,7 @@ def sum_interest_scores(df):
         F.max("timestamp").alias("timestamp"),
         *[
             (F.sum(f"scaled_score_{model}").alias(f"interest_score_nonstd_{model}"))
-            for model in EDUCATION_MODELS_SUFFIXES
+            for model in INCOME_MODELS_SUFFIXES
         ],
     )
 
@@ -170,7 +173,7 @@ df_sum_interest_scores = sum_interest_scores(df_add_interest_scores)
 
 def box_cox_transform(df):
     nonstd_columns = [
-        f"interest_score_nonstd_{model}" for model in EDUCATION_MODELS_SUFFIXES
+        f"interest_score_nonstd_{model}" for model in INCOME_MODELS_SUFFIXES
     ]
     df_pandas = df.select("user_id", "timestamp", *nonstd_columns).toPandas()
 
@@ -191,9 +194,9 @@ df_box_cox_transform = box_cox_transform(df_sum_interest_scores)
 
 def standard_scaler(df):
     nonstd_columns = [
-        f"interest_score_nonstd_{model}" for model in EDUCATION_MODELS_SUFFIXES
+        f"interest_score_nonstd_{model}" for model in INCOME_MODELS_SUFFIXES
     ]
-    std_columns = [f"interest_score_std_{model}" for model in EDUCATION_MODELS_SUFFIXES]
+    std_columns = [f"interest_score_std_{model}" for model in INCOME_MODELS_SUFFIXES]
 
     vec_ass = VectorAssembler(
         inputCols=nonstd_columns, outputCol="features", handleInvalid="skip"
@@ -213,7 +216,7 @@ def standard_scaler(df):
         *[F.col("array")[i].alias(col) for i, col in enumerate(std_columns)],
     )
 
-df_standard_scaler = standard_scaler(df_box_cox_transform)
+df_standard_scalar = standard_scaler(df_box_cox_transform)
 
 # COMMAND ----------
 
@@ -232,11 +235,11 @@ def interest_score_final(df):
             (standardize_column_sigmoid(f"interest_score_std_{model}", SHARPNESS)).alias(
                 f"final_interest_score_{model}"
             )
-            for model in EDUCATION_MODELS_SUFFIXES
+            for model in INCOME_MODELS_SUFFIXES
         ],
     )
 
-df_final = interest_score_final(df_standard_scaler)
+df_result = interest_score_final(df_standard_scalar)
 
 # COMMAND ----------
 
@@ -250,14 +253,14 @@ def save_scores(df, logger):
     logger.info(f"Saving {df.count()} rows.")
     return df.withColumn("timestamp", F.to_timestamp("timestamp"))
 
-df_save_scores = save_scores(df_final, root_logger)
-schema, info = get_education_interest_scores()
+df_save_scores = save_scores(df_result, root_logger)
+schema, info = get_income_interest_scores()
 
 write_dataframe_to_table(
     df_save_scores,
-    get_value_from_yaml("paths", "education_interest_scores"),
+    get_value_from_yaml("paths", "income_interest_scores"),
     schema,
     "overwrite",
     root_logger,
     table_properties=info["table_properties"],
-)
+ )
