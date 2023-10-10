@@ -88,16 +88,14 @@ lst_features_to_load = features_to_load(df_education_interest_coeffs)
 
 # COMMAND ----------
 
-def read_fs(list_features):
-    fs_stage1 = (
-        spark.read.table("odap_features_user.user_stage1")
-        .select("user_id", "timestamp", *list_features)
-        .filter(F.col("timestamp") == widget_timestamp)
+def read_fs(timestamp, features_to_load):
+    df = fetch_fs_stage(timestamp, stage=1, feature_list=features_to_load).withColumn(
+        "timestamp", F.to_timestamp(F.col("timestamp"))
     )
-    return fs_stage1
+    return df
 
 
-df_fs = read_fs(lst_features_to_load)
+df_fs = read_fs(widget_timestamp, lst_features_to_load)
 
 # COMMAND ----------
 

@@ -17,6 +17,7 @@ import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
+from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
 
 # COMMAND ----------
 
@@ -55,19 +56,15 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 
 # COMMAND ----------
 
-def read_fs():
+def read_fs(timestamp):
     perc_features = [
         f"income_model_perc_{model}" for model in INCOME_MODELS_SUFFIXES
     ] + [f"edu_model_perc_{model}" for model in EDUCATION_MODELS_SUFFIXES]
-    
-    fs_stage2 = (
-        spark.read.table("odap_features_user.user_stage2")
-        .select("user_id", "timestamp", *perc_features)
-        .filter(F.col("timestamp") == widget_timestamp)
-    )
+
+    fs_stage2 = fetch_fs_stage(timestamp, stage=2, feature_list=perc_features)
     return fs_stage2
 
-df_fs = read_fs()
+df_fs = read_fs(widget_timestamp)
 
 # COMMAND ----------
 

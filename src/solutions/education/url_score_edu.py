@@ -26,7 +26,6 @@ from src.utils.helper_functions_defined_by_user._abcde_utils import (
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
-from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
 
 from datetime import date, timedelta, datetime
 from pyspark.sql.dataframe import DataFrame

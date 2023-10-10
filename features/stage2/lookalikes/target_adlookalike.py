@@ -12,6 +12,7 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
 
 # COMMAND ----------
 
@@ -64,13 +65,10 @@ df_lookalikes = get_defined_lookalikes()
 # COMMAND ----------
 
 def read_fs(timestamp):
-    df_fs = (
-        spark.read.table("odap_features_user.user_stage1")
-        .select("user_id", "timestamp")
-        .filter(F.col("timestamp") == timestamp)
-        .withColumn("timestamp", F.to_timestamp(F.col("timestamp")))
+    df = fetch_fs_stage(timestamp, stage=1, feature_list=[]).withColumn(
+        "timestamp", F.to_timestamp(F.col("timestamp"))
     )
-    return df_fs
+    return df
 
 
 df_fs = read_fs(timestamp)

@@ -78,20 +78,18 @@ def get_web_features_list(df):
     return [element.feature for element in feat_list.collect()]
 
 df_metadata = spark.read.format("delta").load(get_value_from_yaml("paths", "metadata"))
-list_web_features_list = get_web_features_list(df_metadata)
+web_features_list = get_web_features_list(df_metadata)
 
 # COMMAND ----------
 
-def read_fs(list_features):
-    fs_stage1 = (
-        spark.read.table("odap_features_user.user_stage1")
-        .select("user_id", "timestamp", *list_features)
-        .filter(F.col("timestamp") == widget_timestamp)
+def read_fs(timestamp, web_features_list):
+    df = fetch_fs_stage(timestamp, stage=1, feature_list=web_features_list).withColumn(
+        "timestamp", F.to_timestamp(F.col("timestamp"))
     )
-    return fs_stage1
+    return df
 
 
-df_read_web_features = read_fs(list_web_features_list)
+df_read_web_features = read_fs(widget_timestamp, web_features_list)
 
 # COMMAND ----------
 
@@ -114,7 +112,7 @@ def get_web_binary_features(df):
         .alias("safari_flag"),
     ).fillna(0)
 
-df_get_web_binary_features =get_web_binary_features(df_read_web_features)
+df_get_web_binary_features = get_web_binary_features(df_read_web_features)
 
 # COMMAND ----------
 

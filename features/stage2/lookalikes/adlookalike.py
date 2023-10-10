@@ -14,6 +14,7 @@ from pyspark.sql.dataframe import DataFrame
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user._functions_ml import ith
 from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
+from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
 
 # COMMAND ----------
 
@@ -49,13 +50,7 @@ timestamp = dbutils.widgets.get("timestamp")
 # COMMAND ----------
 
 def read_fs(timestamp):
-    df = (
-        spark.read.table("odap_features_user.user_stage1")
-        .filter(F.col("timestamp") == timestamp)
-        .withColumn("timestamp", F.to_timestamp(F.col("timestamp")))
-    )
-
-    # convert string with publishers names to array
+    df = fetch_fs_stage(timestamp, stage=1).withColumn("timestamp", F.to_timestamp(F.col("timestamp")))
     df = df.withColumn("owner_names", F.split(F.col("owner_names_7d"), ","))
     return df
 
