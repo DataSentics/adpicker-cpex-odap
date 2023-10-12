@@ -8,13 +8,14 @@ parameters:
     metadata:
       table: "metadata"
       
-    #ids:
-    #  table: "catalog.db.ids_table"
-
     entities:
         user:
-        id_column: "user_id"
-        id_column_type: "string"
+          id_column: "user_id"
+          id_column_type: "string"
+
+    checkpoint_dir: "dbfs:/user/hive/warehouse/odap_features_user.db/checkpoints"
+    checkpoint_interval: 5
+
 
   segmentfactory:
     catalog: "hive_metastore"
