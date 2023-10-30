@@ -1,0 +1,51 @@
+name: Black formating and deploy
+
+on: 
+  push:
+    branches:
+      - main
+
+jobs:
+  # format every Python file using 'black' formatting
+  black:
+    name: Black formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
+        with:
+          options: "--verbose"
+          src: "."
+          version: "23.10.1"
+
+  # update repository on DBX workspace
+  deploy:
+    name: Deployment into DBX
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COMMIT_HASH: "${{ github.sha }}"
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v2
+
+      # - name: set up Python 3
+      #   uses: actions/setup-python@v2
+      #   with:
+      #     python-version: '3.11.3'
+
+      - name: Install Databricks CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Setup Databricks CLI access
+        run: |
+          echo -e "[DEFAULT]\nhost = $DBX_HOST\ntoken = $DBX_ACCESS_TOKEN" > ~/.databrickscfg
+        env:
+          DBX_HOST: ${{ secrets.dev_dbx_host }}
+          DBX_ACCESS_TOKEN: ${{ secrets.dev_dbx_access_token }}
+          
+      - name: Update adpicker repo
+        run: |
+          databricks repos update /Repos/adpicker-cpex/master --branch mt-github-actions
+    
