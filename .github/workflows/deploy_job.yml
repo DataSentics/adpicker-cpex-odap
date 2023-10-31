@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - jobs
 
 jobs:
   # Deploy all jobs that are located in specific folder
