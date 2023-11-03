@@ -20,13 +20,33 @@ tables_to_validate = [
     "education_url_scores",
     # "education_url_coeffs",
     "education_other_scores",
-    # "education_other_coeffs"
+    # "education_other_coeffs",
+
+    "user_entity_fs",
 ]
 
 # COMMAND ----------
 
-def _get_latest_version(df_path: str) -> int:    
+special_tables_to_validate = [
+    "odap_features_user.latest",
+    "odap_features_user.user",
+    "odap_features_user.user_stage1",
+    "odap_features_user.user_stage2",
+    "odap_features_user.user_stage3",
+]
+
+# COMMAND ----------
+
+def _get_latest_version(df_path: str) -> int:
     df_history = spark.sql(f"DESCRIBE HISTORY delta.`{df_path}`")
+
+    return df_history.agg({"version": "max"}).collect()[0][0]
+
+# COMMAND ----------
+
+def _get_latest_version_special(df_name: str) -> int:
+    df_name_split = df_name.split(".")
+    df_history = spark.sql(f"DESCRIBE HISTORY `{df_name_split[0]}`.`{df_name_split[1]}`")
 
     return df_history.agg({"version": "max"}).collect()[0][0]
 
@@ -37,7 +57,21 @@ def _get_columns_to_compare(df: DataFrame) -> list():
 
 # COMMAND ----------
 
-def validate_data_between_two_versions(df_name: str, coef: float = 0.1) -> tuple():
+def _get_columns_to_compare_special(df: DataFrame, df_2: DataFrame) -> list():
+    # words = ["affinity", "score", "perc", "prob"]
+    print("ad_interest_affinity_cosmetics" in df.columns)
+    print("ad_interest_affinity_cosmetics" in df_2.columns)
+    words = ["score", "perc", "prob"]
+    column_list = []
+    for col_name in (df.columns)[:5]:
+        for word in words:
+            if word in col_name and col_name in (df_2.columns):
+                column_list.append(col_name)
+    return column_list[:2]
+
+# COMMAND ----------
+
+def validate_data_between_two_versions(df_name: str, coef: float = 0.1, limit_of_rows: int = 10000) -> tuple():
     """
     Function that should be able to validate if there are any discrepancies between last two versions of calculated Feature Store rows - bigger than specific thrash-hold
 
@@ -45,16 +79,30 @@ def validate_data_between_two_versions(df_name: str, coef: float = 0.1) -> tuple
     df_name: Name of table that is specified in config file
     coef: Thrash-hold under which we expect that rows are calculated just fine
     """
-    df_path = get_value_from_yaml("paths", df_name)
-    latest_version = _get_latest_version(df_path)
 
-    df_1 = spark.read.format("delta").option("versionAsOf", latest_version).load(df_path)
-    df_2 = spark.read.format("delta").option("versionAsOf", latest_version - 1).load(df_path)
+    # load table using YAML
+    if "." not in df_name:
+        df_path = get_value_from_yaml("paths", df_name)
+        latest_version = _get_latest_version(df_path)
 
-    columns_to_validate = _get_columns_to_compare(df_1)
+        df_1 = spark.read.format("delta").option("versionAsOf", latest_version).load(df_path)
+        df_2 = spark.read.format("delta").option("versionAsOf", latest_version - 1).load(df_path)
+
+        columns_to_validate = _get_columns_to_compare(df_1)
+
+    # loading table from table catalog
+    else:
+        latest_version = _get_latest_version_special(df_name)
+
+        df_1 = spark.read.option("versionAsOf", latest_version).table(df_name)
+        df_2 = spark.read.option("versionAsOf", latest_version - 1).table(df_name)
+        print(df_1.columns)
+        print(df_2.columns)
+
+        columns_to_validate = _get_columns_to_compare_special(df_1, df_2)
 
     # get random sample of last version table
-    df_1_s = df_1.sample(False, 0.1).limit(10000)
+    df_1_s = df_1.sample(False, 0.1).limit(limit_of_rows)
 
     df_join = df_1_s.alias("df_1").join(
         df_2.alias("df_2"),
@@ -80,13 +128,22 @@ def validate_data_between_two_versions(df_name: str, coef: float = 0.1) -> tuple
         .filter(F.col("diff") == F.lit(1))
     )
 
-    return (True if df_diff.count() == 0 else False, df_diff)
+    return (True if df_diff.count() == 0 else False, df_diff.drop("diff"))
 
 # COMMAND ----------
 
 for tab in tables_to_validate:
     print("------------------------")
     print(tab)
-    x, y = validate_data_between_two_versions(tab)
+    x, y = validate_data_between_two_versions(tab, 0.05, 20000)
+    print(x)
+    display(y)
+
+# COMMAND ----------
+
+for tab in special_tables_to_validate:
+    print("------------------------")
+    print(tab)
+    x, y = validate_data_between_two_versions(tab, 0.05, 1000)
     print(x)
     display(y)
