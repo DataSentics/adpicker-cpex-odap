@@ -6,14 +6,14 @@
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Imports & config
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
 import re
+import pyspark.sql.functions as F
 
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
@@ -21,7 +21,7 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Load table & fetch config values
 
@@ -36,7 +36,7 @@ time_window_int = int(re.search(r'\d+', time_window_str).group())
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC #### Filter table
 
 # COMMAND ----------

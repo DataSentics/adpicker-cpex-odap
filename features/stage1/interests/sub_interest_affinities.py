@@ -44,7 +44,7 @@ widget_use_biagrams = dbutils.widgets.get("use_biagrams")
 
 def tokenized_domains(df: DataFrame, entity, timestamp):
     return (df.withColumn(entity, F.lit(timestamp)))
-    
+
 df_sdm_tokenized_domains = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_tokenized_domains"))
 df_tokenized_domains = tokenized_domains(df_sdm_tokenized_domains, "timestamp", widget_timestamp)
 
@@ -64,7 +64,7 @@ dict_interests = read_interests(df_interests_definition, widget_tokens_version)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC #### Define metadata
 
 # COMMAND ----------
@@ -77,7 +77,7 @@ def get_features(dict_with_interests: dict, table_name, category_name):
     }
 
     for subinterest, interest in dict_with_interests.items():
-         features_dict['features'][f"{subinterest}"] = {
+        features_dict['features'][f"{subinterest}"] = {
         "description": f"General Interest: {interest.general_interest}; Subinterest: {subinterest.replace('_', ' ')}",
         "fillna_with": 0.0,
         "type": "numerical"
@@ -97,7 +97,7 @@ def get_tokenized_domains_interests(
     tokenized_impressions: DataFrame, interests: dict):
 
     tokenized_impressions = tokenized_impressions.drop("date")
-    
+
     return tokenized_impressions.select(
         *tokenized_impressions.columns,
         *[
@@ -123,7 +123,7 @@ def get_interests_stats(
         .agg(*[F.log(n_row / F.sum(F.col(x))).alias(x) for x in interest_names])
     )
 
-    interests_list = [col for col in interests_stats.columns]
+    interests_list = list(interests_stats.columns)
 
     return interests_stats.select(
         F.greatest(*interests_list).alias("max"),
@@ -166,7 +166,7 @@ def features_digi_interests(
 
 df_final = features_digi_interests(
     df_joined_interests_with_stats, list(metadata["features"].keys())
-).withColumn("timestamp", F.current_date()) 
+).withColumn("timestamp", F.current_date())
 
 # COMMAND ----------
 
