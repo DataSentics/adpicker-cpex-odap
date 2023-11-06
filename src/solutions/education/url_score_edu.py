@@ -1,15 +1,20 @@
 # Databricks notebook source
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC # Education models - URL score calculation
 # MAGIC
-# MAGIC This notebook serves to calculate URL scores for education models. The most common URLs are given a score based on marketing surveys (stored in azure storage). These scores are then joined to users' pageview and these values are averaged for each user, scaled by total number of sites visited. We transform and standardize those values to produce final URL scores for each education bracket. 
+# MAGIC This notebook serves to calculate URL scores for education models.
+# MAGIC  The most common URLs are given a score based on marketing surveys (stored in azure storage).
+# MAGIC  These scores are then joined to users' pageview and these values are averaged for each user,
+# MAGIC  scaled by total number of sites visited. We transform and standardize those values to produce
+# MAGIC  final URL scores for each education bracket.
 # MAGIC
-# MAGIC Four education categories are defined: ZS (zakladní škola and less), SS_no (střední škola bez maturity), SS_yes (střední škola s maturitou), VS (vysoká škola).
+# MAGIC Four education categories are defined: ZS (zakladní škola and less),
+# MAGIC  SS_no (střední škola bez maturity), SS_yes (střední škola s maturitou), VS (vysoká škola).
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Imports
 
@@ -18,26 +23,30 @@
 
 import numpy as np
 import pyspark.sql.functions as F
+from pyspark.sql.dataframe import DataFrame
+from pyspark.ml.feature import VectorAssembler, StandardScaler
+from pyspark.ml.functions import vector_to_array
 
 from src.utils.helper_functions_defined_by_user._abcde_utils import (
     standardize_column_sigmoid,
     calculate_count_coefficient,
 )
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
-from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
+from src.utils.helper_functions_defined_by_user.table_writing_functions import (
+    write_dataframe_to_table,
+)
+from src.utils.helper_functions_defined_by_user.yaml_functions import (
+    get_value_from_yaml,
+)
+from src.schemas.education_schemas import get_education_url_scores
 
 from datetime import date, timedelta, datetime
-from pyspark.sql.dataframe import DataFrame
-from pyspark.ml.feature import VectorAssembler, StandardScaler
-from pyspark.ml.functions import vector_to_array
 from scipy.stats import boxcox
 from logging import Logger
-from src.schemas.education_schemas import get_education_url_scores
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Config
 # MAGIC Configure suffixes for education model brackets and sharpness of sigmoidal standardization function.
@@ -53,7 +62,7 @@ root_logger = instantiate_logger()
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Load pageview data
 # MAGIC Load pageview data for the last *n* days, (*n*=7 is the default).
@@ -69,6 +78,7 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 widget_n_days = dbutils.widgets.get("n_days")
 
 # COMMAND ----------
+
 
 # Current date taken if not explicitly specified
 def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger):
@@ -94,47 +104,58 @@ def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger):
         "flag_publisher",
         F.lit(end_date).cast("timestamp").alias("timestamp"),
     )
-df_sdm_pageview = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_pageview"))
-df_load_sdm_pageview = load_sdm_pageview(df_sdm_pageview, widget_timestamp, widget_n_days, root_logger)
+
+
+df_sdm_pageview = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "sdm_pageview")
+)
+df_load_sdm_pageview = load_sdm_pageview(
+    df_sdm_pageview, widget_timestamp, widget_n_days, root_logger
+)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Load URL data
 
 # COMMAND ----------
+
 
 def load_sdm_url(df: DataFrame):
     return df.select(
         "URL_NORMALIZED", "URL_TITLE", "URL_DOMAIN_1_LEVEL", "URL_DOMAIN_2_LEVEL"
     )
 
+
 df_sdm_url = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_url"))
 df_load_sdm_url = load_sdm_url(df_sdm_url)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Join data
 # MAGIC Join the pageviews with URL data.
 
 # COMMAND ----------
 
+
 def join_datasets(df1, df2):
     return df1.join(df2, on="URL_NORMALIZED", how="left")
+
 
 df_join_datasets = join_datasets(df_load_sdm_pageview, df_load_sdm_url)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
-# MAGIC ## Join data with empirical scores 
+# MAGIC ## Join data with empirical scores
 # MAGIC Load empirical scores from azure storage and join them with the pageviews data.
 
 # COMMAND ----------
+
 
 def load_url_scores(df):
     return df.withColumnRenamed("domain", "URL_DOMAIN_2_LEVEL")
@@ -146,6 +167,7 @@ df_education_url_coeffs = spark.read.format("delta").load(
 df_load_url_scores = load_url_scores(df_education_url_coeffs)
 
 # COMMAND ----------
+
 
 def join_with_scores(df1, df2):
     return (
@@ -160,16 +182,18 @@ def join_with_scores(df1, df2):
         )
     )
 
+
 df_join_with_scores = join_with_scores(df_join_datasets, df_load_url_scores)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Calculate average of URL scores
 # MAGIC Calculate average of URL scores for each user; also caluclate their total number of sites visited and list of URL for monitoring purposes.
 
 # COMMAND ----------
+
 
 def collect_urls_for_users(df):
     return df.groupby("user_id").agg(
@@ -182,32 +206,38 @@ def collect_urls_for_users(df):
         F.max("timestamp").alias("timestamp"),
     )
 
+
 df_collect_urls_for_users = collect_urls_for_users(df_join_with_scores)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Convert URL counts
 # MAGIC Convert URL counts to scaling coefficient using custom function
 
 # COMMAND ----------
 
+
 def calculate_scaling_coefficient(df):
     return df.withColumn(
         "count_coefficient", calculate_count_coefficient(F.col("url_count"))
     )
 
-df_calculate_scaling_coefficient = calculate_scaling_coefficient(df_collect_urls_for_users)
+
+df_calculate_scaling_coefficient = calculate_scaling_coefficient(
+    df_collect_urls_for_users
+)
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## Multiply URL scores 
+# MAGIC ## Multiply URL scores
 # MAGIC Multiply URL scores by count scaling coefficient.
 
 # COMMAND ----------
+
 
 def calculate_nonstd_url_scores(df):
     return df.select(
@@ -222,19 +252,25 @@ def calculate_nonstd_url_scores(df):
         ],
     )
 
-df_calculate_nonstd_url_scores = calculate_nonstd_url_scores(df_calculate_scaling_coefficient)
+
+df_calculate_nonstd_url_scores = calculate_nonstd_url_scores(
+    df_calculate_scaling_coefficient
+)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Transform and standardize scores
 # MAGIC
-# MAGIC Use Box-Cox transform to improve distribution of the score and then standardize using `StandardScaler`. 
+# MAGIC Use Box-Cox transform to improve distribution of the score and then standardize using `StandardScaler`.
 # MAGIC
-# MAGIC The values for Box-Cox transformation are shifted to be positive via a static constant (0.01); the magnitude of the shift should not matter ([see link](https://stats.stackexchange.com/questions/399435/which-constant-to-add-when-applying-box-cox-transformation-to-negative-values)).
+# MAGIC The values for Box-Cox transformation are shifted to be positive via a static constant (0.01);
+# MAGIC  the magnitude of the shift should not matter
+# MAGIC  ([see link](https://stats.stackexchange.com/questions/399435/which-constant-to-add-when-applying-box-cox-transformation-to-negative-values)).
 
 # COMMAND ----------
+
 
 def box_cox_transform(df):
     nonstd_columns = [
@@ -255,9 +291,11 @@ def box_cox_transform(df):
     df_spark = spark.createDataFrame(df_pandas)
     return df_spark
 
+
 df_box_cox_transform = box_cox_transform(df_calculate_nonstd_url_scores)
 
 # COMMAND ----------
+
 
 def standard_scaler(df):
     nonstd_columns = [
@@ -281,8 +319,9 @@ def standard_scaler(df):
         "user_id",
         "timestamp",
         "collected_urls",
-        *[(F.col("array")[i]).alias(col) for i, col in enumerate(std_columns)]
+        *[(F.col("array")[i]).alias(col) for i, col in enumerate(std_columns)],
     )
+
 
 df_standard_scaler = standard_scaler(df_box_cox_transform)
 
@@ -294,6 +333,7 @@ df_standard_scaler = standard_scaler(df_box_cox_transform)
 # MAGIC Finally use a sigmoid function to squash the URL scores into a (-1, 1) interval.
 
 # COMMAND ----------
+
 
 def url_score_final(df):
     return df.select(
@@ -308,9 +348,11 @@ def url_score_final(df):
         ],
     )
 
+
 df_result = url_score_final(df_standard_scaler)
 
 # COMMAND ----------
+
 
 def save_scores(df, logger: Logger):
     logger.info(f"Saving {df.count()} rows.")

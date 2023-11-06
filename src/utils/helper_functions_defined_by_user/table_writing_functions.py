@@ -15,7 +15,6 @@ def write_dataframe_to_table(
     partition: Optional[List[str]] = None,
     table_properties: Optional[str] = None,
 ):
-
     """
     This function takes 6 parameters, first 4 mandatory last two optional, and writes the data from a dataframe into a table.
     Data will be written in the table if schema of dataframe is compatible with schema of table otherwise an error will be thrown
@@ -30,7 +29,6 @@ def write_dataframe_to_table(
     """
 
     if compare_and_check_schemas(table_schema, dataframe_source.schema, logger):
-
         logger_writing_table_status(
             delta_table_exists(f"{table_destination}"), writing_mode, logger
         )
@@ -103,7 +101,7 @@ def compare_and_check_schemas(schema1, schema2, logger: logging.Logger):
                     f"Nullability mismatch! TABLE schema: '{field_name}': {field1.nullable} | DATAFRAME schema: '{field_name}' : {field2.nullable}"
                 )
                 schema_compatibility_check = False
-    
+
     return schema_compatibility_check
 
 
@@ -139,4 +137,3 @@ def logger_writing_table_status(check_table, writing_mode, logger: logging.Logge
         )
     else:
         logger.info(f"Data will be written to table in mode '{writing_mode}'.")
-        

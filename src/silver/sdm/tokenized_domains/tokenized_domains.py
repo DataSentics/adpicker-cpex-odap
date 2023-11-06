@@ -61,6 +61,7 @@ widget_tokens_version = dbutils.widgets.get("tokens_version")
 
 # COMMAND ----------
 
+
 def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str):
     # process end date
     try:
@@ -92,6 +93,7 @@ df_silver_sdm_pageview = spark.read.format("delta").load(
 df_pageview = load_sdm_pageview(df_silver_sdm_pageview, widget_end_date, widget_n_days)
 
 # COMMAND ----------
+
 
 def load_sdm_url(df: DataFrame, tokens_version, use_bigrams, logger: Logger):
     # take cleaned unique as default option
@@ -129,6 +131,7 @@ df_sdm_url = load_sdm_url(
 
 # COMMAND ----------
 
+
 def read_interests(df: DataFrame, tokens_version):
     loaded_interests = process_loaded_interests(
         df=df, general_interests=False, keyword_variant=tokens_version
@@ -149,6 +152,7 @@ subinterests = read_interests(df_interests, widget_tokens_version)
 
 # COMMAND ----------
 
+
 def url_tokenized(df_pageview: DataFrame, df_url: DataFrame):
     return df_pageview.join(df_url, on="URL_NORMALIZED", how="left")
 
@@ -160,6 +164,7 @@ df_url_tokenized = url_tokenized(df_pageview, df_sdm_url)
 # MAGIC %md #### Save output
 
 # COMMAND ----------
+
 
 def create_tokenized_domains(df_url_tokenized: DataFrame, subinterests):
     interest_keywords = [interest.keywords for interest in subinterests.values()]

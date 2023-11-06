@@ -1,12 +1,12 @@
 # Databricks notebook source
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC # Sociodemo models application
-# MAGIC This notebook serves to apply the trained sociodemo ML models to the data and write the probabilities/percentiles features into the FS. 
+# MAGIC This notebook serves to apply the trained sociodemo ML models to the data and write the probabilities/percentiles features into the FS.
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC ## Imports
 
 # COMMAND ----------
@@ -17,14 +17,21 @@ import os
 
 from logging import Logger
 from pyspark.sql.dataframe import DataFrame
-from pyspark.sql.types import * 
+from pyspark.sql.types import *
 from pyspark.sql.window import Window
 
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user._functions_ml import ith
-from src.utils.helper_functions_defined_by_user._functions_helper import replace_categorical_levels
-from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
-from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
+from src.utils.helper_functions_defined_by_user._functions_helper import (
+    replace_categorical_levels,
+)
+from src.utils.helper_functions_defined_by_user.yaml_functions import (
+    get_value_from_yaml,
+)
+from src.utils.helper_functions_defined_by_user.feature_fetching_functions import (
+    fetch_fs_stage,
+)
+
 # pylint: disable=W0614
 # pylint: disable=W0401
 # pylint: disable=W0621
@@ -34,7 +41,7 @@ from src.utils.helper_functions_defined_by_user.feature_fetching_functions impor
 
 # COMMAND ----------
 
-# MAGIC %md #### Config 
+# MAGIC %md #### Config
 
 # COMMAND ----------
 
@@ -68,7 +75,7 @@ ALLOWED_VALUES = {
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC
 # MAGIC ## Initialization
@@ -83,13 +90,14 @@ timestamp = dbutils.widgets.get("timestamp")
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC
 # MAGIC ## Get features & data
 # MAGIC Feature names and data from FS is fetched; the collected URLs for each user are then joined.
 
 # COMMAND ----------
+
 
 def read_fs(timestamp):
     df = fetch_fs_stage(timestamp, stage=1).withColumn(
@@ -102,11 +110,18 @@ df_fs = read_fs(timestamp)
 
 # COMMAND ----------
 
+
 def join_url_scores(df_fs, url_path, logger: Logger):
     df_urls = spark.read.format("delta").load(url_path)
-    df_joined = df_fs.join(df_urls.select("user_id", "timestamp", "collected_urls"), on=["user_id", "timestamp"], how="left")
+    df_joined = df_fs.join(
+        df_urls.select("user_id", "timestamp", "collected_urls"),
+        on=["user_id", "timestamp"],
+        how="left",
+    )
 
-    logger.info(f"Count of users with no URLs is {df_joined.select(F.sum(F.col('collected_urls').isNull().cast('integer'))).collect()[0][0]}.")
+    logger.info(
+        f"Count of users with no URLs is {df_joined.select(F.sum(F.col('collected_urls').isNull().cast('integer'))).collect()[0][0]}."
+    )
     return df_joined
 
 
@@ -115,28 +130,34 @@ df_joined = join_url_scores(df_fs, url_path, root_logger)
 
 # COMMAND ----------
 
+
 def get_schemas(models_dict):
-    with open(f'../features/stage2/sociodemo/schemas/socdemo_gender_schema_{models_dict["gender_male"].split("/")[-3]}.txt', 'r') as f:
+    with open(
+        f'../features/stage2/sociodemo/schemas/socdemo_gender_schema_{models_dict["gender_male"].split("/")[-3]}.txt',
+        "r",
+    ) as f:
         schema_gender = eval(f.readlines()[0])
 
-
-    with open(f'../features/stage2/sociodemo/schemas/socdemo_age_schema_{models_dict["ageGroup_0_17"].split("/")[-3]}.txt', 'r') as f:
-        schema_age =  eval(f.readlines()[0])
+    with open(
+        f'../features/stage2/sociodemo/schemas/socdemo_age_schema_{models_dict["ageGroup_0_17"].split("/")[-3]}.txt',
+        "r",
+    ) as f:
+        schema_age = eval(f.readlines()[0])
 
     schema_gender.extend(schema_age)
     schema_both = list(set(schema_gender))
-    schema_both.remove(StructField('label', StringType(), True))
+    schema_both.remove(StructField("label", StringType(), True))
 
     return schema_both
 
-    
 
 # COMMAND ----------
 
-models_dict = get_value_from_yaml("paths", "models", "sociodemo", os.getenv("APP_ENV")) 
+models_dict = get_value_from_yaml("paths", "models", "sociodemo", os.getenv("APP_ENV"))
 schemas_both = get_schemas(models_dict)
 
 # COMMAND ----------
+
 
 def get_cols_from_schema(schema):
     unique_urls = []
@@ -145,7 +166,6 @@ def get_cols_from_schema(schema):
     cat_cols = []
 
     for f in schema:
-
         if f.name.split("_")[-1] == "flag":
             unique_urls.append((".").join(f.name.split("_")[:-1]))
             num_cols.append(f.name)
@@ -157,8 +177,9 @@ def get_cols_from_schema(schema):
             elif isinstance(f.dataType, (IntegerType, DoubleType, FloatType, LongType)):
                 num_cols.append(f.name)
             else:
-                raise Exception(f"{f.name} is unknown type {f.dataType}.") 
+                raise Exception(f"{f.name} is unknown type {f.dataType}.")
     return unique_urls, columns_list, num_cols, cat_cols
+
 
 # COMMAND ----------
 
@@ -166,6 +187,7 @@ unique_urls, columns_list, num_cols, cat_cols = get_cols_from_schema(schemas_bot
 columns_list.extend(["user_id", "timestamp"])
 
 # COMMAND ----------
+
 
 def choose_features(df, columns_list):
     df = df.select(
@@ -184,12 +206,15 @@ df_fs_features = choose_features(df_joined, columns_list)
 
 # COMMAND ----------
 
+
 def replace_rare_values(df, num_cols, cat_cols):
     for key, value in ALLOWED_VALUES.items():
-        df = df.withColumn(key, F.when(F.col(key).isin(value), F.col(key)).otherwise("None"))  
+        df = df.withColumn(
+            key, F.when(F.col(key).isin(value), F.col(key)).otherwise("None")
+        )
 
     df = df.fillna(0, subset=num_cols)
-    df = df.fillna("None", subset=cat_cols)  
+    df = df.fillna("None", subset=cat_cols)
     return df
 
 
@@ -197,12 +222,13 @@ df_fs_replaced = replace_rare_values(df_fs_features, num_cols, cat_cols)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC
 # MAGIC ## Apply sociodemo models
 
 # COMMAND ----------
+
 
 def apply_models(df, models_dict, logger: Logger):
     for model in models_dict:
@@ -246,7 +272,6 @@ def apply_models(df, models_dict, logger: Logger):
             df = df.withColumn(f"sociodemo_perc_{model}", F.lit(None).cast("double"))
             df = df.withColumn(f"sociodemo_prob_{model}", F.lit(None).cast("double"))
 
-
     # define values for male model as a complement to the female model
     df = df.withColumn(
         "sociodemo_perc_gender_female", 1 - F.col("sociodemo_perc_gender_male")
@@ -262,7 +287,7 @@ df_final = apply_models(df_fs_replaced, models_dict, root_logger)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC
 # MAGIC #### Metadata

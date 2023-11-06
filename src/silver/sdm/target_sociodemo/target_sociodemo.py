@@ -40,6 +40,7 @@ widget_n_days = dbutils.widgets.get("n_days")
 
 # COMMAND ----------
 
+
 # if no end date provided then current date is taken
 def load_silver(df: DataFrame, end_date: str, n_days: str):
     # process end date
@@ -77,6 +78,7 @@ df_silver_cpex_piano = load_silver(df_bronze_cpex_piano, widget_end_date, widget
 # MAGIC %md Process age and gender
 
 # COMMAND ----------
+
 
 def preprocessing(df: DataFrame):
     return (

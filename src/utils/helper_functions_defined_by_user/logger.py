@@ -1,10 +1,11 @@
 import logging
 
+
 def instantiate_logger():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     logger.handlers.clear()
-    
+
     # Create a formatter with timestamp
     formatter = logging.Formatter(
         "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
@@ -17,4 +18,3 @@ def instantiate_logger():
     # Add the stream handler to the logger
     logger.addHandler(stream_handler)
     return logger
-    

@@ -35,7 +35,6 @@ def check_dbfs_existence(path: str, spark):
     return fs.exists(jvm.org.apache.hadoop.fs.Path(filePath))
 
 
-
 def create_latest_lookalike_table(db, lookalikes, spark):
     df_tmp_int = spark.createDataFrame(
         [(dt.date.today().isoformat(), lookalikes)], ["date", "last_used_lookalikes"]
@@ -45,7 +44,6 @@ def create_latest_lookalike_table(db, lookalikes, spark):
         f"CREATE TABLE {db}.last_used_lookalikes as SELECT * FROM last_used_lookalikes"
     )
     spark.catalog.dropTempView("last_used_lookalikes")
-
 
 
 # Get old interests and identify new ones, update table if necessary
@@ -58,7 +56,6 @@ def create_latest_interests_table(db, interests, spark):
         f"CREATE TABLE {db}.last_used_interests as SELECT * FROM last_used_interests"
     )
     spark.catalog.dropTempView("last_used_interests")
-
 
 
 def delete_checkpoint_dir(sc):

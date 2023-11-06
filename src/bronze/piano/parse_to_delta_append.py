@@ -56,13 +56,11 @@ widget_series_length = dbutils.widgets.get("series_length")
 
 # COMMAND ----------
 
+
 # create empty if not exists - releavnt only for long table (as append is used)
 def create_bronze_cpex_piano(series_length):
     if series_length == "long":
-        if not delta_table_exists(
-            get_value_from_yaml("paths", "cpex_table_piano")
-        ):
-
+        if not delta_table_exists(get_value_from_yaml("paths", "cpex_table_piano")):
             schema, info = get_schema_cpex_piano_cleansed()
             df_empty = spark.createDataFrame([], schema)
 
@@ -85,6 +83,7 @@ create_bronze_cpex_piano(widget_series_length)
 
 # COMMAND ----------
 
+
 def max_upload_date(df: DataFrame, series_length):
     if series_length == "long":
         return get_max_date(df=df, date_col="day", datetime_col="EVENT_TIME")
@@ -101,6 +100,7 @@ df_max_upload_date = max_upload_date(df_bronze_cpex_piano, widget_series_length)
 # MAGIC %md Select only relevant subfolders of raw folder
 
 # COMMAND ----------
+
 
 # select relevant subfolders
 def get_relevant_folders(
@@ -156,6 +156,7 @@ relevant_folders_list = get_relevant_folders(
 
 # COMMAND ----------
 
+
 def flatten_struct(schema, prefix=""):
     result = []
     for elem in schema:
@@ -165,7 +166,9 @@ def flatten_struct(schema, prefix=""):
             result.append(F.col(prefix + elem.name).alias(elem.name))
     return result
 
+
 # COMMAND ----------
+
 
 def get_custom_parameters(column, param_of_interest):
     @F.pandas_udf("string")
@@ -180,14 +183,15 @@ def get_custom_parameters(column, param_of_interest):
 
     return get_custom_parameters_udf(column)
 
+
 # COMMAND ----------
 
 # MAGIC %md Load json to delta
 
 # COMMAND ----------
 
-def get_jsons(relevant_folders, logger: Logger):
 
+def get_jsons(relevant_folders, logger: Logger):
     for folder in relevant_folders:
         folder_path = folder.split(":")[1]
         files_in_folder = dbutils.fs.ls(folder_path)
@@ -199,7 +203,7 @@ def get_jsons(relevant_folders, logger: Logger):
                 continue
 
             name = re.search(
-                ".*\d{4}-\d{2}-\d{2}/(.*?_*[0-9]+)\.json", elem_path
+                r".*\d{4}-\d{2}-\d{2}/(.*?_*[0-9]+)\.json", elem_path
             ).group(1)
             save_path = folder_path + "delta/" + name
 
@@ -212,7 +216,7 @@ def get_jsons(relevant_folders, logger: Logger):
                 pass
 
             owner_name = re.search(
-                ".*\d{4}-\d{2}-\d{2}/(.*?)_*[0-9]+\.json", elem_path
+                r".*\d{4}-\d{2}-\d{2}/(.*?)_*[0-9]+\.json", elem_path
             ).group(1)
             if not owner_name:
                 owner_name = "unknown"
@@ -240,16 +244,20 @@ get_jsons(relevant_folders_list, root_logger)
 
 # COMMAND ----------
 
+
 def load_raw_delta(
     relevant_folders, series_length, destination_max_date, n_hours_short, logger: Logger
 ):
     fetched_schema, info = get_schema_cpex_piano_cleansed()
-    user_params_expected_schema = fetched_schema["userParameters"].simpleString().split(":", 1)[1]
-    external_id_expected_schema = fetched_schema["externalUserIds"].simpleString().split(":", 1)[1]
+    user_params_expected_schema = (
+        fetched_schema["userParameters"].simpleString().split(":", 1)[1]
+    )
+    external_id_expected_schema = (
+        fetched_schema["externalUserIds"].simpleString().split(":", 1)[1]
+    )
 
     df_to_union = []
     for folder in relevant_folders:
-    
         # load from delta folder inside relevant folder:
         files_in_folder = dbutils.fs.ls(folder.split(":")[1] + "delta/")
 
@@ -262,23 +270,44 @@ def load_raw_delta(
             external_id_schema = df.select("externalUserIds").dtypes[0][1]
 
             if external_id_schema == external_id_expected_schema:
-                df = df.withColumn("externalUserIds", 
-                               F.array(F.struct((F.col("externalUserIds.id")[0]).alias("id"), 
-                                                (F.col("externalUserIds.type")[0]).alias("type"))
-                               ))
-            else: raise Exception(f"Schema mismatch in externalUserIds column on path {elem_path}!")
-            
+                df = df.withColumn(
+                    "externalUserIds",
+                    F.array(
+                        F.struct(
+                            (F.col("externalUserIds.id")[0]).alias("id"),
+                            (F.col("externalUserIds.type")[0]).alias("type"),
+                        )
+                    ),
+                )
+            else:
+                raise Exception(
+                    f"Schema mismatch in externalUserIds column on path {elem_path}!"
+                )
+
             if user_params_schema == user_params_expected_schema:
-                df = df.withColumn("userParameters", 
-                               F.array(F.struct((F.col("userParameters.group")[0]).alias("group"), 
-                                                (F.col("userParameters.item")[0]).alias("item"))
-                                       ))
+                df = df.withColumn(
+                    "userParameters",
+                    F.array(
+                        F.struct(
+                            (F.col("userParameters.group")[0]).alias("group"),
+                            (F.col("userParameters.item")[0]).alias("item"),
+                        )
+                    ),
+                )
             elif user_params_schema == "array<string>":
-                df = df.withColumn("userParameters", 
-                                   F.array(F.struct(F.lit(None).cast("string").alias("group"), 
-                                                    F.lit(None).cast("string").alias("item"))
-                                           ))
-            else: raise Exception(f"Schema mismatch in userParameters column on path {elem_path}!")
+                df = df.withColumn(
+                    "userParameters",
+                    F.array(
+                        F.struct(
+                            F.lit(None).cast("string").alias("group"),
+                            F.lit(None).cast("string").alias("item"),
+                        )
+                    ),
+                )
+            else:
+                raise Exception(
+                    f"Schema mismatch in userParameters column on path {elem_path}!"
+                )
 
             df_to_union.append(df)
             logger.info(f"Source file: {elem_path} appended")
@@ -339,12 +368,11 @@ df_raw_data = load_raw_delta(
 
 # COMMAND ----------
 
-def save(df: DataFrame, series_length):
 
+def save(df: DataFrame, series_length):
     schema, info = get_schema_cpex_piano_cleansed()
 
     if series_length == "long":
-
         write_dataframe_to_table(
             df,
             get_value_from_yaml("paths", "cpex_table_piano"),
@@ -352,11 +380,10 @@ def save(df: DataFrame, series_length):
             "append",
             root_logger,
             info["partition_by"],
-            info["table_properties"]
+            info["table_properties"],
         )
 
     if series_length == "short":
-
         write_dataframe_to_table(
             df,
             get_value_from_yaml("paths", "cpex_table_short_piano"),
@@ -364,19 +391,21 @@ def save(df: DataFrame, series_length):
             "overwrite",
             root_logger,
             info["partition_by"],
-            info["table_properties"]
+            info["table_properties"],
         )
+
 
 save(df_raw_data, widget_series_length)
 
 # COMMAND ----------
 
+
 # delete all files after using them to save storage
 def delete_jsons(relevant_folders, logger: Logger):
-
     for folder in relevant_folders:
         folder_path = folder.split(":")[1] + "delta/"
         dbutils.fs.rm(folder_path, recurse=True)
         logger.info(f"Folder {folder_path} deleted with all tables.")
+
 
 delete_jsons(relevant_folders_list, root_logger)

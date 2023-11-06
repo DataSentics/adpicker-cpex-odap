@@ -13,8 +13,12 @@ from pyspark.sql.dataframe import DataFrame
 
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user._functions_ml import ith
-from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
-from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
+from src.utils.helper_functions_defined_by_user.yaml_functions import (
+    get_value_from_yaml,
+)
+from src.utils.helper_functions_defined_by_user.feature_fetching_functions import (
+    fetch_fs_stage,
+)
 
 # COMMAND ----------
 
@@ -49,8 +53,11 @@ timestamp = dbutils.widgets.get("timestamp")
 
 # COMMAND ----------
 
+
 def read_fs(timestamp):
-    df = fetch_fs_stage(timestamp, stage=1).withColumn("timestamp", F.to_timestamp(F.col("timestamp")))
+    df = fetch_fs_stage(timestamp, stage=1).withColumn(
+        "timestamp", F.to_timestamp(F.col("timestamp"))
+    )
     df = df.withColumn("owner_names", F.split(F.col("owner_names_7d"), ","))
     return df
 
@@ -62,6 +69,7 @@ df_fs = read_fs(timestamp)
 # MAGIC %md #### Load models from database
 
 # COMMAND ----------
+
 
 def load_lookalikes_to_score():
     lookalike_path = get_value_from_yaml("paths", "lookalike_path")
@@ -78,8 +86,11 @@ df_loaded_lookalikes = load_lookalikes_to_score()
 
 # COMMAND ----------
 
+
 def score_lookalikes(df, lookalike_models_df, logger: Logger):
-    fs_columns_to_drop = [colname for colname in df.columns if colname not in ["user_id", "timestamp"]]
+    fs_columns_to_drop = [
+        colname for colname in df.columns if colname not in ["user_id", "timestamp"]
+    ]
     lookalike_models_df = lookalike_models_df.toPandas()
 
     for _, row in lookalike_models_df.iterrows():
@@ -101,21 +112,22 @@ def score_lookalikes(df, lookalike_models_df, logger: Logger):
             model_registry_uri = model_info["mlf_model"] + stage
             model_obj = mlflow.spark.load_model(model_registry_uri)
 
-            # drop columns created by pipeline to avoid duplicates 
+            # drop columns created by pipeline to avoid duplicates
             original_cols = set(df.columns)
             df = model_obj.transform(df)
             pipeline_cols = set(df.columns)
             cols_to_drop = list(pipeline_cols - original_cols)
 
-
-            df = df.withColumn(
-                probability_col_name, ith("probability", F.lit(1))
-            ).withColumn(
-                percentile_col_name,
-                F.percent_rank().over(
-                    Window.partitionBy().orderBy(probability_col_name)
-                ),
-            ).drop(*cols_to_drop)
+            df = (
+                df.withColumn(probability_col_name, ith("probability", F.lit(1)))
+                .withColumn(
+                    percentile_col_name,
+                    F.percent_rank().over(
+                        Window.partitionBy().orderBy(probability_col_name)
+                    ),
+                )
+                .drop(*cols_to_drop)
+            )
 
     return df.drop(*fs_columns_to_drop)
 
@@ -124,7 +136,7 @@ df_final = score_lookalikes(df_fs, df_loaded_lookalikes, root_logger)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC #### Metadata
 
 # COMMAND ----------

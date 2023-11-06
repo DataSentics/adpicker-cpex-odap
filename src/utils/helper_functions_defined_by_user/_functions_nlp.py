@@ -1,38 +1,36 @@
-
 import os
-
-import pyspark.sql.functions as F
-import pyspark.sql.types as T
-from pyspark.sql.window import Window
-from unidecode import unidecode
-import urllib.parse as urlParse
-import datetime as dt
-import math
-import requests
-from pyspark.dbutils import DBUtils
-
-import urllib.parse as urlParse
-import datetime as dt
-from pyspark.sql.functions import udf
-from pyspark.sql.dataframe import DataFrame
-from pyspark.sql.session import SparkSession
-from pyspark import SparkContext
-from pyspark.sql import SQLContext
-
-from pyspark.ml.feature import Word2VecModel
-from pyspark.ml.feature import StopWordsRemover, RegexTokenizer
-from pyspark.ml import Pipeline
 import re
 import pandas as pd
 import numpy as np
 import random
 import unicodedata
 import json
-import requests
 from pprint import pprint
+from unidecode import unidecode
+import urllib.parse as urlParse
+import datetime as dt
+import math
+import requests
+
+import pyspark.sql.functions as F
+import pyspark.sql.types as T
+from pyspark.sql.window import Window
+from pyspark.sql.functions import udf
+from pyspark.sql.dataframe import DataFrame
+from pyspark.sql.session import SparkSession
+from pyspark import SparkContext
+from pyspark.sql import SQLContext
+from pyspark.dbutils import DBUtils
+
+from pyspark.ml.feature import Word2VecModel
+from pyspark.ml.feature import StopWordsRemover, RegexTokenizer
+from pyspark.ml import Pipeline
 
 from nltk.stem.cistem import Cistem
-from src.utils.helper_functions_defined_by_user._functions_general import check_dbfs_existence
+
+from src.utils.helper_functions_defined_by_user._functions_general import (
+    check_dbfs_existence,
+)
 
 # Functions originally in _functions_nlp
 decode_udf = udf(lambda val: urlParse.unquote(val))
@@ -47,8 +45,8 @@ charsTo = (
 
 @F.udf(returnType=T.ArrayType(T.StringType()))
 def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
-    # TODO: the stemming is too agresive and not very smart - it should be refactored 
-    
+    # TODO: the stemming is too agresive and not very smart - it should be refactored
+
     # helper functions (due to issue with import of UDF when helper functions are outside of the function's body)
     def _remove_case(word):
         if len(word) > 7 and word.endswith("atech"):
@@ -75,7 +73,17 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
                 "imu",
             }:
                 return _palatalise(word[:-2])
-            if word[-3:] in {"ách", "ata", "aty", "ých", "ama", "ami", "ové", "ovi", "ými"}:
+            if word[-3:] in {
+                "ách",
+                "ata",
+                "aty",
+                "ých",
+                "ama",
+                "ami",
+                "ové",
+                "ovi",
+                "ými",
+            }:
                 return word[:-3]
         if len(word) > 4:
             if word.endswith("em"):
@@ -91,7 +99,6 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
                 return word[:-1]
         return word
 
-
     def _remove_possessives(word):
         if len(word) > 5:
             if word[-2:] in {"ov", "ův"}:
@@ -100,13 +107,11 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
                 return _palatalise(word[:-1])
         return word
 
-
     def _remove_comparative(word):
         if len(word) > 5:
             if word[-3:] in {"ejš", "ějš"}:
                 return _palatalise(word[:-2])
         return word
-
 
     def _remove_diminutive(word):
         if len(word) > 7 and word.endswith("oušek"):
@@ -159,7 +164,6 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
             return word[:-1]
         return word
 
-
     def _remove_augmentative(word):
         if len(word) > 6 and word.endswith("ajzn"):
             return word[:-4]
@@ -168,7 +172,6 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
         if len(word) > 4 and word.endswith("ák"):
             return word[:-2]
         return word
-
 
     def _remove_derivational(word):
         if len(word) > 8 and word.endswith("obinec"):
@@ -218,7 +221,18 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
         if len(word) > 4:
             if word[-2:] in {"áč", "ač", "án", "an", "ář", "as"}:
                 return word[:-2]
-            if word[-2:] in {"ec", "en", "ěn", "éř", "íř", "ic", "in", "ín", "it", "iv"}:
+            if word[-2:] in {
+                "ec",
+                "en",
+                "ěn",
+                "éř",
+                "íř",
+                "ic",
+                "in",
+                "ín",
+                "it",
+                "iv",
+            }:
                 return _palatalise(word[:-1])
             if word[-2:] in {
                 "ob",
@@ -240,7 +254,6 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
             return word[:-1]
         return word
 
-
     def _palatalise(word):
         if word[-2:] in {"ci", "ce", "či", "če"}:
             return word[:-2] + "k"
@@ -254,7 +267,6 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
         if word[-3:] in {"ště", "šti", "ští"}:
             return word[:-3] + "sk"
         return word[:-1]
-
 
     # assume the account ends with 'cz' if not specified (None)
     if (account is not None) and account.endswith("_at"):
@@ -276,7 +288,6 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
     #   udfstemed_lst = F.udf(cz_stem, T.ArrayType(T.StringType()))
     else:
         print("cz stemmer")
-        import re
 
         if inputString == True:
             words = sentence.split()
@@ -331,14 +342,13 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
         return stemmed_sentence
 
 
-
 def stem_pd_column(kw_l):
     if kw_l is not None:
         return list(set(stemming(kw_l, "cz")))
     else:
         return None
 
-      
+
 def strip_diacritic_fl(kw_l):
     if kw_l is not None:
         return [unidecode(kw) for kw in kw_l]
@@ -346,7 +356,16 @@ def strip_diacritic_fl(kw_l):
         return None
 
 
-def run_azuresearch_al(interest, account, client_name, enhance, personas_client_id, specific_solution_path, spark, dbutils):
+def run_azuresearch_al(
+    interest,
+    account,
+    client_name,
+    enhance,
+    personas_client_id,
+    specific_solution_path,
+    spark,
+    dbutils,
+):
     notebook_name = "WL_generator_augmented"
     min_selection_percentile = "0.75"
     dbutils.notebook.run(
@@ -371,27 +390,27 @@ def run_azuresearch_al(interest, account, client_name, enhance, personas_client_
             .withColumn("rank", F.lit(1))
         )
 
-        
+
 def clean_rtb_domain(df: DataFrame) -> DataFrame:
     """cleaning of RtbDomain for grouping"""
     df = df.withColumn("RtbDomain", F.lower(F.col("URL"))).drop("URL")
     # remove prefix (https/http/www...) from RtbDomain
     df = df.withColumn(
         "RtbDomain",
-        F.regexp_replace("RtbDomain", "^((https?|ftp)://)?(ww+[^\.]*\.)?", ""),
+        F.regexp_replace("RtbDomain", r"^((https?|ftp)://)?(ww+[^\.]*\.)?", ""),
     )
     # remove '.' if it is the first character in RtbDomain
-    df = df.withColumn("RtbDomain", F.regexp_replace("RtbDomain", "^\.", ""))
+    df = df.withColumn("RtbDomain", F.regexp_replace("RtbDomain", r"^\.", ""))
     # remove forbidden and all following characters from RtbDomain
     df = df.withColumn(
         "RtbDomain",
         F.regexp_replace(
-            "RtbDomain", "[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""
+            "RtbDomain", r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""
         ),
     )
     # crop to domain and category (+ a dot is not allowed after the first forward slash)
     df = df.withColumn(
-        "RtbDomain", F.regexp_extract("RtbDomain", "^[^/]+(/[^/.]+)?", 0)
+        "RtbDomain", F.regexp_extract("RtbDomain", r"^[^/]+(/[^/.]+)?", 0)
     )
 
     # crop domain to the first 100 characters
@@ -403,18 +422,25 @@ def clean_rtb_domain(df: DataFrame) -> DataFrame:
     )
 
     # remove trailing special char
-    df = df.withColumn("RtbDomain", F.regexp_replace("RtbDomain", "[\.\-\/]$", ""))
+    df = df.withColumn("RtbDomain", F.regexp_replace("RtbDomain", r"[\.\-\/]$", ""))
 
     # remove "m" indicating mobile phone
-    df = df.withColumn("RtbDomain", F.regexp_replace("RtbDomain", "^m\.", ""))
-    df = df.withColumn("RtbDomain", F.regexp_replace("RtbDomain", "\.m\.", "."))
+    df = df.withColumn("RtbDomain", F.regexp_replace("RtbDomain", r"^m\.", ""))
+    df = df.withColumn("RtbDomain", F.regexp_replace("RtbDomain", r"\.m\.", "."))
     df = df.withColumnRenamed("RtbDomain", "URL")
     return df
 
 
 # Functions originally in _NLP_functions
 def enhance_keywords(
-    kw_list, similarity_thresh, synonym_count, account, spark: SparkSession, sc: SparkContext, sql_context: SQLContext, max_number=100
+    kw_list,
+    similarity_thresh,
+    synonym_count,
+    account,
+    spark: SparkSession,
+    sc: SparkContext,
+    sql_context: SQLContext,
+    max_number=100,
 ):
     enhanced_dict = {k: "" for k in kw_list}
     synonyms = pd.DataFrame({}, columns=["word", "similarity", "count"])
@@ -450,7 +476,7 @@ def indexesCalculator(data, levelOfDistinction=["DomainCategory"]):
         .agg(*logit(groups=["interest"]))
     )
     return temp
-    
+
 
 def strip_diacritic(s) -> str:
     """
@@ -464,7 +490,7 @@ def strip_diacritic(s) -> str:
     else:
         return ""
 
-    
+
 def url_to_adform_format(url: str) -> str:
     """
     Process and crop the domains in input_col_name so that they are in compliance with AdForm format (no special characters,
@@ -516,64 +542,107 @@ def url_to_adform_format_light(url: str) -> str:
 url_transform_light = F.udf(url_to_adform_format_light, T.StringType())
 
 
-
 def df_url_to_adform_format(df, column):
     """
     Process and crop the domains in input_col_name so that they are in compliance with AdForm format (no special characters,
     maximum length of 100 characters) and also cropped to domain/category.
     """
     df = df.withColumn(column, F.lower(F.col(column)))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"^((https?|ftp)://)?", ""))
+    df = df.withColumn(
+        column, F.regexp_replace(F.col(column), r"^((https?|ftp)://)?", "")
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^\.", ""))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""))
+    df = df.withColumn(
+        column,
+        F.regexp_replace(
+            F.col(column), r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""
+        ),
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^m\.", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"\.m\.", "."))
     df = df.withColumn(column, F.regexp_extract(F.col(column), r"^[^/]+(/[^/.]+)?", 0))
-    df = df.withColumn(column, F.when(F.length(F.col(column)) > 99, df[column].substr(0, 99)).otherwise(F.col(column)))
+    df = df.withColumn(
+        column,
+        F.when(F.length(F.col(column)) > 99, df[column].substr(0, 99)).otherwise(
+            F.col(column)
+        ),
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"[\.\-\/]$", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"www.", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"m,.", ""))
     return df
-      
+
+
 def df_url_to_adform_format_light(df, column):
     """
     Light version of url_to_adform_format - no cropping and shortening.
     """
 
     df = df.withColumn(column, F.lower(F.col(column)))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"^((https?|ftp)://)?", ""))
+    df = df.withColumn(
+        column, F.regexp_replace(F.col(column), r"^((https?|ftp)://)?", "")
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^\.", ""))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""))
+    df = df.withColumn(
+        column,
+        F.regexp_replace(
+            F.col(column), r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""
+        ),
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^m\.", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"\.m\.", "."))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"[\.\-\/]$", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"www.", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"m,.", ""))
     return df
-      
-      
-def df_url_to_domain(df, column, subdomains = None):
+
+
+def df_url_to_domain(df, column, subdomains=None):
     """
     Process and crop the domains in input_col_name so that they are in compliance with AdForm format (no special characters,
     maximum length of 100 characters) and also cropped to domain/category.
     """
     df = df.withColumn(column, F.lower(F.col(column)))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"^((https?|ftp)://)?", ""))
+    df = df.withColumn(
+        column, F.regexp_replace(F.col(column), r"^((https?|ftp)://)?", "")
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^\.", ""))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""))
+    df = df.withColumn(
+        column,
+        F.regexp_replace(
+            F.col(column), r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""
+        ),
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^m\.", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"\.m\.", "."))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"[\.\-\/]$", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"www.", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"m,.", ""))
-    df = df.withColumn(column, F.split(F.col(column), '/').getItem(0))
+    df = df.withColumn(column, F.split(F.col(column), "/").getItem(0))
     if subdomains == 0:
-        df = df.withColumn(column, F.reverse(F.split(F.col(column), "\.")).getItem(0))
+        df = df.withColumn(column, F.reverse(F.split(F.col(column), r"\.")).getItem(0))
     elif subdomains == 1:
-        df = df.withColumn(column,F.concat_ws(".",F.reverse(F.slice(F.reverse(F.split(F.col(column), "\.")), start= 1, length = 2))))
+        df = df.withColumn(
+            column,
+            F.concat_ws(
+                ".",
+                F.reverse(
+                    F.slice(F.reverse(F.split(F.col(column), r"\.")), start=1, length=2)
+                ),
+            ),
+        )
     elif subdomains == 2:
-        df = df.withColumn(column,F.concat_ws(".",F.reverse(F.slice(F.reverse(F.split(F.col(column), "\.")), start= 1, length = 3))))
+        df = df.withColumn(
+            column,
+            F.concat_ws(
+                ".",
+                F.reverse(
+                    F.slice(F.reverse(F.split(F.col(column), r"\.")), start=1, length=3)
+                ),
+            ),
+        )
     return df
+
 
 def df_url_to_2_level_domain(df, column):
     """
@@ -581,54 +650,76 @@ def df_url_to_2_level_domain(df, column):
     maximum length of 100 characters) and also cropped to domain/category.
     """
     df = df.withColumn(column, F.lower(F.col(column)))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"^((https?|ftp)://)?", ""))
+    df = df.withColumn(
+        column, F.regexp_replace(F.col(column), r"^((https?|ftp)://)?", "")
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^\.", ""))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""))
+    df = df.withColumn(
+        column,
+        F.regexp_replace(
+            F.col(column), r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""
+        ),
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^m\.", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"\.m\.", "."))
-    df = df.withColumn(column, F.regexp_extract(F.col(column), r"^[^/]+(/[^/.]+)(/[^/.]+)", 0))
-    df = df.withColumn(column, F.when(F.length(F.col(column)) > 99, df[column].substr(0, 99)).otherwise(F.col(column)))
+    df = df.withColumn(
+        column, F.regexp_extract(F.col(column), r"^[^/]+(/[^/.]+)(/[^/.]+)", 0)
+    )
+    df = df.withColumn(
+        column,
+        F.when(F.length(F.col(column)) > 99, df[column].substr(0, 99)).otherwise(
+            F.col(column)
+        ),
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"[\.\-\/]$", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"www.", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"m,.", ""))
-    return df      
+    return df
+
 
 def df_url_normalization(df, column):
     """
     Normalization of URL
     """
     df = df.withColumn(column, F.lower(F.col(column)))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"^((https?|ftp)://)?", ""))
+    df = df.withColumn(
+        column, F.regexp_replace(F.col(column), r"^((https?|ftp)://)?", "")
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^\.", ""))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""))
+    df = df.withColumn(
+        column,
+        F.regexp_replace(
+            F.col(column), r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""
+        ),
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^m\.", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"\.m\.", "."))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r".php$", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r".html$", ""))
-    df = df.withColumn(column, F.regexp_replace(F.col(column), r"\.[0-9a-zA-z_-]*$", ""))
+    df = df.withColumn(
+        column, F.regexp_replace(F.col(column), r"\.[0-9a-zA-z_-]*$", "")
+    )
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"^(www.)?", ""))
     df = df.withColumn(column, F.regexp_replace(F.col(column), r"/$", ""))
     return df
 
 
 def df_url_to_DV360(df, column):
-    '''
+    """
     Function to format URL that can be uploaded to DV360
     Format specifications: - Supports 2 level categories (i.e. mydomain/first-cat/second-cat)
                            - Supports up to 5 levels of subdomain targeting (five.four.three.two.one.mydomain.com)
     Further documentation: https://support.google.com/displayvideo/answer/2650521?hl=en
-    '''
-    return df   
-  
+    """
+    return df
+
 
 def clean_domain_column(df, column):
     return (
         # transform urls to lowercase
         df.withColumn(column, F.lower(F.col(column)))
         # remove prefix (https/http...) from RtbDomain
-        .withColumn(
-            column, F.regexp_replace(column, r"^((https?|ftp)://)?", "")
-        )
+        .withColumn(column, F.regexp_replace(column, r"^((https?|ftp)://)?", ""))
         # remove '.' if it is the first character in RtbDomain
         .withColumn(column, F.regexp_replace(column, r"^\.", ""))
         # remove '/' if it is the last character in RtbDomain
@@ -639,24 +730,40 @@ def clean_domain_column(df, column):
     )
 
 
-def df_stemming(df: DataFrame, input_col: str, cleaned_col: str, stemmed_col: str, client_name: str, stop_words: list) -> DataFrame:
+def df_stemming(
+    df: DataFrame,
+    input_col: str,
+    cleaned_col: str,
+    stemmed_col: str,
+    client_name: str,
+    stop_words: list,
+) -> DataFrame:
     """
-    Performs both cleaning and stemming of a column, creating new column for each transformation (cleaned, cleaned & stemmed) 
+    Performs both cleaning and stemming of a column, creating new column for each transformation (cleaned, cleaned & stemmed)
     """
     # TODO: this function is obsolete and it will not be used after the main pipeline refactoring
-    
+
     df_augmented = df.filter(F.col(input_col).isNotNull())
     df_null = df.filter(F.col(input_col).isNull())
 
     # remove stopwords
-    tokenizer = RegexTokenizer(minTokenLength=2, pattern=r'[\W_]+', inputCol=input_col, outputCol="input_col_temp")
-    remover = StopWordsRemover(stopWords=stop_words, inputCol="input_col_temp", outputCol=cleaned_col)
+    tokenizer = RegexTokenizer(
+        minTokenLength=2,
+        pattern=r"[\W_]+",
+        inputCol=input_col,
+        outputCol="input_col_temp",
+    )
+    remover = StopWordsRemover(
+        stopWords=stop_words, inputCol="input_col_temp", outputCol=cleaned_col
+    )
 
     pipeline = Pipeline(stages=[tokenizer, remover])
     pipeline_fitted = pipeline.fit(df_augmented)
     df_augmented = pipeline_fitted.transform(df_augmented)
 
-    df_augmented = df_augmented.withColumn(stemmed_col, udfstemed_lst(F.col(cleaned_col), F.lit(client_name))).drop("input_col_temp")
+    df_augmented = df_augmented.withColumn(
+        stemmed_col, udfstemed_lst(F.col(cleaned_col), F.lit(client_name))
+    ).drop("input_col_temp")
 
     return df_augmented.unionByName(df_null, allowMissingColumns=True)
 
@@ -668,19 +775,19 @@ def crop_to_DC(df_input, inputcolname):
         df_input.withColumn(
             "DomainCategory",
             F.regexp_extract(
-                F.col(inputcolname), "^((https?://|ftp://))?" + match_2_sections, 0
+                F.col(inputcolname), r"^((https?://|ftp://))?" + match_2_sections, 0
             ),
         )
         .withColumn(
             "DomainCategory",
             F.regexp_replace(
                 F.col("DomainCategory"),
-                "^((https?|ftp)://)?(ww+[^\.]*\.)?(\*\.)?(m\.)?(mobil\.)?(3c\.)?",
+                r"^((https?|ftp)://)?(ww+[^\.]*\.)?(\*\.)?(m\.)?(mobil\.)?(3c\.)?",
                 "",
             ),
         )
         .withColumn(
-            "DomainCategory", F.regexp_replace(F.col("DomainCategory"), "/#?$", "")
+            "DomainCategory", F.regexp_replace(F.col("DomainCategory"), r"/#?$", "")
         )
     )
 
@@ -688,7 +795,7 @@ def crop_to_DC(df_input, inputcolname):
     df_cropped_urls = df_cropped_urls0.withColumn(
         "DomainCategory",
         F.regexp_replace(
-            "DomainCategory", "[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""
+            "DomainCategory", r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", ""
         ),
     )
     return df_cropped_urls
@@ -718,8 +825,8 @@ def url_to_domain(url: str) -> str:
 
 # helper to process string to list (for widget input)
 def convert_string_to_list(string):
-    if string == '[]' or string == '':
+    if string == "[]" or string == "":
         return []
     else:
-        string = re.sub('[\\[\\]]', '', string)
-        return list(string.split(', '))
+        string = re.sub("[\\[\\]]", "", string)
+        return list(string.split(", "))

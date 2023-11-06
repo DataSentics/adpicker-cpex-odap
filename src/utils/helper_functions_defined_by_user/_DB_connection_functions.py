@@ -1,13 +1,20 @@
 from pyspark.sql.session import SparkSession
 from pyspark.dbutils import DBUtils
 
+
 def getMySqlOptions(dbutils: DBUtils):
     dbConfig = {
-        "host": dbutils.secrets.get(scope='unit-kv', key='personas-db-sql-server-host-name'),
-        "user": dbutils.secrets.get(scope='unit-kv', key='personas-db-admin-username'),
-        "password": dbutils.secrets.get(scope='unit-kv', key='personas-db-admin-password'),
-        "database": dbutils.secrets.get(scope='unit-kv', key='personas-db-database-name'),
-        "port": dbutils.secrets.get(scope='unit-kv', key='personas-db-server-port'),
+        "host": dbutils.secrets.get(
+            scope="unit-kv", key="personas-db-sql-server-host-name"
+        ),
+        "user": dbutils.secrets.get(scope="unit-kv", key="personas-db-admin-username"),
+        "password": dbutils.secrets.get(
+            scope="unit-kv", key="personas-db-admin-password"
+        ),
+        "database": dbutils.secrets.get(
+            scope="unit-kv", key="personas-db-database-name"
+        ),
+        "port": dbutils.secrets.get(scope="unit-kv", key="personas-db-server-port"),
         "timezone": "UTC",
     }
 
@@ -48,7 +55,7 @@ def overwrite_mysql_table_by_df(df, table_name, spark: SparkSession, dbutils: DB
             .mode("overwrite")
             .options(**getMySqlOptions(dbutils))
             .option("dbtable", table_name)
-            .option("truncate", "true") 
+            .option("truncate", "true")
             .save()
         )
         return True

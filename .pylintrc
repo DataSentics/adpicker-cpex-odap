@@ -65,7 +65,9 @@ ignore-patterns=^\.#
 # supports qualified module names, as well as Unix pattern matching.
 ignored-modules = odap, # AdPicker package
                   src.utils,  # local functions
-                  pyspark.sql.functions    # useful functions from (Py)Spark
+                  pyspark.sql.functions,   # useful functions from (Py)Spark
+                  delta.tables,     # functions for delta tables
+                  src.schemas, # schemas for used tables
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
@@ -437,7 +439,9 @@ disable=raw-checker-failed,
         use-implicit-booleaness-not-comparison-to-zero,
         # AdPicker specific disabilities
         missing-module-docstring,   # Databricks notebooks has to start with '# Databricks notebook source'
-        wrong-import-position # when we run '%run' command, imports can be only below
+        wrong-import-position, # when we run '%run' command, imports can be only below
+        wrong-import-order,    # not necessary for our focus - mainlly it's reasonable
+        
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

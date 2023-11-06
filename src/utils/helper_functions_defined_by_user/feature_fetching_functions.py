@@ -9,37 +9,41 @@ spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
 def is_valid_timestamp(timestamp):
     try:
-        datetime_object = datetime.strptime(timestamp, "%Y-%m-%d") 
+        datetime_object = datetime.strptime(timestamp, "%Y-%m-%d")
         return True
     except ValueError:
         return False
-    
 
-def fetch_fs_stage(timestamp: str, stage: int, feature_list: Optional[List[str]] = None) -> DataFrame:
+
+def fetch_fs_stage(
+    timestamp: str, stage: int, feature_list: Optional[List[str]] = None
+) -> DataFrame:
     """
-    Fetch a chosen Feature Store stage for a given timestamp. 
+    Fetch a chosen Feature Store stage for a given timestamp.
 
     Parameters:
         timestamp (str): Timestamp for which to fetch the Feature Store stage.
-        stage (int): Stage of the Feature Store to be fetched. 
+        stage (int): Stage of the Feature Store to be fetched.
         feature_list (list, optional): The list of features to be fetched. If blank, fetches all features.
 
     Returns:
-        DataFrame: Spark DataFrame with the Feature Store stage. 
+        DataFrame: Spark DataFrame with the Feature Store stage.
     """
 
-    # TODO - rewrite not to use dbfs, but ADLS cloud storage, if desired and needed 
-   
+    # TODO - rewrite not to use dbfs, but ADLS cloud storage, if desired and needed
+
     if not is_valid_timestamp(timestamp):
         raise Exception("Invalid timestamp!")
 
     try:
-        fs = spark.read.table(f"odap_features_user.user_stage{stage}").filter(F.col("timestamp") == timestamp)
+        fs = spark.read.table(f"odap_features_user.user_stage{stage}").filter(
+            F.col("timestamp") == timestamp
+        )
     except Exception as e:
         print(f"An error occurred while loading the FS: {e}.")
         return None
 
-    if feature_list is None: 
+    if feature_list is None:
         return fs
     else:
         try:

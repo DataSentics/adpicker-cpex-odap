@@ -3,10 +3,10 @@ import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql.window import Window
 from pyspark.sql.dataframe import DataFrame
+from pyspark.sql import SparkSession
 from delta.tables import DeltaTable
 from logging import Logger
 import pandas as pd
-from pyspark.sql import SparkSession
 
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
@@ -70,10 +70,7 @@ web_browsers = ["mozilla", "safari", "edge", "opera", "seznam", "chrome"]
 
 # COMMAND ----------
 
-if not delta_table_exists(
-    get_value_from_yaml("paths", "sdm_session")
-):
-
+if not delta_table_exists(get_value_from_yaml("paths", "sdm_session")):
     schema, info = get_schema_sdm_session()
     df_empty = spark.createDataFrame([], schema)
 
@@ -89,10 +86,7 @@ if not delta_table_exists(
 
 # COMMAND ----------
 
-if not delta_table_exists(
-    get_value_from_yaml("paths", "sdm_pageview")
-):
-
+if not delta_table_exists(get_value_from_yaml("paths", "sdm_pageview")):
     schema, info = get_schema_sdm_pageview()
     df_empty = spark.createDataFrame([], schema)
 
@@ -101,12 +95,13 @@ if not delta_table_exists(
         get_value_from_yaml("paths", "sdm_pageview"),
         schema,
         "default",
-        root_logger, 
+        root_logger,
         info["partition_by"],
         info["table_properties"],
     )
 
 # COMMAND ----------
+
 
 @F.pandas_udf("string")
 def vectorized_udf(REFERER: pd.Series) -> pd.Series:
@@ -135,11 +130,13 @@ def vectorized_udf(REFERER: pd.Series) -> pd.Series:
 
     return REFERER.apply(helper_func)
 
+
 # COMMAND ----------
 
 # MAGIC %md Load cleansed table
 
 # COMMAND ----------
+
 
 def read_cleansed_data(df: DataFrame, df_pageview: DataFrame, logger: Logger):
     # get max date in table
@@ -153,7 +150,7 @@ def read_cleansed_data(df: DataFrame, df_pageview: DataFrame, logger: Logger):
     logger.info(
         f"maximal date in silver.sdm_session before append: {destination_max_date}"
     )
-    
+
     if destination_max_date is not None:
         df = df.filter(
             F.col("day") >= F.to_date(F.lit(destination_max_date.date()))
@@ -206,6 +203,7 @@ df_cleansed_data = read_cleansed_data(
 
 # COMMAND ----------
 
+
 def filter_empty_ids(df):
     df_filtered = df.filter(F.col("DEVICE") != "")
     return df_filtered
@@ -214,6 +212,7 @@ def filter_empty_ids(df):
 df_filtered_data = filter_empty_ids(df_cleansed_data)
 
 # COMMAND ----------
+
 
 def calculate_device_features(df: DataFrame):
     return (
@@ -358,6 +357,7 @@ df_calculate_device_feature = calculate_device_features(df_filtered_data)
 
 # COMMAND ----------
 
+
 def extract_url_formats(df: DataFrame):
     # NORMALIZED URL
     return df_url_normalization(
@@ -368,6 +368,7 @@ def extract_url_formats(df: DataFrame):
 df_extract_url_formats = extract_url_formats(df_calculate_device_feature)
 
 # COMMAND ----------
+
 
 def order_into_sessions(df: DataFrame):
     df = df.repartition(F.col("DEVICE"))
@@ -418,6 +419,7 @@ df_order_into_session = order_into_sessions(df_extract_url_formats)
 
 # COMMAND ----------
 
+
 def create_session_id(df: DataFrame):
     """
     Return DataFrame with unique session identifier.
@@ -442,6 +444,7 @@ def create_session_id(df: DataFrame):
 df_create_session_id = create_session_id(df_order_into_session)
 
 # COMMAND ----------
+
 
 def group_into_sessions(df: DataFrame):
     grouped_sessions = df.groupBy(
@@ -483,6 +486,7 @@ df_group_into_sessions = group_into_sessions(df_create_session_id)
 
 # COMMAND ----------
 
+
 def add_empty_cols_and_zipped_device(df: DataFrame):
     return (
         df.withColumnRenamed("REFERER_NORMALIZED", "REFERRAL_PATH_NORMALIZED")
@@ -522,6 +526,7 @@ df_add_empty_cols_and_zipped_device = add_empty_cols_and_zipped_device(
 
 # COMMAND ----------
 
+
 def create_foreign_dimension_keys(df: DataFrame):
     """Return DataFrame with hashed foreign keys for dimension tables"""
     return (
@@ -543,6 +548,7 @@ df_create_foreign_dimension_keys = create_foreign_dimension_keys(
 # MAGIC %md #### Save preprocessed table
 
 # COMMAND ----------
+
 
 def save_preprocessed_table(df: DataFrame):
     return df.select(
