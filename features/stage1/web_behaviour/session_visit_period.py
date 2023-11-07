@@ -16,8 +16,6 @@ import re
 
 import pyspark.sql.functions as F
 
-from pyspark.sql.window import Window
-
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
@@ -71,9 +69,9 @@ df_session_with_visit_period = web_with_visit_period(df_session_filtered)
 # COMMAND ----------
 
 
-def calculate_visit_time_most_common(df_session_with_visit_period):
-    df = (
-        df_session_with_visit_period.groupby("user_id")
+def calculate_visit_time_most_common(df):
+    df_visit_period = (
+        df.groupby("user_id")
         .agg(
             F.mode("visit_period").alias(
                 f"web_analytics_visit_time_most_common_{time_window_str}"
@@ -81,7 +79,7 @@ def calculate_visit_time_most_common(df_session_with_visit_period):
         )
         .withColumn("timestamp", F.lit(F.current_date()))
     )
-    return df
+    return df_visit_period
 
 
 df_final = calculate_visit_time_most_common(df_session_with_visit_period)

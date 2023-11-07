@@ -17,11 +17,9 @@
 
 import pyspark.sql.functions as F
 
+from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.window import Window
 
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
 from src.utils.helper_functions_defined_by_user.feature_fetching_functions import (
     fetch_fs_stage,
 )
@@ -85,7 +83,7 @@ df_fs = read_fs(widget_timestamp)
 # COMMAND ----------
 
 
-def calculate_combinations(df):
+def calculate_combinations(df: DataFrame):
     """
     Function to succintly calculate scores for all possible combinations of income and education levels (as linear combination of these two scores).
 
@@ -114,7 +112,7 @@ df_calculate_combinations = calculate_combinations(df_fs)
 # COMMAND ----------
 
 
-def define_brackets(df):
+def define_brackets(df: DataFrame):
     """
     Bracket combinations are designed manually to roughly correspond to income/education combinations.
     """
@@ -141,7 +139,7 @@ df_define_brackets = define_brackets(df_calculate_combinations)
 # COMMAND ----------
 
 
-def calculate_percentiles(df):
+def calculate_percentiles(df: DataFrame):
     return df.select(
         "user_id",
         "timestamp",

@@ -22,10 +22,19 @@ Interest = namedtuple("Interest", ["keywords", "general_interest"])
 
 # COMMAND ----------
 
-dbutils.widgets.dropdown("target_name", "<no target>", ["<no target>"], "01. target name")
+dbutils.widgets.dropdown(
+    "target_name", "<no target>", ["<no target>"], "01. target name"
+)
 dbutils.widgets.text("timestamp", "2020-12-12", "02. timestamp")
-dbutils.widgets.dropdown("sample_data", "complete", ["complete", "sample"], "03. sample data")
-dbutils.widgets.dropdown("tokens_version", "cleaned_unique", ["cleaned_unique", "stemmed_unique"], "04. tokens version")
+dbutils.widgets.dropdown(
+    "sample_data", "complete", ["complete", "sample"], "03. sample data"
+)
+dbutils.widgets.dropdown(
+    "tokens_version",
+    "cleaned_unique",
+    ["cleaned_unique", "stemmed_unique"],
+    "04. tokens version",
+)
 dbutils.widgets.dropdown("use_biagrams", "false", ["true", "false"], "05. use biagrams")
 
 # COMMAND ----------
@@ -42,11 +51,17 @@ widget_use_biagrams = dbutils.widgets.get("use_biagrams")
 
 # COMMAND ----------
 
-def tokenized_domains(df: DataFrame, entity, timestamp):
-    return (df.withColumn(entity, F.lit(timestamp)))
 
-df_sdm_tokenized_domains = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_tokenized_domains"))
-df_tokenized_domains = tokenized_domains(df_sdm_tokenized_domains, "timestamp", widget_timestamp)
+def tokenized_domains(df: DataFrame, entity, timestamp):
+    return df.withColumn(entity, F.lit(timestamp))
+
+
+df_sdm_tokenized_domains = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "sdm_tokenized_domains")
+)
+df_tokenized_domains = tokenized_domains(
+    df_sdm_tokenized_domains, "timestamp", widget_timestamp
+)
 
 # COMMAND ----------
 
@@ -54,12 +69,18 @@ df_tokenized_domains = tokenized_domains(df_sdm_tokenized_domains, "timestamp", 
 
 # COMMAND ----------
 
+
 def read_interests(df: DataFrame, tokens_version):
-    loaded_interests = process_loaded_interests(df=df, general_interests=False, keyword_variant=tokens_version)
+    loaded_interests = process_loaded_interests(
+        df=df, general_interests=False, keyword_variant=tokens_version
+    )
 
     return loaded_interests
 
-df_interests_definition = spark.read.format("delta").load(get_value_from_yaml("paths", "interests_definition"))
+
+df_interests_definition = spark.read.format("delta").load(
+    get_value_from_yaml("paths", "interests_definition")
+)
 dict_interests = read_interests(df_interests_definition, widget_tokens_version)
 
 # COMMAND ----------
@@ -69,23 +90,26 @@ dict_interests = read_interests(df_interests_definition, widget_tokens_version)
 
 # COMMAND ----------
 
+
 def get_features(dict_with_interests: dict, table_name, category_name):
     features_dict = {
-    "table":  f"{table_name}",
-    "category": f"{category_name}",
-    "features":{}
+        "table": f"{table_name}",
+        "category": f"{category_name}",
+        "features": {},
     }
 
     for subinterest, interest in dict_with_interests.items():
-        features_dict['features'][f"{subinterest}"] = {
-        "description": f"General Interest: {interest.general_interest}; Subinterest: {subinterest.replace('_', ' ')}",
-        "fillna_with": 0.0,
-        "type": "numerical"
-    }
+        features_dict["features"][f"{subinterest}"] = {
+            "description": f"General Interest: {interest.general_interest}; Subinterest: {subinterest.replace('_', ' ')}",
+            "fillna_with": 0.0,
+            "type": "numerical",
+        }
     return features_dict
 
 
-metadata = get_features(dict_interests["tuple"], "user_stage1", "subinterest_affinity_features")
+metadata = get_features(
+    dict_interests["tuple"], "user_stage1", "subinterest_affinity_features"
+)
 
 # COMMAND ----------
 
@@ -93,9 +117,8 @@ metadata = get_features(dict_interests["tuple"], "user_stage1", "subinterest_aff
 
 # COMMAND ----------
 
-def get_tokenized_domains_interests(
-    tokenized_impressions: DataFrame, interests: dict):
 
+def get_tokenized_domains_interests(tokenized_impressions: DataFrame, interests: dict):
     tokenized_impressions = tokenized_impressions.drop("date")
 
     return tokenized_impressions.select(
@@ -108,13 +131,15 @@ def get_tokenized_domains_interests(
         ],
     )
 
-df_tokenized_domains_interests = get_tokenized_domains_interests(df_tokenized_domains, dict_interests['tuple'])
+
+df_tokenized_domains_interests = get_tokenized_domains_interests(
+    df_tokenized_domains, dict_interests["tuple"]
+)
 
 # COMMAND ----------
 
-def get_interests_stats(
-    tokenized_domains_interests: DataFrame, interest_names: list
-):
+
+def get_interests_stats(tokenized_domains_interests: DataFrame, interest_names: list):
     n_row = F.count(F.lit(1))
 
     interests_stats = (
@@ -131,18 +156,26 @@ def get_interests_stats(
         *(F.col(col).alias(f"stat_{col}") for col in interests_stats.columns),
     )
 
-df_interests_stats = get_interests_stats(df_tokenized_domains_interests, dict_interests['names'])
+
+df_interests_stats = get_interests_stats(
+    df_tokenized_domains_interests, dict_interests["names"]
+)
 
 # COMMAND ----------
+
 
 def get_joined_interests_with_stats(
     tokenized_domains_interests: DataFrame, interests_stats: DataFrame
 ):
     return tokenized_domains_interests.join(interests_stats, how="cross")
 
-df_joined_interests_with_stats = get_joined_interests_with_stats(df_tokenized_domains_interests, df_interests_stats)
+
+df_joined_interests_with_stats = get_joined_interests_with_stats(
+    df_tokenized_domains_interests, df_interests_stats
+)
 
 # COMMAND ----------
+
 
 def features_digi_interests(
     joined_interests_with_stats: DataFrame,
@@ -180,9 +213,9 @@ metadata = {
     "table": "user_stage1",
     "category": "subinterest_affinity_features",
     "features": {
-         "ad_interest_affinity_{interest}": {
-            "description": "Subinterest: ad interest affinity {interest}", 
-            "fillna_with": 0.0
-         }
-     }
+        "ad_interest_affinity_{interest}": {
+            "description": "Subinterest: ad interest affinity {interest}",
+            "fillna_with": 0.0,
+        }
+    },
 }

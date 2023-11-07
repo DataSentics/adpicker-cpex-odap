@@ -17,14 +17,18 @@ import os
 
 from logging import Logger
 from pyspark.sql.dataframe import DataFrame
-from pyspark.sql.types import *
+from pyspark.sql.types import (
+    DoubleType,
+    FloatType,
+    IntegerType,
+    LongType,
+    StringType,
+    StructField,
+)
 from pyspark.sql.window import Window
 
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user._functions_ml import ith
-from src.utils.helper_functions_defined_by_user._functions_helper import (
-    replace_categorical_levels,
-)
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
@@ -111,7 +115,7 @@ df_fs = read_fs(timestamp)
 # COMMAND ----------
 
 
-def join_url_scores(df_fs, url_path, logger: Logger):
+def join_url_scores(df_fs: DataFrame, url_path: str, logger: Logger):
     df_urls = spark.read.format("delta").load(url_path)
     df_joined = df_fs.join(
         df_urls.select("user_id", "timestamp", "collected_urls"),
@@ -131,7 +135,7 @@ df_joined = join_url_scores(df_fs, url_path, root_logger)
 # COMMAND ----------
 
 
-def get_schemas(models_dict):
+def get_schemas(models_dict: dict):
     with open(
         f'../features/stage2/sociodemo/schemas/socdemo_gender_schema_{models_dict["gender_male"].split("/")[-3]}.txt',
         "r",
@@ -189,7 +193,7 @@ columns_list.extend(["user_id", "timestamp"])
 # COMMAND ----------
 
 
-def choose_features(df, columns_list):
+def choose_features(df: DataFrame, columns_list):
     df = df.select(
         *columns_list,
         *[
@@ -207,7 +211,7 @@ df_fs_features = choose_features(df_joined, columns_list)
 # COMMAND ----------
 
 
-def replace_rare_values(df, num_cols, cat_cols):
+def replace_rare_values(df: DataFrame, num_cols, cat_cols):
     for key, value in ALLOWED_VALUES.items():
         df = df.withColumn(
             key, F.when(F.col(key).isin(value), F.col(key)).otherwise("None")
@@ -230,7 +234,7 @@ df_fs_replaced = replace_rare_values(df_fs_features, num_cols, cat_cols)
 # COMMAND ----------
 
 
-def apply_models(df, models_dict, logger: Logger):
+def apply_models(df: DataFrame, models_dict: dict, logger: Logger):
     for model in models_dict:
         logger.info(f"Applying sociodemo model {model}, with path {models_dict[model]}")
 

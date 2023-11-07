@@ -87,7 +87,7 @@ df_loaded_lookalikes = load_lookalikes_to_score()
 # COMMAND ----------
 
 
-def score_lookalikes(df, lookalike_models_df, logger: Logger):
+def score_lookalikes(df: DataFrame, lookalike_models_df: DataFrame, logger: Logger):
     fs_columns_to_drop = [
         colname for colname in df.columns if colname not in ["user_id", "timestamp"]
     ]

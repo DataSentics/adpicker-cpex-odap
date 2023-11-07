@@ -16,8 +16,6 @@
 import re
 import pyspark.sql.functions as F
 
-from pyspark.sql.window import Window
-
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
@@ -59,7 +57,7 @@ def calculate_device_features(df):
     ]
 
     df_grouped = (
-        df_session_filtered.na.fill("unknown", subset=distinct_columns)
+        df.na.fill("unknown", subset=distinct_columns)
         .groupby("user_id")
         .agg(
             F.count_distinct("device_category").alias(

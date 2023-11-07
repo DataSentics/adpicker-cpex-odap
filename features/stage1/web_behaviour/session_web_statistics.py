@@ -18,8 +18,6 @@ import re
 
 import pyspark.sql.functions as F
 
-from pyspark.sql.window import Window
-
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )

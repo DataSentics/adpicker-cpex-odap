@@ -1,6 +1,4 @@
 from pyspark.sql import types as T
-from typing import List, Dict, Optional
-from logging import Logger, getLogger
 
 
 def get_schema_sdm_preprocessed():

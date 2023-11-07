@@ -100,7 +100,7 @@ def check_for_daily_run(scores_table, timestamp):
 
 
 def run_income_model_notebooks(timestamp):
-    if check_for_daily_run("income_interest_scores", timestamp) == False:
+    if check_for_daily_run("income_interest_scores", timestamp) is False:
         dbutils.notebook.run(
             "../src/solutions/income/interest_score_income",
             10000,
@@ -109,7 +109,7 @@ def run_income_model_notebooks(timestamp):
             },
         )
 
-    if check_for_daily_run("income_url_scores", timestamp) == False:
+    if check_for_daily_run("income_url_scores", timestamp) is False:
         dbutils.notebook.run(
             "../src/solutions/income/url_score_income",
             10000,
@@ -118,7 +118,7 @@ def run_income_model_notebooks(timestamp):
             },
         )
 
-    if check_for_daily_run("income_other_scores", timestamp) == False:
+    if check_for_daily_run("income_other_scores", timestamp) is False:
         dbutils.notebook.run(
             "../src/solutions/income/other_score_income",
             10000,

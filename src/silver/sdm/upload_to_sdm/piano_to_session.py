@@ -4,7 +4,6 @@ from pyspark.sql import functions as F
 
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
-    delta_table_exists,
 )
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,

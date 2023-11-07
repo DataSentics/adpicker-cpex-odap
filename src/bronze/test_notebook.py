@@ -1,17 +1,10 @@
 # Databricks notebook source
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
-    delta_table_exists,
-    compare_and_check_schemas,
-)
-from src.schemas.bronze_schema import get_schema_cpex_piano_cleansed
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
 )
 
 import logging
 import pyspark.sql.types as T
-import pyspark.sql.functions as F
 
 # COMMAND ----------
 
@@ -90,7 +83,7 @@ path = (
 print(os.path.abspath(path))
 new_path = "/Workspace/Repos/michal.odler@datasentics.com/adpicker-cpex-odap/src/config/config.yaml"
 
-with open(new_path, "r") as cf:
+with open(new_path, "r", encoding="utf-8") as cf:
     data = yaml.safe_load(cf)
     print(data)
 

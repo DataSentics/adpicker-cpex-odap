@@ -136,7 +136,7 @@ df_fs_targets = assign_lookalikes_target(
 # COMMAND ----------
 
 
-def get_array_of_lookalikes(df_fs_targets: DataFrame, df_lookalikes):
+def get_array_of_lookalikes(df_fs_targets: DataFrame):
     feature_names = [
         colname
         for colname in df_fs_targets.columns
@@ -159,7 +159,7 @@ def get_array_of_lookalikes(df_fs_targets: DataFrame, df_lookalikes):
     return df_fs_targets_array
 
 
-df_final = get_array_of_lookalikes(df_fs_targets, df_lookalikes)
+df_final = get_array_of_lookalikes(df_fs_targets)
 
 # COMMAND ----------
 

@@ -104,7 +104,7 @@ def check_for_daily_run(scores_table, timestamp):
 
 
 def run_education_model_notebooks(timestamp):
-    if check_for_daily_run("education_interest_scores", timestamp) == False:
+    if check_for_daily_run("education_interest_scores", timestamp) is False:
         dbutils.notebook.run(
             "../src/solutions/education/interest_score_edu",
             10000,
@@ -113,7 +113,7 @@ def run_education_model_notebooks(timestamp):
             },
         )
 
-    if check_for_daily_run("education_url_scores", timestamp) == False:
+    if check_for_daily_run("education_url_scores", timestamp) is False:
         dbutils.notebook.run(
             "../src/solutions/education/url_score_edu",
             10000,
@@ -122,7 +122,7 @@ def run_education_model_notebooks(timestamp):
             },
         )
 
-    if check_for_daily_run("education_other_scores", timestamp) == False:
+    if check_for_daily_run("education_other_scores", timestamp) is False:
         dbutils.notebook.run(
             "../src/solutions/education/other_score_edu",
             10000,

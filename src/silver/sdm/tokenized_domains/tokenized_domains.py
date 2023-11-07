@@ -66,7 +66,7 @@ def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str):
     # process end date
     try:
         end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
-    except:
+    except BaseException:
         end_date = date.today()
 
     # calculate start date
