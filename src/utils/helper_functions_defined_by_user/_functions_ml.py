@@ -5,6 +5,8 @@ from pyspark.sql.window import Window
 from pyspark.sql.session import SparkSession
 from pyspark.sql import DataFrame
 
+import datetime as dt
+
 from typing import Callable, List, Any
 import os
 from itertools import chain
@@ -60,7 +62,9 @@ def logit(groups, idfV):
     ]
 
 
-def indexesCalculator(data, interests, idfV, levelOfDistinction=["DomainCategory"]):
+def indexesCalculator(data, interests, idfV, levelOfDistinction=None):
+    if levelOfDistinction is None:
+        levelOfDistinction = ["DomainCategory"]
     temp = (
         data.select(*(levelOfDistinction + interests))
         .groupBy(*levelOfDistinction)
@@ -286,6 +290,7 @@ def fudf(val):
 
 
 def column_add(a, b):
+    # pylint: disable=unnecessary-dunder-call  # I would rather keep explicit call, bu also what is this for?
     return a.__add__(b)
 
 
@@ -408,7 +413,7 @@ def lift_curve(predictions, target, bin_count=10):
         bucket number merget together, calculated as `cum_avg_target/avg_target_rate`,
         where `avg_target_rate =  sum(bucket_n_subj)/sum(bucket_n_target)`
     """
-    if bin_count >= 0 and type(bin_count) == int:
+    if bin_count >= 0 and isinstance(bin_count, int):
         pass
     else:
         raise Exception("Invalid 'bin_count' param value! Set integer value >=0!")
@@ -488,7 +493,7 @@ def lift_curve_generalized(predictions, target, pos_label=1, bin_count=10):
     )
 
     # input check
-    if bin_count < 0 or type(bin_count) != int:
+    if bin_count < 0 or not isinstance(bin_count, int):
         raise Exception("Invalid 'bin_count' param value! Set integer value >=0!")
 
     # actual code

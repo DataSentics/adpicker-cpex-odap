@@ -174,7 +174,7 @@ def check_for_duplicates(df, logger: Logger):
         logger.info("Some duplicates created/no data found! Investigate please!")
 
 
-df_check_for_duplicates = check_for_duplicates(df_unique_url, root_logger)
+check_for_duplicates(df_unique_url, root_logger)
 
 # COMMAND ----------
 

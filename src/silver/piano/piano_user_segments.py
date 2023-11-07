@@ -75,7 +75,7 @@ def get_user_ids(segment_id):
         + str(hmac_value)
     }
 
-    response = requests.post(PIANO_API_URL, headers=headers, json=payload)
+    response = requests.post(PIANO_API_URL, headers=headers, json=payload, timeout=300)
     body = response.json()
     return body["events"]
 
@@ -85,7 +85,7 @@ def get_user_ids(segment_id):
 
 def create_lookalike_table(logger):
     if not delta_table_exists(LOOKALIKE_PATH):
-        schema, info = get_lookalike_schema()
+        schema, _ = get_lookalike_schema()
         df_empty = spark.createDataFrame([], schema)
 
         write_dataframe_to_table(
@@ -143,7 +143,7 @@ segment_ids_df = load_segment_ids()
 
 
 def create_user_segment_df(segment_ids_df: DataFrame) -> DataFrame:
-    user_segments_schema, info = get_piano_segments_schema()
+    user_segments_schema, _ = get_piano_segments_schema()
 
     df = spark.createDataFrame([], schema=user_segments_schema)
     segment_ids = segment_ids_df.rdd.map(lambda x: x.TP_DMP_id).collect()

@@ -114,6 +114,7 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
         return word
 
     def _remove_diminutive(word):
+        # TODO rewrite using match?
         if len(word) > 7 and word.endswith("oušek"):
             return word[:-5]
         if len(word) > 6:
@@ -273,7 +274,7 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
         print("at stemmer")
         if sentence is None:
             return []
-        if type(sentence) == str:
+        if isinstance(sentence, str):
             words = sentence.split(" ")
         else:
             words = sentence
@@ -289,7 +290,7 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
     else:
         print("cz stemmer")
 
-        if inputString == True:
+        if inputString:
             words = sentence.split()
             stemmed_sentence = ""
             for word in words:
@@ -434,7 +435,6 @@ def clean_rtb_domain(df: DataFrame) -> DataFrame:
 # Functions originally in _NLP_functions
 def enhance_keywords(
     kw_list,
-    similarity_thresh,
     synonym_count,
     account,
     spark: SparkSession,
@@ -442,7 +442,7 @@ def enhance_keywords(
     sql_context: SQLContext,
     max_number=100,
 ):
-    enhanced_dict = {k: "" for k in kw_list}
+    # pylint: disable=protected-access
     synonyms = pd.DataFrame({}, columns=["word", "similarity", "count"])
     if account.endswith("_at"):
         sc._jvm.example.Word2VecGE.synonyms(kw_list, synonym_count)
@@ -469,7 +469,9 @@ def logit(groups):
     ]
 
 
-def indexesCalculator(data, levelOfDistinction=["DomainCategory"]):
+def indexesCalculator(data, levelOfDistinction=None):
+    if levelOfDistinction is None:
+        levelOfDistinction = ["DomainCategory"]
     temp = (
         data.select(*(levelOfDistinction + ["interest"]))
         .groupBy(*levelOfDistinction)
@@ -483,7 +485,7 @@ def strip_diacritic(s) -> str:
     Strips diacritic from a string.
     First, normalize the string, that is split diacritic ('Mn' category) and letters and then omits 'Mn category'
     """
-    if type(s) == str and s != "":
+    if isinstance(s, str) and s != "":
         s_normalized = unicodedata.normalize("NFD", s)
         out_s = "".join(c for c in s_normalized if unicodedata.category(c) != "Mn")
         return out_s
@@ -498,21 +500,21 @@ def url_to_adform_format(url: str) -> str:
     """
     if not url:
         return None
-    else:
-        transformed_url = url.lower()
-        transformed_url = re.sub(r"^((https?|ftp)://)?", "", transformed_url)
-        transformed_url = re.sub(r"^\.", "", transformed_url)
-        transformed_url = re.sub(
-            r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", "", transformed_url
-        )
-        transformed_url = re.sub(r"^m\.", "", transformed_url)
-        transformed_url = re.sub(r"\.m\.", ".", transformed_url)
-        transformed_url = re.search(r"^[^/]+(/[^/.]+)?", transformed_url).group(0)
-        transformed_url = transformed_url[:99]
-        transformed_url = re.sub(r"[\.\-\/]$", "", transformed_url)
-        transformed_url = re.sub(r"www.", "", transformed_url)
-        transformed_url = re.sub(r"m,.", "", transformed_url)
-        return transformed_url
+
+    transformed_url = url.lower()
+    transformed_url = re.sub(r"^((https?|ftp)://)?", "", transformed_url)
+    transformed_url = re.sub(r"^\.", "", transformed_url)
+    transformed_url = re.sub(
+        r"[~\!@#\$%\^&\*\(\)=+\\\|\?<>\:'\"\[\]\{\} ,].*$", "", transformed_url
+    )
+    transformed_url = re.sub(r"^m\.", "", transformed_url)
+    transformed_url = re.sub(r"\.m\.", ".", transformed_url)
+    transformed_url = re.search(r"^[^/]+(/[^/.]+)?", transformed_url).group(0)
+    transformed_url = transformed_url[:99]
+    transformed_url = re.sub(r"[\.\-\/]$", "", transformed_url)
+    transformed_url = re.sub(r"www.", "", transformed_url)
+    transformed_url = re.sub(r"m,.", "", transformed_url)
+    return transformed_url
 
 
 def url_to_adform_format_light(url: str) -> str:
@@ -704,7 +706,7 @@ def df_url_normalization(df, column):
     return df
 
 
-def df_url_to_DV360(df, column):
+def df_url_to_DV360(df):
     """
     Function to format URL that can be uploaded to DV360
     Format specifications: - Supports 2 level categories (i.e. mydomain/first-cat/second-cat)
@@ -825,6 +827,7 @@ def url_to_domain(url: str) -> str:
 
 # helper to process string to list (for widget input)
 def convert_string_to_list(string):
+    # pylint: disable=consider-using-in
     if string == "[]" or string == "":
         return []
     else:

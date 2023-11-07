@@ -9,7 +9,6 @@ def find_and_replace_percent_substrings(source_string):
 
     for find in matches:
         try:
-            replacement = os.getenv(find)
             source_string = re.sub(f"%{find}%", os.getenv(find), source_string)
         except TypeError:
             raise Exception(
@@ -57,7 +56,6 @@ def environment_tag(old_tag, new_tag):
     # Read the environment variable from the cluster
     # env_variable_value = os.environ.get("APP_ENV")
 
-    print(env_tag)
     # Path to the .yaml file
     # absolute_yaml_path = os.getcwd() + "/src/adpickercpex/_config/config.yaml"
     yaml_path = "/Workspace/Users/nicolellaurian.anistoroaei@datasentics.com/cnfg.yaml"

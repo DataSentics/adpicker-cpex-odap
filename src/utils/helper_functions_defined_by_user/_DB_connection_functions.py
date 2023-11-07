@@ -18,19 +18,12 @@ def getMySqlOptions(dbutils: DBUtils):
         "timezone": "UTC",
     }
 
-    url = "jdbc:mysql://{}:{}/{}?serverTimezone={}".format(
-        dbConfig["host"],
-        dbConfig["port"],
-        dbConfig["database"],
-        dbConfig["timezone"],
-    )
+    url = f"jdbc:mysql://{dbConfig['host']}:{dbConfig['port']}/{dbConfig['database']}?serverTimezone={dbConfig['timezone']}"
 
-    return dict(
-        url=url,
-        driver="com.mysql.cj.jdbc.Driver",
-        user=dbConfig["user"],
-        password=dbConfig["password"],
-    )
+    return {'url': url,
+            'driver': "com.mysql.cj.jdbc.Driver",
+            'user': dbConfig["user"],
+            'password': dbConfig["password"]}
 
 
 def load_mysql_table(table_name, spark: SparkSession, dbutils: DBUtils):
@@ -45,7 +38,7 @@ def load_mysql_table(table_name, spark: SparkSession, dbutils: DBUtils):
     )
 
 
-def overwrite_mysql_table_by_df(df, table_name, spark: SparkSession, dbutils: DBUtils):
+def overwrite_mysql_table_by_df(df, table_name, dbutils: DBUtils):
     """
     Overwrites MySQL table without dropping it (maintains the schema)
     """
@@ -64,7 +57,7 @@ def overwrite_mysql_table_by_df(df, table_name, spark: SparkSession, dbutils: DB
         return False
 
 
-def append_df_to_mysql_table(df, table_name, spark: SparkSession, dbutils: DBUtils):
+def append_df_to_mysql_table(df, table_name, dbutils: DBUtils):
     try:
         (
             df.write.format("jdbc")

@@ -7,6 +7,7 @@ import shutil
 from pyspark.sql import SQLContext
 from pyspark.dbutils import DBUtils
 
+# pylint: disable=protected-access
 
 def upsertToDelta(aggregateTable, updateTable, key, sc):
     # Set the dataframe to view name
@@ -66,4 +67,3 @@ def delete_checkpoint_dir(sc):
     checkpointDir = sc._jsc.sc().getCheckpointDir().get().replace("dbfs:", "/dbfs")
     print("DELETING CHECKPOINT DIRECTORY: ", checkpointDir)
     shutil.rmtree(checkpointDir, ignore_errors=True)
-    return None

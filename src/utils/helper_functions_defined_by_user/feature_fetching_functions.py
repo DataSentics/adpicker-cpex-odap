@@ -9,7 +9,7 @@ spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
 def is_valid_timestamp(timestamp):
     try:
-        datetime_object = datetime.strptime(timestamp, "%Y-%m-%d")
+        datetime.strptime(timestamp, "%Y-%m-%d")
         return True
     except ValueError:
         return False
@@ -45,10 +45,9 @@ def fetch_fs_stage(
 
     if feature_list is None:
         return fs
-    else:
-        try:
-            fs_selected_features = fs.select("user_id", "timestamp", *feature_list)
-            return fs_selected_features
-        except Exception as e:
-            print(f"An error occurred while selecting features: {e}.")
-            return None
+    try:
+        fs_selected_features = fs.select("user_id", "timestamp", *feature_list)
+        return fs_selected_features
+    except Exception as e:
+        print(f"An error occurred while selecting features: {e}.")
+        return None

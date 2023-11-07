@@ -439,9 +439,12 @@ disable=raw-checker-failed,
         use-implicit-booleaness-not-comparison-to-zero,
         # AdPicker specific disabilities
         missing-module-docstring,   # Databricks notebooks has to start with '# Databricks notebook source'
+        missing-function-docstring,
         wrong-import-position, # when we run '%run' command, imports can be only below
         wrong-import-order,    # not necessary for our focus - mainlly it's reasonable
-        
+        too-many-arguments,    # really dont care
+        redefined-outer-name,  # this is just annoying
+        duplicate-code,        # TODO solve this when we clean up utils later in rewrite
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

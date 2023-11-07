@@ -108,12 +108,10 @@ def get_relevant_folders(
 ):
     paths = dbutils.fs.ls(base_path)
     max_date = max(
-        [
             datetime.strptime(
                 p.name.replace("day=", "").replace("/", ""), "%Y-%m-%d"
             ).date()
             for p in paths
-        ]
     )
 
     if series_length == "long":
@@ -248,7 +246,8 @@ get_jsons(relevant_folders_list, root_logger)
 def load_raw_delta(
     relevant_folders, series_length, destination_max_date, n_hours_short, logger: Logger
 ):
-    fetched_schema, info = get_schema_cpex_piano_cleansed()
+    # pylint: disable=too-many-locals
+    fetched_schema, _ = get_schema_cpex_piano_cleansed()
     user_params_expected_schema = (
         fetched_schema["userParameters"].simpleString().split(":", 1)[1]
     )

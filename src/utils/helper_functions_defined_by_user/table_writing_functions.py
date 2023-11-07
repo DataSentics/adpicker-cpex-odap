@@ -70,7 +70,6 @@ def compare_and_check_schemas(schema1, schema2, logger: logging.Logger):
 
     fields1 = {field.name: field for field in schema1.fields}
     fields2 = {field.name: field for field in schema2.fields}
-    mismatch_fields = []
     schema_compatibility_check = True
 
     for field_name in fields1.keys() | fields2.keys():
@@ -113,9 +112,9 @@ def delta_table_exists(table_path):
     table_path - the full path to the delta table(including its name)
     """
     try:
-        delta_table = DeltaTable.forPath(spark, table_path)
+        DeltaTable.forPath(spark, table_path)
         return True
-    except Exception as e:
+    except Exception:
         return False
 
 

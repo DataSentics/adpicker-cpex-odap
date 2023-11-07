@@ -169,7 +169,7 @@ df_url_tokenized = url_tokenized(df_pageview, df_sdm_url)
 def create_tokenized_domains(df_url_tokenized: DataFrame, subinterests):
     interest_keywords = [interest.keywords for interest in subinterests.values()]
 
-    vocabulary = list(set([item for sublist in interest_keywords for item in sublist]))
+    vocabulary = list({item for sublist in interest_keywords for item in sublist})
     vocabulary = spark.createDataFrame(vocabulary, T.StringType())
 
     output = df_url_tokenized.select(
