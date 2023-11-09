@@ -79,7 +79,7 @@ widget_n_days = dbutils.widgets.get("n_days")
 
 
 # Current date taken if not explicitly specified
-def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger):
+def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger: Logger):
     # process end date
     try:
         end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
@@ -114,7 +114,7 @@ df_load_sdm_pageview = load_sdm_pageview(
 # COMMAND ----------
 
 
-def check_row_number(df, logger):
+def check_row_number(df: DataFrame, logger: Logger):
     logger.info(f"Loaded {df.count()} pageviews.")
 
 
@@ -147,7 +147,7 @@ df_sdm_url = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_u
 # COMMAND ----------
 
 
-def join_datasets(df1, df2):
+def join_datasets(df1: DataFrame, df2: DataFrame):
     return df1.join(df2, on="URL_NORMALIZED", how="left")
 
 
@@ -156,7 +156,7 @@ df_join_datasets = join_datasets(df_load_sdm_pageview, df_sdm_url)
 # COMMAND ----------
 
 
-def check_row_number_joined(df, logger):
+def check_row_number_joined(df: DataFrame, logger: Logger):
     logger.info(f"Number of rows after join: {df.count()}.")
 
 
@@ -184,7 +184,7 @@ df_income_url_coeffs = load_url_scores()
 # COMMAND ----------
 
 
-def join_with_scores(df1, df2):
+def join_with_scores(df1: DataFrame, df2: DataFrame):
     return (
         df1.join(df2, on="URL_DOMAIN_2_LEVEL", how="left")
         .fillna(0, subset=[f"score_{model}" for model in INCOME_MODELS_SUFFIXES])
@@ -210,7 +210,7 @@ df_join_with_scores = join_with_scores(df_join_datasets, df_income_url_coeffs)
 # COMMAND ----------
 
 
-def collect_urls_for_users(df):
+def collect_urls_for_users(df: DataFrame):
     return df.groupby("user_id").agg(
         *[
             F.mean(f"score_{model}").alias(f"score_average_{model}")
@@ -234,7 +234,7 @@ df_collect_urls_for_users = collect_urls_for_users(df_join_with_scores)
 # COMMAND ----------
 
 
-def calculate_scaling_coefficient(df):
+def calculate_scaling_coefficient(df: DataFrame):
     return df.withColumn(
         "count_coefficient", calculate_count_coefficient(F.col("url_count"))
     )
@@ -254,7 +254,7 @@ df_calculate_scaling_coefficient = calculate_scaling_coefficient(
 # COMMAND ----------
 
 
-def calculate_nonstd_url_scores(df):
+def calculate_nonstd_url_scores(df: DataFrame):
     return df.select(
         "user_id",
         "timestamp",
@@ -287,7 +287,7 @@ df_calculate_nonstd_url_scores = calculate_nonstd_url_scores(
 # COMMAND ----------
 
 
-def box_cox_transform(df):
+def box_cox_transform(df: DataFrame):
     nonstd_columns = [f"url_score_nonstd_{model}" for model in INCOME_MODELS_SUFFIXES]
 
     df_pandas = df.select(
@@ -311,7 +311,7 @@ df_box_cox_transform = box_cox_transform(df_calculate_nonstd_url_scores)
 # COMMAND ----------
 
 
-def standard_scaler(df):
+def standard_scaler(df: DataFrame):
     nonstd_columns = ["url_score_nonstd_" + model for model in INCOME_MODELS_SUFFIXES]
     std_columns = ["url_score_std_" + model for model in INCOME_MODELS_SUFFIXES]
 
@@ -347,7 +347,7 @@ df_standard_scaler = standard_scaler(df_box_cox_transform)
 # COMMAND ----------
 
 
-def url_score_final(df):
+def url_score_final(df: DataFrame):
     return df.select(
         "user_id",
         "timestamp",
@@ -372,7 +372,7 @@ df_result = url_score_final(df_standard_scaler)
 # COMMAND ----------
 
 
-def save_scores(df, logger):
+def save_scores(df: DataFrame, logger: Logger):
     logger.info(f"Saving {df.count()} rows.")
     return df
 

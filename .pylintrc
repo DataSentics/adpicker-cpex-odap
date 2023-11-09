@@ -440,15 +440,17 @@ disable=raw-checker-failed,
         use-implicit-booleaness-not-comparison-to-string,
         use-implicit-booleaness-not-comparison-to-zero,
         # AdPicker specific disabilities
-        missing-module-docstring,   # Databricks notebooks has to start with '# Databricks notebook source'
-        wrong-import-position,          # when we run '%run' command, imports can be only below
-        wrong-import-order,             # not necessary for our focus - mainlly it's reasonable
-        missing-function-docstring,     # nice to have it solved, however not right now
-        redefined-outer-name,           # it actually can be an issue, but as every developer know, naming IS an issue
-        simplifiable-if-statement,      # maybe it's simpler but not always more readable - we can solve it later
-        no-else-return,                 # in relation with previous one - we can solve it later
-        too-many-arguments,             # really dont care
+        missing-module-docstring,         # Databricks notebooks has to start with '# Databricks notebook source'
+        wrong-import-position,            # when we run '%run' command, imports can be only below
+        wrong-import-order,               # not necessary for our focus - mainlly it's reasonable
+        missing-function-docstring,       # nice to have it solved, however not right now
+        redefined-outer-name,             # it actually can be an issue, but as every developer know, naming IS an issue
+        simplifiable-if-statement,        # maybe it's simpler but not always more readable - we can solve it later
+        no-else-return,                   # in relation with previous one - we can solve it later
+        too-many-arguments,               # really dont care
         #duplicate-code,                 # TODO solve this when we clean up utils later in rewrite
+        C,                                # turning OFF all Convention errors/warnings
+        #broad-exception-caught,           # we handle exceptions with BaseException and not some specific, not priority to solve right now            
         
 
 # Enable the message, report, category or checker with the given id(s). You can

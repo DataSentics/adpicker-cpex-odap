@@ -163,7 +163,7 @@ df_unique_url = get_unique_url(df_normalize_url_data, df_silver_sdm_url)
 # COMMAND ----------
 
 
-def check_for_duplicates(df, logger: Logger):
+def check_for_duplicates(df: DataFrame, logger: Logger):
     logger.info(f"Found {df.count()} new URLs to append.")
     num_unique = (
         df.groupby("URL_NORMALIZED").count().select(F.max("count")).collect()[0][0]

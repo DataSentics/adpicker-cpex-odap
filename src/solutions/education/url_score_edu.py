@@ -86,7 +86,7 @@ def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger):
     try:
         end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
         logger.info(f"Date set from widget value: {end_date}")
-    except:
+    except BaseException:
         end_date = date.today()
         logger.info(f"No initial date set; setting as today: {end_date}")
 

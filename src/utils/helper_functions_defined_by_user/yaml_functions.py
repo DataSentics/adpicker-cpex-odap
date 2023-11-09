@@ -10,10 +10,10 @@ def find_and_replace_percent_substrings(source_string):
     for find in matches:
         try:
             source_string = re.sub(f"%{find}%", os.getenv(find), source_string)
-        except TypeError:
-            raise Exception(
+        except TypeError as e:
+            raise BaseException(
                 "Could not replace special substring; check if substring is defined in cluster environment variables."
-            )
+            ) from e
 
     return source_string
 
@@ -36,7 +36,7 @@ def get_value_from_yaml(*keys):
     # Construct the path to the config.yaml file
     yaml_path = os.path.join(current_dir, "../../config/config.yaml")
 
-    with open(yaml_path, "r") as yaml_file:
+    with open(yaml_path, "r", encoding="utf-8") as yaml_file:
         data = yaml.safe_load(yaml_file)
 
         for key in keys:
@@ -61,12 +61,12 @@ def environment_tag(old_tag, new_tag):
     yaml_path = "/Workspace/Users/nicolellaurian.anistoroaei@datasentics.com/cnfg.yaml"
 
     # Read the contents of the .yaml file
-    with open(yaml_path, "r") as yaml_file:
+    with open(yaml_path, "r", encoding="utf-8") as yaml_file:
         yaml_content = yaml_file.read()
 
     # Replace the placeholder with the environment variable value
     yaml_content_with_replacement = yaml_content.replace(f"{old_tag}", f"{new_tag}")
 
     # Save the modified content back to the same .yaml file
-    with open(yaml_path, "w") as yaml_file:
+    with open(yaml_path, "w", encoding="utf-8") as yaml_file:
         yaml_file.write(yaml_content_with_replacement)

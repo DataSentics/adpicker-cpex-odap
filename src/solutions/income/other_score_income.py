@@ -131,7 +131,7 @@ def get_web_binary_features(df):
     )
 
 
-df_get_web_binary_features = get_web_binary_features(df_read_web_features_fs)
+df_get_web_binary_features = get_web_binary_features(df_fs)
 
 # COMMAND ----------
 

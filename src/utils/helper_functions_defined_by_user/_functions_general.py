@@ -1,15 +1,14 @@
 import datetime as dt
-import pyspark.sql.functions as F
-import pyspark.sql.types as T
-import pyspark
-import builtins as py
+from pyspark.sql import SparkSession
+from pyspark.sql.dataframe import DataFrame
 import shutil
 from pyspark.sql import SQLContext
 from pyspark.dbutils import DBUtils
 
 # pylint: disable=protected-access
 
-def upsertToDelta(aggregateTable, updateTable, key, sc):
+
+def upsertToDelta(aggregateTable: DataFrame, updateTable: DataFrame, key, sc):
     # Set the dataframe to view name
     aggregateTable.createOrReplaceTempView("aggregates")
     updateTable.createOrReplaceTempView("updates")

@@ -146,7 +146,7 @@ def create_user_segment_df(segment_ids_df: DataFrame) -> DataFrame:
     user_segments_schema, _ = get_piano_segments_schema()
 
     df = spark.createDataFrame([], schema=user_segments_schema)
-    segment_ids = df_segment_ids.rdd.map(lambda x: x.TP_DMP_id).collect()
+    segment_ids = segment_ids_df.rdd.map(lambda x: x.TP_DMP_id).collect()
 
     for segment_id in segment_ids:
         user_ids = [
