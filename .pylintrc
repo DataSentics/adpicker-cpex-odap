@@ -448,9 +448,15 @@ disable=raw-checker-failed,
         simplifiable-if-statement,        # maybe it's simpler but not always more readable - we can solve it later
         no-else-return,                   # in relation with previous one - we can solve it later
         too-many-arguments,               # really dont care
-        #duplicate-code,                 # TODO solve this when we clean up utils later in rewrite
+        #duplicate-code,                 # TODO: solve this when we clean up utils later in rewrite
         C,                                # turning OFF all Convention errors/warnings
-        #broad-exception-caught,           # we handle exceptions with BaseException and not some specific, not priority to solve right now            
+        broad-exception-caught,           # we handle exceptions with BaseException and not some specific, not priority to solve right now
+        broad-exception-raised,           # Nice to specify, but not sure how
+        too-many-locals,                  # Nice to solve, but not a priority
+        too-many-return-statements,       # Mostly unsolvable - useful in specific places (ML, NLP)
+        too-many-branches,                # Mostly unsolvable - useful in specific places (ML, NLP)
+        too-many-statements,              # Mostly unsolvable
+        fixme,                            # we definitely will solve that; for sure; somehow; sometime; in the future
         
 
 # Enable the message, report, category or checker with the given id(s). You can

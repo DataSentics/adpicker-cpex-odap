@@ -1,20 +1,11 @@
-import os
 import re
 import pandas as pd
-import numpy as np
-import random
 import unicodedata
-import json
-from pprint import pprint
 from unidecode import unidecode
 import urllib.parse as urlParse
-import datetime as dt
-import math
-import requests
 
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql.window import Window
 from pyspark.sql.functions import udf
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.session import SparkSession
@@ -22,7 +13,6 @@ from pyspark import SparkContext
 from pyspark.sql import SQLContext
 from pyspark.dbutils import DBUtils
 
-from pyspark.ml.feature import Word2VecModel
 from pyspark.ml.feature import StopWordsRemover, RegexTokenizer
 from pyspark.ml import Pipeline
 
@@ -469,7 +459,7 @@ def logit(groups):
     ]
 
 
-def indexesCalculator(data, levelOfDistinction=None):
+def indexesCalculator(data: DataFrame, levelOfDistinction=None) -> DataFrame:
     if levelOfDistinction is None:
         levelOfDistinction = ["DomainCategory"]
     temp = (
@@ -544,7 +534,7 @@ def url_to_adform_format_light(url: str) -> str:
 url_transform_light = F.udf(url_to_adform_format_light, T.StringType())
 
 
-def df_url_to_adform_format(df, column):
+def df_url_to_adform_format(df: DataFrame, column: str) -> DataFrame:
     """
     Process and crop the domains in input_col_name so that they are in compliance with AdForm format (no special characters,
     maximum length of 100 characters) and also cropped to domain/category.
@@ -575,7 +565,7 @@ def df_url_to_adform_format(df, column):
     return df
 
 
-def df_url_to_adform_format_light(df, column):
+def df_url_to_adform_format_light(df: DataFrame, column: str) -> DataFrame:
     """
     Light version of url_to_adform_format - no cropping and shortening.
     """
@@ -599,7 +589,7 @@ def df_url_to_adform_format_light(df, column):
     return df
 
 
-def df_url_to_domain(df, column, subdomains=None):
+def df_url_to_domain(df: DataFrame, column: str, subdomains=None) -> DataFrame:
     """
     Process and crop the domains in input_col_name so that they are in compliance with AdForm format (no special characters,
     maximum length of 100 characters) and also cropped to domain/category.
@@ -646,7 +636,7 @@ def df_url_to_domain(df, column, subdomains=None):
     return df
 
 
-def df_url_to_2_level_domain(df, column):
+def df_url_to_2_level_domain(df: DataFrame, column: str) -> DataFrame:
     """
     Process and crop the domains in input_col_name so that they are in compliance with AdForm format (no special characters,
     maximum length of 100 characters) and also cropped to domain/category.
@@ -679,7 +669,7 @@ def df_url_to_2_level_domain(df, column):
     return df
 
 
-def df_url_normalization(df, column):
+def df_url_normalization(df: DataFrame, column: str) -> DataFrame:
     """
     Normalization of URL
     """
@@ -706,17 +696,18 @@ def df_url_normalization(df, column):
     return df
 
 
-def df_url_to_DV360(df):
+def df_url_to_DV360(df: DataFrame) -> DataFrame:
     """
     Function to format URL that can be uploaded to DV360
     Format specifications: - Supports 2 level categories (i.e. mydomain/first-cat/second-cat)
                            - Supports up to 5 levels of subdomain targeting (five.four.three.two.one.mydomain.com)
     Further documentation: https://support.google.com/displayvideo/answer/2650521?hl=en
     """
+    # TODO: finish or remove?
     return df
 
 
-def clean_domain_column(df, column):
+def clean_domain_column(df: DataFrame, column: str) -> DataFrame:
     return (
         # transform urls to lowercase
         df.withColumn(column, F.lower(F.col(column)))
@@ -770,7 +761,7 @@ def df_stemming(
     return df_augmented.unionByName(df_null, allowMissingColumns=True)
 
 
-def crop_to_DC(df_input, inputcolname):
+def crop_to_DC(df_input: DataFrame, inputcolname: str):
     match_2_sections = "".join(["[^/]*/?" for _ in range(2)])
 
     df_cropped_urls0 = (
@@ -826,7 +817,7 @@ def url_to_domain(url: str) -> str:
 
 
 # helper to process string to list (for widget input)
-def convert_string_to_list(string):
+def convert_string_to_list(string: str) -> list:
     # pylint: disable=consider-using-in
     if string == "[]" or string == "":
         return []

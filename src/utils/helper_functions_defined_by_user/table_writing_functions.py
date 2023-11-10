@@ -1,5 +1,6 @@
 import logging
 from typing import Optional, List
+from pyspark.sql.dataframe import DataFrame
 from pyspark.sql import SparkSession
 from delta.tables import DeltaTable
 
@@ -7,7 +8,7 @@ spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
 
 def write_dataframe_to_table(
-    dataframe_source,
+    dataframe_source: DataFrame,
     table_destination,
     table_schema,
     writing_mode,
@@ -114,7 +115,7 @@ def delta_table_exists(table_path):
     try:
         DeltaTable.forPath(spark, table_path)
         return True
-    except Exception:
+    except BaseException:
         return False
 
 

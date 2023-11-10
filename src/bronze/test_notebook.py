@@ -1,7 +1,7 @@
 # Databricks notebook source
-from src.utils.helper_functions_defined_by_user.table_writing_functions import (
-    write_dataframe_to_table,
-)
+# from src.utils.helper_functions_defined_by_user.table_writing_functions import (
+#    write_dataframe_to_table,
+# )
 
 import logging
 import pyspark.sql.types as T

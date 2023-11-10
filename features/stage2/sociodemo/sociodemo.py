@@ -181,7 +181,7 @@ def get_cols_from_schema(schema):
             elif isinstance(f.dataType, (IntegerType, DoubleType, FloatType, LongType)):
                 num_cols.append(f.name)
             else:
-                raise Exception(f"{f.name} is unknown type {f.dataType}.")
+                raise BaseException(f"{f.name} is unknown type {f.dataType}.")
     return unique_urls, columns_list, num_cols, cat_cols
 
 

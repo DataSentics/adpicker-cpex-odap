@@ -33,13 +33,13 @@ def fetch_fs_stage(
     # TODO - rewrite not to use dbfs, but ADLS cloud storage, if desired and needed
 
     if not is_valid_timestamp(timestamp):
-        raise Exception("Invalid timestamp!")
+        raise BaseException("Invalid timestamp!")
 
     try:
         fs = spark.read.table(f"odap_features_user.user_stage{stage}").filter(
             F.col("timestamp") == timestamp
         )
-    except Exception as e:
+    except BaseException as e:
         print(f"An error occurred while loading the FS: {e}.")
         return None
 
@@ -48,6 +48,6 @@ def fetch_fs_stage(
     try:
         fs_selected_features = fs.select("user_id", "timestamp", *feature_list)
         return fs_selected_features
-    except Exception as e:
+    except BaseException as e:
         print(f"An error occurred while selecting features: {e}.")
         return None

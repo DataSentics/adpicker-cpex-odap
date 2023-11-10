@@ -8,26 +8,7 @@ from pyspark.sql import DataFrame
 import datetime as dt
 
 from typing import Callable, List, Any
-import os
 from itertools import chain
-
-from pyspark.ml.linalg import Vectors
-from pyspark.ml import Pipeline
-from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit, CrossValidator
-from pyspark.ml.evaluation import BinaryClassificationEvaluator, RegressionEvaluator
-from pyspark.ml.classification import (
-    LogisticRegression,
-    GBTClassifier,
-    DecisionTreeClassifier,
-    RandomForestClassifier,
-    MultilayerPerceptronClassifier,
-    LinearSVC,
-    NaiveBayes,
-)
-
-import mlflow
-import mlflow.spark as mlflow_spark
-from mlflow.tracking.client import MlflowClient
 
 
 def logit(groups, idfV):
@@ -62,7 +43,9 @@ def logit(groups, idfV):
     ]
 
 
-def indexesCalculator(data, interests, idfV, levelOfDistinction=None):
+def indexesCalculator(
+    data: DataFrame, interests, idfV, levelOfDistinction=None
+) -> DataFrame:
     if levelOfDistinction is None:
         levelOfDistinction = ["DomainCategory"]
     temp = (
@@ -73,7 +56,7 @@ def indexesCalculator(data, interests, idfV, levelOfDistinction=None):
     return temp
 
 
-def lift_jlh(dataset, column, power=1, minDF=30):
+def lift_jlh(dataset: DataFrame, column, power=1, minDF=30) -> DataFrame:
     count_users = dataset.select(column).distinct().count()
     count_users_click = (
         dataset.select(column).filter(F.col("target") == 1).distinct().count()
@@ -115,7 +98,7 @@ def lift_jlh(dataset, column, power=1, minDF=30):
 
 
 # LIFT
-def lift_curve(predictions, target, bin_count):
+def lift_curve(predictions: DataFrame, target, bin_count) -> DataFrame:
     vectorElement = udf(lambda v: float(v[1]))
     lift_df = (
         predictions.select(
@@ -161,7 +144,9 @@ def lift_curve(predictions, target, bin_count):
 
 
 # LIFT
-def lift_curve_colname_specified(predictions, target, bin_count, colname):
+def lift_curve_colname_specified(
+    predictions: DataFrame, target, bin_count, colname
+) -> DataFrame:
     vectorElement = udf(lambda v: float(v[1]))
     lift_df = (
         predictions.select(vectorElement(colname).cast("float").alias(colname), target)
@@ -202,7 +187,9 @@ def lift_curve_colname_specified(predictions, target, bin_count, colname):
 
 
 # LIFT - with extracted probability column (i.e. no need to extract vectorElement)
-def lift_curve_with_prob_column(df_predictions, target, prediction, bin_count=10):
+def lift_curve_with_prob_column(
+    df_predictions: DataFrame, target, prediction, bin_count=10
+) -> DataFrame:
     lift_df = (
         df_predictions.select(target, prediction)
         .withColumn("rank", F.ntile(bin_count).over(Window.orderBy(F.desc(prediction))))
@@ -249,7 +236,7 @@ def ith(v, i):
 
 
 # lift words for quadrants
-def lift_a_hits(dataset, quadr):
+def lift_a_hits(dataset: DataFrame, quadr) -> DataFrame:
     # drop words with low ocurance
     dataset_higher_occurance = (
         dataset.groupBy("hits")
@@ -290,7 +277,7 @@ def fudf(val):
 
 
 def column_add(a, b):
-    # pylint: disable=unnecessary-dunder-call  # I would rather keep explicit call, bu also what is this for?
+    # pylint: disable=unnecessary-dunder-call  # I would rather keep explicit call, but also what is this for?
     return a.__add__(b)
 
 
@@ -336,7 +323,7 @@ def devices(x):
     # '131', '132', '138' - ios devices
     try:
         return len(list(filter(lambda fn: fn in ["131", "132", "138"], x))) / len(x)
-    except:
+    except BaseException:
         return 0
 
 
@@ -348,7 +335,7 @@ def slovak_geolocation(x):
         return len(
             list(filter(lambda fn: fn in ["Slovakia (slovak Republic)"], x))
         ) / len(x)
-    except:
+    except BaseException:
         return 0
 
 
@@ -373,7 +360,7 @@ def remove_general_urls(df: DataFrame) -> DataFrame:
 formatToDate = udf(lambda x: dt.datetime.strptime(str(x), "%Y%m%d"), T.DateType())
 
 
-def process_multiple_segments_input(t):
+def process_multiple_segments_input(t: str) -> dict:
     t = t.replace(" ", "")
 
     t_list = list(t.split(","))
@@ -416,7 +403,7 @@ def lift_curve(predictions, target, bin_count=10):
     if bin_count >= 0 and isinstance(bin_count, int):
         pass
     else:
-        raise Exception("Invalid 'bin_count' param value! Set integer value >=0!")
+        raise BaseException("Invalid 'bin_count' param value! Set integer value >=0!")
 
     vectorElement = udf(lambda v: float(v[1]), T.DoubleType())
 
@@ -494,7 +481,7 @@ def lift_curve_generalized(predictions, target, pos_label=1, bin_count=10):
 
     # input check
     if bin_count < 0 or not isinstance(bin_count, int):
-        raise Exception("Invalid 'bin_count' param value! Set integer value >=0!")
+        raise BaseException("Invalid 'bin_count' param value! Set integer value >=0!")
 
     # actual code
     lift_df = (

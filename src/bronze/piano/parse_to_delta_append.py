@@ -108,10 +108,10 @@ def get_relevant_folders(
 ):
     paths = dbutils.fs.ls(base_path)
     max_date = max(
-            datetime.strptime(
-                p.name.replace("day=", "").replace("/", ""), "%Y-%m-%d"
-            ).date()
-            for p in paths
+        datetime.strptime(
+            p.name.replace("day=", "").replace("/", ""), "%Y-%m-%d"
+        ).date()
+        for p in paths
     )
 
     if series_length == "long":
@@ -210,7 +210,7 @@ def get_jsons(relevant_folders, logger: Logger):
                 dbutils.fs.ls(save_path)
                 logger.info(f"Skipping {save_path} because it already exists.")
                 continue
-            except:
+            except BaseException:
                 pass
 
             owner_name = re.search(

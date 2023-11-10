@@ -20,10 +20,12 @@ def getMySqlOptions(dbutils: DBUtils):
 
     url = f"jdbc:mysql://{dbConfig['host']}:{dbConfig['port']}/{dbConfig['database']}?serverTimezone={dbConfig['timezone']}"
 
-    return {'url': url,
-            'driver': "com.mysql.cj.jdbc.Driver",
-            'user': dbConfig["user"],
-            'password': dbConfig["password"]}
+    return {
+        "url": url,
+        "driver": "com.mysql.cj.jdbc.Driver",
+        "user": dbConfig["user"],
+        "password": dbConfig["password"],
+    }
 
 
 def load_mysql_table(table_name, spark: SparkSession, dbutils: DBUtils):
