@@ -23,7 +23,7 @@ from src.utils.helper_functions_defined_by_user._functions_general import (
 )
 
 # Functions originally in _functions_nlp
-decode_udf = udf(lambda val: urlParse.unquote(val))
+decode_udf = udf(urlParse.unquote)
 
 charsFrom = (
     "ÀÁÂÃÄÅČÇĎÈÉÊËÍÌÏÎĹĽŇÑÒÓÔÕÖŔŘŠŤÙÚŮÛŰÜÝŸŽàáâãäåčçďèéêëíìïîĺľňñòóôõöŕřšťùúůûűüýÿž"
@@ -333,13 +333,6 @@ def udfstemed_lst(sentence, account=None, aggressive=False, inputString=False):
         return stemmed_sentence
 
 
-def stem_pd_column(kw_l):
-    if kw_l is not None:
-        return list(set(stemming(kw_l, "cz")))
-    else:
-        return None
-
-
 def strip_diacritic_fl(kw_l):
     if kw_l is not None:
         return [unidecode(kw) for kw in kw_l]
@@ -380,6 +373,8 @@ def run_azuresearch_al(
             .withColumn("score", F.lit(1))
             .withColumn("rank", F.lit(1))
         )
+    else:
+        raise ValueError(f"table {parquet_file_path} not generated.")
 
 
 def clean_rtb_domain(df: DataFrame) -> DataFrame:

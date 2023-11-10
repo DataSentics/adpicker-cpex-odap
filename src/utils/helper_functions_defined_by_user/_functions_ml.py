@@ -98,7 +98,7 @@ def lift_jlh(dataset: DataFrame, column, power=1, minDF=30) -> DataFrame:
 
 
 # LIFT
-def lift_curve(predictions: DataFrame, target, bin_count) -> DataFrame:
+def lift_curve_affinity(predictions: DataFrame, target, bin_count) -> DataFrame:
     vectorElement = udf(lambda v: float(v[1]))
     lift_df = (
         predictions.select(
