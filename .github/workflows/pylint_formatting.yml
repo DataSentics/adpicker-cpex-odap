@@ -22,8 +22,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install pylint
     - name: Analysing the code with pylint
+      # list all files and use pylint on them
       run: |
         pylint $(git ls-files '*.py')
+      # list all files that were changed and use pylint on them
+      # run: |
+      #   pylint $(git diff-tree --no-commit-id --name-only -r ${{ github.sha }})  
   # check formatting and force it if it's not done properly
   black:
     runs-on: ubuntu-latest
