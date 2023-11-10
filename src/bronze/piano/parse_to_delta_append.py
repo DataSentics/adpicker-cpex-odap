@@ -4,19 +4,20 @@
 
 # COMMAND ----------
 
-from pyspark.sql.dataframe import DataFrame
+import re
+from datetime import datetime, timedelta
+from functools import reduce
+from logging import Logger
+from math import ceil
+
+import pandas as pd
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
-from pyspark.dbutils import DBUtils
-from delta.tables import DeltaTable
-from logging import Logger
-from datetime import datetime, timedelta
-from math import ceil
-from functools import reduce
-import re
-import pandas as pd
+from pyspark.sql.dataframe import DataFrame
 
+from src.schemas.bronze_schema import get_schema_cpex_piano_cleansed
 from src.utils.helper_functions_defined_by_user.date_functions import get_max_date
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
     delta_table_exists,
@@ -24,9 +25,6 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
-from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-
-from src.schemas.bronze_schema import get_schema_cpex_piano_cleansed
 
 # COMMAND ----------
 

@@ -1,9 +1,9 @@
 import datetime as dt
-from pyspark.sql import SparkSession
-from pyspark.sql.dataframe import DataFrame
 import shutil
+
 from pyspark.sql import SQLContext
-from pyspark.dbutils import DBUtils
+from pyspark.sql.dataframe import DataFrame
+
 
 # pylint: disable=protected-access
 

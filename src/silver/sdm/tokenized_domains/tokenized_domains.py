@@ -4,14 +4,16 @@
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
-import pyspark.sql.types as T
-from pyspark.sql.dataframe import DataFrame
-from pyspark.sql import SparkSession
 from collections import namedtuple
 from datetime import date, datetime, timedelta
 from logging import Logger
 
+import pyspark.sql.functions as F
+import pyspark.sql.types as T
+from pyspark.sql.dataframe import DataFrame
+
+from src.schemas.sdm_schemas import get_schema_sdm_tokenized_domains
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.process_loaded_interests import (
     process_loaded_interests,
 )
@@ -21,9 +23,6 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
-from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-
-from src.schemas.sdm_schemas import get_schema_sdm_tokenized_domains
 
 Interest = namedtuple("Interest", ["keywords", "general_interest"])
 

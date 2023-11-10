@@ -1,30 +1,29 @@
 # Databricks notebook source
+from logging import Logger
+
+import pandas as pd
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql.window import Window
 from pyspark.sql.dataframe import DataFrame
-from pyspark.sql import SparkSession
-from delta.tables import DeltaTable
-from logging import Logger
-import pandas as pd
+from pyspark.sql.window import Window
 
-from src.utils.helper_functions_defined_by_user.table_writing_functions import (
-    write_dataframe_to_table,
-    delta_table_exists,
-)
-from src.utils.helper_functions_defined_by_user.date_functions import get_max_date
-from src.utils.helper_functions_defined_by_user.sdm_table_functions import sdm_hash
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
-from src.utils.helper_functions_defined_by_user._functions_nlp import (
-    df_url_normalization,
-)
-from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.schemas.sdm_schemas import (
     get_schema_sdm_preprocessed,
     get_schema_sdm_session,
     get_schema_sdm_pageview,
+)
+from src.utils.helper_functions_defined_by_user._functions_nlp import (
+    df_url_normalization,
+)
+from src.utils.helper_functions_defined_by_user.date_functions import get_max_date
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+from src.utils.helper_functions_defined_by_user.sdm_table_functions import sdm_hash
+from src.utils.helper_functions_defined_by_user.table_writing_functions import (
+    write_dataframe_to_table,
+    delta_table_exists,
+)
+from src.utils.helper_functions_defined_by_user.yaml_functions import (
+    get_value_from_yaml,
 )
 
 # COMMAND ----------

@@ -1,22 +1,19 @@
 import re
-import pandas as pd
 import unicodedata
-from unidecode import unidecode
 import urllib.parse as urlParse
 
+import pandas as pd
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
-from pyspark.sql.functions import udf
-from pyspark.sql.dataframe import DataFrame
-from pyspark.sql.session import SparkSession
-from pyspark import SparkContext
-from pyspark.sql import SQLContext
-from pyspark.dbutils import DBUtils
-
-from pyspark.ml.feature import StopWordsRemover, RegexTokenizer
-from pyspark.ml import Pipeline
-
 from nltk.stem.cistem import Cistem
+from pyspark import SparkContext
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import StopWordsRemover, RegexTokenizer
+from pyspark.sql import SQLContext
+from pyspark.sql.dataframe import DataFrame
+from pyspark.sql.functions import udf
+from pyspark.sql.session import SparkSession
+from unidecode import unidecode
 
 from src.utils.helper_functions_defined_by_user._functions_general import (
     check_dbfs_existence,
