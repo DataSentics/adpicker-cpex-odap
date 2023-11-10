@@ -2,8 +2,7 @@ name: Black formating and deploy
 
 on: 
   push:
-    branches:
-      - main
+    tags: [ '*.*.*' ]  # run it only when there is release/tag, etc. 0.1.3
 
 jobs:
   # format every Python file using 'black' formatting
@@ -42,10 +41,10 @@ jobs:
         run: |
           echo -e "[DEFAULT]\nhost = $DBX_HOST\ntoken = $DBX_ACCESS_TOKEN" > ~/.databrickscfg
         env:
-          DBX_HOST: ${{ secrets.dev_dbx_host }}
-          DBX_ACCESS_TOKEN: ${{ secrets.dev_dbx_access_token }}
+          DBX_HOST: ${{ secrets.DBX_ACCESS_TOKEN_DEV }}
+          DBX_ACCESS_TOKEN: ${{ secrets.DBX_HOST_DEV }}
           
       - name: Update adpicker repo
         run: |
-          databricks repos update /Repos/adpicker-cpex/master --branch mt-github-actions
+          databricks repos update /Repos/adpicker-cpex-odap-github-actions/main --branch main
     
