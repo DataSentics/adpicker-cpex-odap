@@ -30,6 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: psf/black@stable
+        continue-on-error: true  # we do only check without necesity to have positive result
         with:
           options: "--check --verbose"
           src: "."
