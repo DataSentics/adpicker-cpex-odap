@@ -1,0 +1,15 @@
+name: Manual workflow for testing
+
+on: [workflow_dispatch]
+
+jobs:
+  example:
+    name: Example Job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+      - name: Read file and print it
+        run: |
+          DATA=$(cat config.yaml)
+          echo "CONTENT=$DATA"
