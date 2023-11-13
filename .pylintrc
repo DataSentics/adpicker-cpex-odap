@@ -66,6 +66,7 @@ ignore-patterns=^\.#
 ignored-modules = src.utils,              # local functions
                   src.schemas,            # schemas for used tables
                   odap.feature_factory,   # odap package causing issues
+                  odap.segment_factory,   # odap package - maybe easier to handle it all at once with odap only    
 
 # AdPicker - TBI: To Be Installed
 # odap - AdPicker package
