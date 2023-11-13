@@ -2,7 +2,7 @@ import logging
 from typing import Optional, List
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql import SparkSession
-from delta.tables import DeltaTable
+from delta.tables import DeltaTable # pylint: disable=import-error
 
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
