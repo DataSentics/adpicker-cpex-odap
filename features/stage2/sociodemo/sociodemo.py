@@ -36,12 +36,11 @@ from src.utils.helper_functions_defined_by_user.feature_fetching_functions impor
     fetch_fs_stage,
 )
 
-# pylint: disable=W0614
-# pylint: disable=W0401
-# pylint: disable=W0621
-# pylint: disable=W0123
-# pylint: disable=W1514
-# pylint: disable=W0614
+# pylint: disable=wildcard-import
+# pylint: disable=redefined-outer-name
+# pylint: disable=eval-used
+# pylint: disable=unspecified-encoding
+# pylint: disable=unused-wildcard-import
 
 # COMMAND ----------
 

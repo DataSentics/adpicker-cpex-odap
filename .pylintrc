@@ -448,7 +448,7 @@ disable=raw-checker-failed,
         simplifiable-if-statement,        # maybe it's simpler but not always more readable - we can solve it later
         no-else-return,                   # in relation with previous one - we can solve it later
         too-many-arguments,               # really dont care
-        #duplicate-code,                 # TODO: solve this when we clean up utils later in rewrite
+        duplicate-code,                   # TODO: solve this when we clean up utils later in rewrite
         C,                                # turning OFF all Convention errors/warnings
         broad-exception-caught,           # we handle exceptions with BaseException and not some specific, not priority to solve right now
         broad-exception-raised,           # Nice to specify, but not sure how
