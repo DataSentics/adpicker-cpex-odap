@@ -63,8 +63,9 @@ ignore-patterns=^\.#
 # (useful for modules/projects where namespaces are manipulated during runtime
 # and thus existing member attributes cannot be deduced by static analysis). It
 # supports qualified module names, as well as Unix pattern matching.
-ignored-modules = src.utils,  # local functions
-                  src.schemas, # schemas for used tables
+ignored-modules = src.utils,              # local functions
+                  src.schemas,            # schemas for used tables
+                  odap.feature_factory,   # odap package causing issues
 
 # AdPicker - TBI: To Be Installed
 # odap - AdPicker package
