@@ -8,47 +8,38 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
 
 # COMMAND ----------
 
-tables_to_validate = [
-    "income_url_scores",
-    # "income_url_coeffs",
-    "income_interest_scores",
+APP_ENV = "dev"
+
+# COMMAND ----------
+
+# Specify path into "old" data from non-up-to-date-odap pipeline
+tables_to_validate = {
+    "income_interest_scores":f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/income/income_interest_scores.delta",
     # "income_interest_coeffs",
-    "income_other_scores",
+    "income_url_scores":f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/income/income_url_scores.delta",
+    # "income_url_coeffs",
+    "income_other_scores":f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/income/income_other_scores.delta",
     # "income_other_coeffs",
-    "education_interest_scores",
+
+    "education_interest_scores":f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/education/education_interest_scores.delta",
     # "education_interest_coeffs",
-    "education_url_scores",
+    "education_url_scores":f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/education/education_url_scores.delta",
     # "education_url_coeffs",
-    "education_other_scores",
+    "education_other_scores":f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/education/education_other_scores.delta",
     # "education_other_coeffs",
 
-    "user_entity_fs",
-]
+    # "user_entity_fs":f"abfss://gold@cpexstorageblob{APP_ENV}.dfs.core.windows.net/feature_store/features/user_entity",
+}
 
 # COMMAND ----------
 
-special_tables_to_validate = [
-    "odap_features_user.latest",
-    "odap_features_user.user",
-    "odap_features_user.user_stage1",
-    "odap_features_user.user_stage2",
-    "odap_features_user.user_stage3",
-]
-
-# COMMAND ----------
-
-def _get_latest_version(df_path: str) -> int:
-    df_history = spark.sql(f"DESCRIBE HISTORY delta.`{df_path}`")
-
-    return df_history.agg({"version": "max"}).collect()[0][0]
-
-# COMMAND ----------
-
-def _get_latest_version_special(df_name: str) -> int:
-    df_name_split = df_name.split(".")
-    df_history = spark.sql(f"DESCRIBE HISTORY `{df_name_split[0]}`.`{df_name_split[1]}`")
-
-    return df_history.agg({"version": "max"}).collect()[0][0]
+special_tables_to_validate = {
+    "odap_features_user.latest":f"abfss://gold@cpexstorageblob{APP_ENV}.dfs.core.windows.net/feature_store/features/user_entity.delta",
+    # "odap_features_user.user",
+    # "odap_features_user.user_stage1",
+    # "odap_features_user.user_stage2",
+    # "odap_features_user.user_stage3",
+}
 
 # COMMAND ----------
 
@@ -59,8 +50,8 @@ def _get_columns_to_compare(df: DataFrame) -> list():
 
 def _get_columns_to_compare_special(df: DataFrame, df_2: DataFrame) -> list():
     # words = ["affinity", "score", "perc", "prob"]
-    print("ad_interest_affinity_cosmetics" in df.columns)
-    print("ad_interest_affinity_cosmetics" in df_2.columns)
+    # print("ad_interest_affinity_cosmetics" in df.columns)
+    # print("ad_interest_affinity_cosmetics" in df_2.columns)
     words = ["score", "perc", "prob"]
     column_list = []
     for col_name in (df.columns)[:5]:
@@ -71,7 +62,7 @@ def _get_columns_to_compare_special(df: DataFrame, df_2: DataFrame) -> list():
 
 # COMMAND ----------
 
-def validate_data_between_two_versions(df_name: str, coef: float = 0.1, limit_of_rows: int = 10000) -> tuple():
+def validate_data_between_two_sources(df_name: str, df_path_old_pipeline: str, coef: float = 0.1, limit_of_rows: int = 10000) -> tuple():
     """
     Function that should be able to validate if there are any discrepancies between last two versions of calculated Feature Store rows - bigger than specific thrash-hold
 
@@ -83,26 +74,26 @@ def validate_data_between_two_versions(df_name: str, coef: float = 0.1, limit_of
     # load table using YAML
     if "." not in df_name:
         df_path = get_value_from_yaml("paths", df_name)
-        latest_version = _get_latest_version(df_path)
 
-        df_1 = spark.read.format("delta").option("versionAsOf", latest_version).load(df_path)
-        df_2 = spark.read.format("delta").option("versionAsOf", latest_version - 1).load(df_path)
+        df_1 = spark.read.format("delta").load(df_path)                 # read "current" ODAP pipeline results
+        df_2 = spark.read.format("delta").load(df_path_old_pipeline)    # read "old" pipeline results
 
         columns_to_validate = _get_columns_to_compare(df_1)
 
     # loading table from table catalog
     else:
-        latest_version = _get_latest_version_special(df_name)
-
-        df_1 = spark.read.option("versionAsOf", latest_version).table(df_name)
-        df_2 = spark.read.option("versionAsOf", latest_version - 1).table(df_name)
-        print(df_1.columns)
-        print(df_2.columns)
+        df_1 = spark.read.table(df_name)                                # read "current" ODAP pipeline results
+        df_2 = spark.read.format("delta").load(df_path_old_pipeline)    # read "old" pipeline results
+        # print(df_1.columns)
+        # print(df_2.columns)
 
         columns_to_validate = _get_columns_to_compare_special(df_1, df_2)
 
     # get random sample of last version table
-    df_1_s = df_1.sample(False, 0.1).limit(limit_of_rows)
+    if limit_of_rows == None:
+        df_1_s = df_1.sample(False, 0.1)
+    else:
+        df_1_s = df_1.sample(False, 0.1).limit(limit_of_rows)
 
     df_join = df_1_s.alias("df_1").join(
         df_2.alias("df_2"),
@@ -123,27 +114,47 @@ def validate_data_between_two_versions(df_name: str, coef: float = 0.1, limit_of
             )
         )
 
+    print(f"There were comparison done for {df_diff.count()} columns, {df_1.count()} from df_1 and {df_2.count()} from df_2")
+
     df_diff = (
         df_diff
         .filter(F.col("diff") == F.lit(1))
     )
 
+    print(f"There left {df_diff.count()} columns for comparison after removing valid non-different (valid) rows")
+
+    df_diff_zeros = df_diff.select("*")
+    for column in columns_to_validate:
+        df_diff_zeros = (
+            df_diff_zeros
+            # it's true that both columns will be zero at same time - good to know how many rows we skipped
+            .filter((F.col(f"df_1.{column}") == F.lit(0)) & (F.col(f"df_2.{column}") == F.lit(0)))
+        )
+        df_diff = (
+            df_diff
+            # it's not true that both columns will be zero at same time
+            .filter(~(F.col(f"df_1.{column}") == F.lit(0)) & (F.col(f"df_2.{column}") == F.lit(0)))
+        )
+
+    print(f"After cleanse of zeros in columns, there were left different {df_diff.count()} columns")
+    print(f"After keeping zeros in columns, there were skipped {df_diff_zeros.count()} columns")
+
     return (True if df_diff.count() == 0 else False, df_diff.drop("diff"))
 
 # COMMAND ----------
 
-for tab in tables_to_validate:
+for tab in tables_to_validate.keys():
     print("------------------------")
     print(tab)
-    x, y = validate_data_between_two_versions(tab, 0.05, 20000)
+    x, y = validate_data_between_two_sources(tab, tables_to_validate[tab], 0.09, None)
     print(x)
     display(y)
 
 # COMMAND ----------
 
-for tab in special_tables_to_validate:
+for tab in special_tables_to_validate.keys():
     print("------------------------")
     print(tab)
-    x, y = validate_data_between_two_versions(tab, 0.05, 1000)
+    x, y = validate_data_between_two_sources(tab, special_tables_to_validate[tab], 0.09, None)
     print(x)
     display(y)
