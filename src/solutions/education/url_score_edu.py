@@ -140,7 +140,7 @@ def load_url_scores(df):
 
 
 df_education_url_coeffs = spark.read.format("delta").load(
-    gcnfg_file.paths.education_url_coeffs
+    cnfg_file.paths.education_url_coeffs
 )
 df_load_url_scores = load_url_scores(df_education_url_coeffs)
 
