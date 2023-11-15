@@ -26,10 +26,10 @@ from scipy.stats import boxcox
 
 from src.schemas.income_schemas import get_income_interest_scores
 
-from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
+from src.utils.parse_config import cnfg_file
 
 # COMMAND ----------
 
@@ -70,7 +70,7 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 # COMMAND ----------
 
 df_income_interest_coeffs = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "income_interest_coeffs")
+    cnfg_file.paths.income_interest_coeffs
 )
 
 # COMMAND ----------
@@ -256,7 +256,7 @@ schema, info = get_income_interest_scores()
 
 write_dataframe_to_table(
     df_save_scores,
-    get_value_from_yaml("paths", "income_interest_scores"),
+    cnfg_file.paths.income_interest_scores,
     schema,
     "overwrite",
     root_logger,

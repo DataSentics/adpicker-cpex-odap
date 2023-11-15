@@ -18,11 +18,11 @@ import pyspark.pandas as ps
 import pyspark.sql.functions as F
 
 from src.utils.helper_functions_defined_by_user._abcde_utils import convert_traits_to_location_features
-from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
 from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
 from src.schemas.income_schemas import get_income_other_scores
+from src.utils.parse_config import cnfg_file
 
 # COMMAND ----------
 
@@ -72,7 +72,7 @@ def get_web_features_list(df):
     feat_list = df.filter(F.col("category").isin(DEVICES))
     return [element.feature for element in feat_list.collect()]
 
-df_metadata = spark.read.format("delta").load(get_value_from_yaml("paths", "metadata"))
+df_metadata = spark.read.format("delta").load(cnfg_file.paths.metadata)
 web_features_list = get_web_features_list(df_metadata)
 
 # COMMAND ----------
@@ -137,13 +137,13 @@ df_get_web_binary_features = get_web_binary_features(df_read_web_features_fs)
 
 df_location_traits_map = (
     spark.read.format("delta")
-    .load(get_value_from_yaml("paths", "location_traits_map"))
+    .load(cnfg_file.paths.location_traits_map)
     .withColumnRenamed("TRAIT", "segment_id")
 )
 
 # COMMAND ----------
 
-df_user_traits = spark.read.format("delta").load(get_value_from_yaml("paths", "user_segments_path"))
+df_user_traits = spark.read.format("delta").load(cnfg_file.paths.user_segments_path)
 
 # COMMAND ----------
 
@@ -244,7 +244,7 @@ df_join_data = join_data(df_get_web_binary_features, df_get_location_binary_feat
 # COMMAND ----------
 
 df_income_other_coeffs = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "income_other_coeffs")
+    cnfg_file.paths.income_other_coeffs
 )
 
 # COMMAND ----------
@@ -298,7 +298,7 @@ schema, info = get_income_other_scores()
 
 write_dataframe_to_table(
     df_save_scores,
-    get_value_from_yaml("paths", "income_other_scores"),
+    cnfg_file.paths.income_other_scores,
     schema,
     "overwrite",
     root_logger,

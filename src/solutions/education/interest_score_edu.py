@@ -23,7 +23,7 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_
 from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
-
+from src.utils.parse_config import cnfg_file
 from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml.functions import vector_to_array
 from scipy.stats import boxcox
@@ -68,7 +68,7 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 # COMMAND ----------
 
 df_education_interest_coeffs = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "education_interest_coeffs")
+    cnfg_file.paths.education_interest_coeffs
 )
 
 # COMMAND ----------
@@ -254,7 +254,7 @@ schema, info = get_education_interest_scores()
 
 write_dataframe_to_table(
     df_save_scores,
-    get_value_from_yaml("paths", "education_interest_scores"),
+    cnfg_file.paths.education_interest_scores,
     schema,
     "overwrite",
     root_logger,
