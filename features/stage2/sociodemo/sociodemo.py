@@ -36,11 +36,8 @@ from src.utils.helper_functions_defined_by_user.feature_fetching_functions impor
     fetch_fs_stage,
 )
 
-# pylint: disable=wildcard-import
 # pylint: disable=redefined-outer-name
 # pylint: disable=eval-used
-# pylint: disable=unspecified-encoding
-# pylint: disable=unused-wildcard-import
 
 # COMMAND ----------
 
@@ -138,12 +135,14 @@ def get_schemas(models_dict: dict):
     with open(
         f'../features/stage2/sociodemo/schemas/socdemo_gender_schema_{models_dict["gender_male"].split("/")[-3]}.txt',
         "r",
+        encoding="utf-8",
     ) as f:
         schema_gender = eval(f.readlines()[0])
 
     with open(
         f'../features/stage2/sociodemo/schemas/socdemo_age_schema_{models_dict["ageGroup_0_17"].split("/")[-3]}.txt',
         "r",
+        encoding="utf-8",
     ) as f:
         schema_age = eval(f.readlines()[0])
 

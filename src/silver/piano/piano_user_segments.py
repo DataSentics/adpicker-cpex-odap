@@ -19,7 +19,6 @@ from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.schemas.piano_segments_schema import get_piano_segments_schema
 from src.schemas.lookalike_schema import get_lookalike_schema
 
-# pylint: disable = import-error
 from src.utils.helper_functions_defined_by_user._DB_connection_functions import (
     load_mysql_table,
 )
