@@ -272,10 +272,6 @@ def lift_a_hits(dataset: DataFrame, quadr) -> DataFrame:
     return avg_rate_dataset
 
 
-def fudf(val):
-    return F.reduce(lambda x, y: x + y, val)
-
-
 def column_add(a, b):
     # pylint: disable=unnecessary-dunder-call  # I would rather keep explicit call, but also what is this for?
     return a.__add__(b)

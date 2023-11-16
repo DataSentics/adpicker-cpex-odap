@@ -1,5 +1,5 @@
 from pyspark.sql.session import SparkSession
-from pyspark.dbutils import DBUtils
+from pyspark.dbutils import DBUtils # pylint: disable=import-error, no-name-in-module
 
 
 def getMySqlOptions(dbutils: DBUtils):
