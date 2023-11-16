@@ -71,7 +71,7 @@ ignored-modules = src.utils,              # local functions
 # AdPicker - TBI: To Be Installed
 # odap - AdPicker package
 # pyspark.sql.functions - useful functions from (Py)Spark
-# delta.tables - functions for delta tables         
+# delta.tables - functions for delta tables
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
@@ -145,7 +145,7 @@ bad-names=foo,
           tutu,
           tata,
           # AdPicker specification - mostly CZ/SK naming
-          pom
+          pom,
 
 # Bad variable names regexes, separated by a comma. If names match any regex,
 # they will always be refused
@@ -459,7 +459,7 @@ disable=raw-checker-failed,
         too-many-branches,                # Mostly unsolvable - useful in specific places (ML, NLP)
         too-many-statements,              # Mostly unsolvable
         fixme,                            # we definitely will solve that; for sure; somehow; sometime; in the future
-        
+
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
