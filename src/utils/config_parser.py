@@ -2,9 +2,6 @@ import os
 from typing import Dict
 from omegaconf import OmegaConf
 
-from src.utils.find_config_path import build_path
-
-
 def parse_config_file(yaml_path, overrides: Dict = None):
     """Function to parse the config file and override the env variable if needed"""
 
@@ -20,6 +17,3 @@ def parse_config_file(yaml_path, overrides: Dict = None):
     else:
         OmegaConf.resolve(config)
     return config
-
-config_file_path = build_path()
-cnfg_file = parse_config_file(config_file_path)
