@@ -204,7 +204,7 @@ def validate_data_between_two_sources(
         f"After keeping zeros in columns, there were skipped {df_diff_zeros.count()} columns"
     )
 
-    return (True if df_diff.count() == 0 else False, df_diff.drop("diff"))
+    return (df_diff.count() == 0, df_diff.drop("diff"))
 
 
 # COMMAND ----------
