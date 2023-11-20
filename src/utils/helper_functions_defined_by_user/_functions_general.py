@@ -1,14 +1,14 @@
 import datetime as dt
-import pyspark.sql.functions as F
-import pyspark.sql.types as T
-import pyspark
-import builtins as py
 import shutil
+
 from pyspark.sql import SQLContext
-from pyspark.dbutils import DBUtils
+from pyspark.sql.dataframe import DataFrame
 
 
-def upsertToDelta(aggregateTable, updateTable, key, sc):
+# pylint: disable=protected-access
+
+
+def upsertToDelta(aggregateTable: DataFrame, updateTable: DataFrame, key, sc):
     # Set the dataframe to view name
     aggregateTable.createOrReplaceTempView("aggregates")
     updateTable.createOrReplaceTempView("updates")
@@ -35,7 +35,6 @@ def check_dbfs_existence(path: str, spark):
     return fs.exists(jvm.org.apache.hadoop.fs.Path(filePath))
 
 
-
 def create_latest_lookalike_table(db, lookalikes, spark):
     df_tmp_int = spark.createDataFrame(
         [(dt.date.today().isoformat(), lookalikes)], ["date", "last_used_lookalikes"]
@@ -45,7 +44,6 @@ def create_latest_lookalike_table(db, lookalikes, spark):
         f"CREATE TABLE {db}.last_used_lookalikes as SELECT * FROM last_used_lookalikes"
     )
     spark.catalog.dropTempView("last_used_lookalikes")
-
 
 
 # Get old interests and identify new ones, update table if necessary
@@ -60,7 +58,6 @@ def create_latest_interests_table(db, interests, spark):
     spark.catalog.dropTempView("last_used_interests")
 
 
-
 def delete_checkpoint_dir(sc):
     """
     Delete checkpoint directory with its' content.
@@ -69,4 +66,3 @@ def delete_checkpoint_dir(sc):
     checkpointDir = sc._jsc.sc().getCheckpointDir().get().replace("dbfs:", "/dbfs")
     print("DELETING CHECKPOINT DIRECTORY: ", checkpointDir)
     shutil.rmtree(checkpointDir, ignore_errors=True)
-    return None
