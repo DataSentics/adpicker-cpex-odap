@@ -84,7 +84,7 @@ timestamp = dbutils.widgets.get("timestamp")
 
 
 def check_for_daily_run(scores_table, timestamp):
-    path = config.paths.scores_table
+    path = config.paths.get(scores_table)
     df_scores = (
         spark.read.format("delta").load(path).filter(F.col("timestamp") == timestamp)
     )

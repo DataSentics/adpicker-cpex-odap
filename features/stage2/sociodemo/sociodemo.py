@@ -152,8 +152,8 @@ def get_schemas(models_dict: dict):
 
 
 # COMMAND ----------
-
-models_dict = config.paths.models.sociodemo.os.getenv("APP_ENV")
+app_env = os.getenv('APP_ENV')
+models_dict = config.paths.models.sociodemo.get(app_env)
 schemas_both = get_schemas(models_dict)
 
 # COMMAND ----------

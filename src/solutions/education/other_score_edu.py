@@ -34,7 +34,6 @@ from src.utils.helper_functions_defined_by_user.feature_fetching_functions impor
     fetch_fs_stage,
 )
 from src.schemas.education_schemas import get_education_other_scores
-from src.utils.read_config import config
 
 
 # COMMAND ----------

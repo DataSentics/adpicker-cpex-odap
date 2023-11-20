@@ -22,18 +22,7 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
     delta_table_exists,
 )
-from src.utils.helper_functions_defined_by_user.date_functions import get_max_date
-from src.utils.helper_functions_defined_by_user.sdm_table_functions import sdm_hash
 from src.utils.read_config import config
-from src.utils.helper_functions_defined_by_user._functions_nlp import (
-    df_url_normalization,
-)
-from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-from src.schemas.sdm_schemas import (
-    get_schema_sdm_preprocessed,
-    get_schema_sdm_session,
-    get_schema_sdm_pageview,
-)
 
 # COMMAND ----------
 

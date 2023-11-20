@@ -6,10 +6,9 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
 )
 from src.utils.read_config import config
-
 from src.schemas.sdm_schemas import get_schema_sdm_session
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-from src.utils.read_config import config
+
 # COMMAND ----------
 
 # MAGIC %md #### Load preprocessed

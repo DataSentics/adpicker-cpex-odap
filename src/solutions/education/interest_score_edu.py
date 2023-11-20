@@ -31,17 +31,6 @@ from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml.functions import vector_to_array
 from scipy.stats import boxcox
 
-from src.utils.helper_functions_defined_by_user._abcde_utils import (
-    standardize_column_sigmoid,
-)
-from src.utils.read_config import config
-from src.utils.helper_functions_defined_by_user.table_writing_functions import (
-    write_dataframe_to_table,
-)
-from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-from src.utils.helper_functions_defined_by_user.feature_fetching_functions import (
-    fetch_fs_stage,
-)
 from src.schemas.education_schemas import get_education_interest_scores
 
 # COMMAND ----------

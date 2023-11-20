@@ -38,7 +38,6 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
 )
 from src.schemas.income_schemas import get_income_url_scores
-from src.utils.read_config import config
 
 
 # COMMAND ----------
