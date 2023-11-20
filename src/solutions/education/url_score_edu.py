@@ -41,8 +41,6 @@ from src.schemas.education_schemas import get_education_url_scores
 from datetime import date, timedelta, datetime
 from scipy.stats import boxcox
 from logging import Logger
-from src.schemas.education_schemas import get_education_url_scores
-from src.utils.read_config import config
 # COMMAND ----------
 
 # MAGIC %md
