@@ -1,5 +1,6 @@
 from pyspark.sql import types as T
 
+
 # schema - saving loaded raw data to delta
 def get_schema_cpex_piano_cleansed():
     schema = T.StructType(

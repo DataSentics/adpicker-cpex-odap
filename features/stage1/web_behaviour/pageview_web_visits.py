@@ -6,14 +6,14 @@
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Imports & config
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
 import re
+import pyspark.sql.functions as F
 
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
@@ -21,29 +21,32 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Load table & fetch config values
 
 # COMMAND ----------
 
-df_sdm_pageview =  spark.read.format("delta").load(
+df_sdm_pageview = spark.read.format("delta").load(
     get_value_from_yaml("paths", "sdm_pageview")
 )
 
 time_window_str = get_value_from_yaml("featurestorebundle", "time_windows")[0]
-time_window_int = int(re.search(r'\d+', time_window_str).group())
+time_window_int = int(re.search(r"\d+", time_window_str).group())
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC #### Filter table
 
 # COMMAND ----------
 
-df_pageview_filtered = df_sdm_pageview.filter(F.col("page_screen_view_date") >= F.current_date() - time_window_int)
+df_pageview_filtered = df_sdm_pageview.filter(
+    F.col("page_screen_view_date") >= F.current_date() - time_window_int
+)
 
 # COMMAND ----------
+
 
 def calculate_distinct_web_visits(df):
     df_grouped = (

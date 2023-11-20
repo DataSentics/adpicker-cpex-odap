@@ -4,7 +4,6 @@ from pyspark.sql import functions as F
 
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
-    delta_table_exists,
 )
 from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
@@ -33,6 +32,7 @@ df_preprocessed = spark.read.format("delta").load(
 
 # COMMAND ----------
 
+
 def get_relevant_fields(df: DataFrame):
     return df.withColumn("flag_active_session", F.lit(True)).select(
         "session_id",
@@ -56,6 +56,7 @@ df_relevant_fields = get_relevant_fields(df_preprocessed)
 # MAGIC %md #### Append to pageview table
 
 # COMMAND ----------
+
 
 def session_table(
     df_session: DataFrame,

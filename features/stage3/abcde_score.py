@@ -1,12 +1,15 @@
 # Databricks notebook source
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC # ABCDE segmentation
-# MAGIC This notebook calculates the ABCDE segmentation scores and percentiles. Income and education scores are fetched from FS, combined and ABCDE brackets are manually defined for suitable combinations. Percentiles for each bracket, A-E are then calculated and written into FS.
+# MAGIC This notebook calculates the ABCDE segmentation scores and percentiles.
+# MAGIC  Income and education scores are fetched from FS,
+# MAGIC  combined and ABCDE brackets are manually defined for suitable combinations.
+# MAGIC  Percentiles for each bracket, A-E are then calculated and written into FS.
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Imports
 
@@ -14,10 +17,12 @@
 
 import pyspark.sql.functions as F
 
+from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.window import Window
 
-from src.utils.helper_functions_defined_by_user.yaml_functions import get_value_from_yaml
-from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
+from src.utils.helper_functions_defined_by_user.feature_fetching_functions import (
+    fetch_fs_stage,
+)
 
 # COMMAND ----------
 
@@ -36,7 +41,7 @@ EDUCATION_COEFF = 0.7
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Initialize widgets and user entity
 
@@ -50,11 +55,12 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC ## Fetch percentiles from FS
 
 # COMMAND ----------
+
 
 def read_fs(timestamp):
     perc_features = [
@@ -63,6 +69,7 @@ def read_fs(timestamp):
 
     fs_stage2 = fetch_fs_stage(timestamp, stage=2, feature_list=perc_features)
     return fs_stage2
+
 
 df_fs = read_fs(widget_timestamp)
 
@@ -75,7 +82,8 @@ df_fs = read_fs(widget_timestamp)
 
 # COMMAND ----------
 
-def calculate_combinations(df):
+
+def calculate_combinations(df: DataFrame):
     """
     Function to succintly calculate scores for all possible combinations of income and education levels (as linear combination of these two scores).
 
@@ -98,11 +106,13 @@ def calculate_combinations(df):
         *[col for level in INCOME_MODELS_SUFFIXES for col in _calc_for_level(level)],
     )
 
+
 df_calculate_combinations = calculate_combinations(df_fs)
 
 # COMMAND ----------
 
-def define_brackets(df):
+
+def define_brackets(df: DataFrame):
     """
     Bracket combinations are designed manually to roughly correspond to income/education combinations.
     """
@@ -116,6 +126,7 @@ def define_brackets(df):
         F.greatest("low_zs", "low_ss_no").alias("E_score"),
     )
 
+
 df_define_brackets = define_brackets(df_calculate_combinations)
 
 # COMMAND ----------
@@ -127,7 +138,8 @@ df_define_brackets = define_brackets(df_calculate_combinations)
 
 # COMMAND ----------
 
-def calculate_percentiles(df):
+
+def calculate_percentiles(df: DataFrame):
     return df.select(
         "user_id",
         "timestamp",
@@ -140,6 +152,7 @@ def calculate_percentiles(df):
         ],
     )
 
+
 df_final = calculate_percentiles(df_define_brackets)
 
 # COMMAND ----------
@@ -149,8 +162,8 @@ df_final = calculate_percentiles(df_define_brackets)
 
 # COMMAND ----------
 
-metadata =  {
-    "table":  "user_stage3",
+metadata = {
+    "table": "user_stage3",
     "category": "ABCDE_score_features",
     "features": {
         "{category}_score": {
@@ -161,5 +174,5 @@ metadata =  {
             "description": "ABCDE model percentile: Segment {category}",
             "fillna_with": -1.0,
         },
-    }
-    }
+    },
+}

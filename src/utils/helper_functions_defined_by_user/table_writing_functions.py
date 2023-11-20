@@ -1,13 +1,14 @@
 import logging
 from typing import Optional, List
+from pyspark.sql.dataframe import DataFrame
 from pyspark.sql import SparkSession
-from delta.tables import DeltaTable
+from delta.tables import DeltaTable  # pylint: disable=import-error, no-name-in-module
 
 spark = SparkSession.builder.appName("MyApp").getOrCreate()
 
 
 def write_dataframe_to_table(
-    dataframe_source,
+    dataframe_source: DataFrame,
     table_destination,
     table_schema,
     writing_mode,
@@ -15,7 +16,6 @@ def write_dataframe_to_table(
     partition: Optional[List[str]] = None,
     table_properties: Optional[str] = None,
 ):
-
     """
     This function takes 6 parameters, first 4 mandatory last two optional, and writes the data from a dataframe into a table.
     Data will be written in the table if schema of dataframe is compatible with schema of table otherwise an error will be thrown
@@ -30,7 +30,6 @@ def write_dataframe_to_table(
     """
 
     if compare_and_check_schemas(table_schema, dataframe_source.schema, logger):
-
         logger_writing_table_status(
             delta_table_exists(f"{table_destination}"), writing_mode, logger
         )
@@ -72,7 +71,6 @@ def compare_and_check_schemas(schema1, schema2, logger: logging.Logger):
 
     fields1 = {field.name: field for field in schema1.fields}
     fields2 = {field.name: field for field in schema2.fields}
-    mismatch_fields = []
     schema_compatibility_check = True
 
     for field_name in fields1.keys() | fields2.keys():
@@ -103,7 +101,7 @@ def compare_and_check_schemas(schema1, schema2, logger: logging.Logger):
                     f"Nullability mismatch! TABLE schema: '{field_name}': {field1.nullable} | DATAFRAME schema: '{field_name}' : {field2.nullable}"
                 )
                 schema_compatibility_check = False
-    
+
     return schema_compatibility_check
 
 
@@ -115,9 +113,9 @@ def delta_table_exists(table_path):
     table_path - the full path to the delta table(including its name)
     """
     try:
-        delta_table = DeltaTable.forPath(spark, table_path)
+        DeltaTable.forPath(spark, table_path)
         return True
-    except Exception as e:
+    except BaseException:
         return False
 
 
@@ -139,4 +137,3 @@ def logger_writing_table_status(check_table, writing_mode, logger: logging.Logge
         )
     else:
         logger.info(f"Data will be written to table in mode '{writing_mode}'.")
-        

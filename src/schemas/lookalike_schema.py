@@ -13,12 +13,13 @@ def get_lookalike_schema():
             T.StructField("next_retraining", T.StringType(), True),
             T.StructField("segment_id", T.StringType(), True),
             T.StructField("days_before_tp", T.IntegerType(), True),
-        ])
+        ]
+    )
 
     info = {
-    "primary_key": ["Id"],
-    "partition_by": [],  # INSERT PARTITION KEY(s) HERE (OPTIONAL)
-    "table_properties": {"delta.autoOptimize.optimizeWrite": "true"},
+        "primary_key": ["Id"],
+        "partition_by": [],  # INSERT PARTITION KEY(s) HERE (OPTIONAL)
+        "table_properties": {"delta.autoOptimize.optimizeWrite": "true"},
     }
 
     return schema, info

@@ -27,6 +27,7 @@ df_silver_sdm_preprocessed = spark.read.format("delta").load(
 
 # COMMAND ----------
 
+
 def add_pageview_ids_and_empty_cols(df: DataFrame):
     return (
         df.withColumn("PAGE_VIEWS", F.explode("PAGES_TIMES"))
@@ -52,6 +53,7 @@ df_added_pageview_ids_and_empty_cols = add_pageview_ids_and_empty_cols(
 # MAGIC %md #### Append
 
 # COMMAND ----------
+
 
 def save_pageview_table(df: DataFrame):
     return df.select(

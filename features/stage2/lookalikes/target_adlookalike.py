@@ -12,11 +12,13 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
     get_value_from_yaml,
 )
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
+from src.utils.helper_functions_defined_by_user.feature_fetching_functions import (
+    fetch_fs_stage,
+)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC #### Config
 
 # COMMAND ----------
@@ -43,6 +45,7 @@ timestamp = dbutils.widgets.get("timestamp")
 
 # COMMAND ----------
 
+
 def get_defined_lookalikes():
     lookalike_path = get_value_from_yaml("paths", "lookalike_path")
     df_lookalike = spark.read.format("delta").load(lookalike_path)
@@ -64,6 +67,7 @@ df_lookalikes = get_defined_lookalikes()
 
 # COMMAND ----------
 
+
 def read_fs(timestamp):
     df = fetch_fs_stage(timestamp, stage=1, feature_list=[]).withColumn(
         "timestamp", F.to_timestamp(F.col("timestamp"))
@@ -79,6 +83,7 @@ df_fs = read_fs(timestamp)
 
 # COMMAND ----------
 
+
 def get_user_segments():
     user_segments_path = get_value_from_yaml("paths", "user_segments_path")
     df_segments = spark.read.format("delta").load(user_segments_path)
@@ -93,6 +98,7 @@ df_user_segments = get_user_segments()
 # MAGIC %md #### Assign target
 
 # COMMAND ----------
+
 
 def assign_lookalikes_target(
     df_fs: DataFrame, df_user_segments: DataFrame, df_models: DataFrame, logger: Logger
@@ -129,7 +135,8 @@ df_fs_targets = assign_lookalikes_target(
 
 # COMMAND ----------
 
-def get_array_of_lookalikes(df_fs_targets: DataFrame, df_lookalikes):
+
+def get_array_of_lookalikes(df_fs_targets: DataFrame):
     feature_names = [
         colname
         for colname in df_fs_targets.columns
@@ -152,7 +159,7 @@ def get_array_of_lookalikes(df_fs_targets: DataFrame, df_lookalikes):
     return df_fs_targets_array
 
 
-df_final = get_array_of_lookalikes(df_fs_targets, df_lookalikes)
+df_final = get_array_of_lookalikes(df_fs_targets)
 
 # COMMAND ----------
 
