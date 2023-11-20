@@ -1,4 +1,8 @@
 # Databricks notebook source
+# MAGIC %md Imports
+
+# COMMAND ----------
+
 import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
 
@@ -8,7 +12,33 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
 
 # COMMAND ----------
 
-APP_ENV = "dev"
+# MAGIC %md Parameters from widgets
+
+# COMMAND ----------
+
+dbutils.widgets.dropdown("APP_ENV", "dev", ["dev", "prod"])
+dbutils.widgets.text("number_of_rows", "")
+dbutils.widgets.text("sample_coef", "")
+
+# COMMAND ----------
+
+APP_ENV = dbutils.widgets.get("APP_ENV")
+
+number_of_rows = dbutils.widgets.get("number_of_rows")
+if number_of_rows in ["None", ""]:
+    number_of_rows = None
+else:
+    number_of_rows = int(number_of_rows)
+
+sample_coef = dbutils.widgets.get("sample_coef")
+if sample_coef in ["None", ""]:
+    sample_coef = None
+else:
+    sample_coef = float(sample_coef)
+
+# COMMAND ----------
+
+# MAGIC %md Define tables and their paths
 
 # COMMAND ----------
 
@@ -43,6 +73,10 @@ special_tables_to_validate = {
 
 # COMMAND ----------
 
+# MAGIC %md Helper functions
+
+# COMMAND ----------
+
 def _get_columns_to_compare(df: DataFrame) -> list():
     return [col_name for col_name in df.columns if "final" in col_name]
 
@@ -62,6 +96,10 @@ def _get_columns_to_compare_special(df: DataFrame, df_2: DataFrame) -> list():
 
 # COMMAND ----------
 
+# MAGIC %md Main function
+
+# COMMAND ----------
+
 def validate_data_between_two_sources(df_name: str, df_path_old_pipeline: str, coef: float = 0.1, limit_of_rows: int = 10000) -> tuple():
     """
     Function that should be able to validate if there are any discrepancies between last two versions of calculated Feature Store rows - bigger than specific thrash-hold
@@ -70,6 +108,8 @@ def validate_data_between_two_sources(df_name: str, df_path_old_pipeline: str, c
     df_name: Name of table that is specified in config file
     coef: Thrash-hold under which we expect that rows are calculated just fine
     """
+
+    coef = 0.1 if coef is None else coef    # handle 'None' input for coef
 
     # load table using YAML
     if "." not in df_name:
@@ -84,8 +124,6 @@ def validate_data_between_two_sources(df_name: str, df_path_old_pipeline: str, c
     else:
         df_1 = spark.read.table(df_name)                                # read "current" ODAP pipeline results
         df_2 = spark.read.format("delta").load(df_path_old_pipeline)    # read "old" pipeline results
-        # print(df_1.columns)
-        # print(df_2.columns)
 
         columns_to_validate = _get_columns_to_compare_special(df_1, df_2)
 
@@ -143,10 +181,14 @@ def validate_data_between_two_sources(df_name: str, df_path_old_pipeline: str, c
 
 # COMMAND ----------
 
+# MAGIC %md Validation itself
+
+# COMMAND ----------
+
 for tab in tables_to_validate.keys():
     print("------------------------")
     print(tab)
-    x, y = validate_data_between_two_sources(tab, tables_to_validate[tab], 0.09, None)
+    x, y = validate_data_between_two_sources(tab, tables_to_validate[tab], sample_coef, number_of_rows)
     print(x)
     display(y)
 
@@ -155,6 +197,6 @@ for tab in tables_to_validate.keys():
 for tab in special_tables_to_validate.keys():
     print("------------------------")
     print(tab)
-    x, y = validate_data_between_two_sources(tab, special_tables_to_validate[tab], 0.09, None)
+    x, y = validate_data_between_two_sources(tab, special_tables_to_validate[tab], sample_coef, number_of_rows)
     print(x)
     display(y)
