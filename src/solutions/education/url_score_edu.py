@@ -35,9 +35,7 @@ from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.schemas.education_schemas import get_education_url_scores
 
 from datetime import date, timedelta, datetime
@@ -108,7 +106,7 @@ def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger):
 
 
 df_sdm_pageview = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_pageview")
+    config.paths.sdm_pageview
 )
 df_load_sdm_pageview = load_sdm_pageview(
     df_sdm_pageview, widget_timestamp, widget_n_days, root_logger

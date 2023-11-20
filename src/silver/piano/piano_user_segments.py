@@ -11,9 +11,7 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
     delta_table_exists,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 from src.schemas.piano_segments_schema import get_piano_segments_schema
@@ -25,7 +23,7 @@ from src.utils.helper_functions_defined_by_user._DB_connection_functions import 
 
 # COMMAND ----------
 
-LOOKALIKE_PATH = get_value_from_yaml("paths", "lookalike_path")
+LOOKALIKE_PATH = config.paths.lookalike_path
 
 # COMMAND ----------
 
@@ -89,7 +87,7 @@ def create_lookalike_table(logger):
 
         write_dataframe_to_table(
             df_empty,
-            get_value_from_yaml("paths", "lookalike_path"),
+            config.paths.lookalike_path,
             schema,
             "default",
             logger,
@@ -113,7 +111,7 @@ def update_lookalike_delta(logger):
 
     write_dataframe_to_table(
         new_lal_df,
-        get_value_from_yaml("paths", "lookalike_path"),
+        config.paths.lookalike_path,
         schema,
         "overwrite",
         logger,
@@ -173,7 +171,7 @@ def save_table(df: DataFrame, logger):
 
     write_dataframe_to_table(
         df,
-        get_value_from_yaml("paths", "user_segments_path"),
+        config.paths.user_segments_path,
         schema,
         "overwrite",
         logger,

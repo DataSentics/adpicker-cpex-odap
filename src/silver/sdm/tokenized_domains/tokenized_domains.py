@@ -20,9 +20,7 @@ from src.utils.helper_functions_defined_by_user.process_loaded_interests import 
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 
 Interest = namedtuple("Interest", ["keywords", "general_interest"])
 
@@ -86,7 +84,7 @@ def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str):
 # if no end date provided then current date is taken
 
 df_silver_sdm_pageview = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_pageview")
+    config.paths.sdm_pageview
 )
 
 df_pageview = load_sdm_pageview(df_silver_sdm_pageview, widget_end_date, widget_n_days)
@@ -121,7 +119,7 @@ def load_sdm_url(df: DataFrame, tokens_version, use_bigrams, logger: Logger):
 
 
 df_silver_sdm_url = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_url")
+    config.paths.sdm_url
 )
 
 df_sdm_url = load_sdm_url(
@@ -140,7 +138,7 @@ def read_interests(df: DataFrame, tokens_version):
 
 
 df_interests = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "interests_definition")
+    config.paths.interests_definition
 )
 
 subinterests = read_interests(df_interests, widget_tokens_version)
@@ -186,7 +184,7 @@ schema, info = get_schema_sdm_tokenized_domains()
 
 write_dataframe_to_table(
     df_tokenized_domains,
-    get_value_from_yaml("paths", "sdm_tokenized_domains"),
+    config.paths.sdm_tokenized_domains,
     schema,
     "overwrite",
     root_logger,

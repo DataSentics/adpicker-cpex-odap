@@ -32,9 +32,7 @@ from src.utils.helper_functions_defined_by_user._abcde_utils import (
     standardize_column_sigmoid,
     calculate_count_coefficient,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
@@ -134,7 +132,7 @@ def load_sdm_url(df: DataFrame):
     )
 
 
-df_sdm_url = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_url"))
+df_sdm_url = spark.read.format("delta").load(config.paths.sdm_url)
 
 # COMMAND ----------
 

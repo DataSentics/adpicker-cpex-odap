@@ -11,9 +11,7 @@ from datetime import date, datetime, timedelta
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 
@@ -69,7 +67,7 @@ def load_silver(df: DataFrame, end_date: str, n_days: str):
 
 
 df_bronze_cpex_piano = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "cpex_table_piano")
+    config.paths.cpex_table_piano
 )
 df_silver_cpex_piano = load_silver(df_bronze_cpex_piano, widget_end_date, widget_n_days)
 
@@ -116,7 +114,7 @@ schema, info = get_sociodemo_target_schema()
 
 write_dataframe_to_table(
     df_preprocessing,
-    get_value_from_yaml("paths", "sdm_sociodemo_targets"),
+    config.paths.sdm_sociodemo_targets,
     schema,
     "overwrite",
     root_logger,

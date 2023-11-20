@@ -15,9 +15,7 @@
 import re
 import pyspark.sql.functions as F
 
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 
 # COMMAND ----------
 
@@ -28,10 +26,10 @@ from src.utils.helper_functions_defined_by_user.yaml_functions import (
 # COMMAND ----------
 
 df_sdm_pageview = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_pageview")
+    config.paths.sdm_pageview
 )
 
-time_window_str = get_value_from_yaml("featurestorebundle", "time_windows")[0]
+time_window_str = config.featurestorebundle.time_windows[0]
 time_window_int = int(re.search(r"\d+", time_window_str).group())
 
 # COMMAND ----------

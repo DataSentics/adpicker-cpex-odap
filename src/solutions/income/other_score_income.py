@@ -22,9 +22,7 @@ import pyspark.sql.functions as F
 from src.utils.helper_functions_defined_by_user._abcde_utils import (
     convert_traits_to_location_features,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
 )

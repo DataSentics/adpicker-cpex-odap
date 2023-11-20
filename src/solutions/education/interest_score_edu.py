@@ -34,9 +34,7 @@ from scipy.stats import boxcox
 from src.utils.helper_functions_defined_by_user._abcde_utils import (
     standardize_column_sigmoid,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
 )
