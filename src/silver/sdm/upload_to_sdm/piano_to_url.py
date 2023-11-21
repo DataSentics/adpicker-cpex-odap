@@ -11,9 +11,7 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     delta_table_exists,
 )
 from src.utils.helper_functions_defined_by_user.date_functions import get_max_date
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user._functions_nlp import (
     df_stemming,
     df_url_normalization,
@@ -47,13 +45,16 @@ col_to_concat_stemmed = [f"{col}_STEMMED" for col in col_to_concat]
 
 
 def create_url_table():
-    if not delta_table_exists(get_value_from_yaml("paths", "sdm_url")):
+    if not delta_table_exists(
+        config.paths.sdm_url
+    ):
+
         schema, info = get_schema_sdm_url()
         df_empty = spark.createDataFrame([], schema)
 
         write_dataframe_to_table(
             df_empty,
-            get_value_from_yaml("paths", "sdm_url"),
+            config.paths.sdm_url,
             schema,
             "default",
             root_logger,
@@ -71,7 +72,7 @@ create_url_table()
 # COMMAND ----------
 
 df_silver_sdm_url = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_url")
+    config.paths.sdm_url
 )
 
 # COMMAND ----------
@@ -105,7 +106,7 @@ def read_cleansed_data(df_silver: DataFrame, df_url: DataFrame, logger: Logger):
 
 
 df_bronze_cpex_piano = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "cpex_table_piano")
+    config.paths.cpex_table_piano
 )
 
 
@@ -400,7 +401,7 @@ schema_sdm_url, info_sdm_url = get_schema_sdm_url()
 
 write_dataframe_to_table(
     df_save_url_table,
-    get_value_from_yaml("paths", "sdm_url"),
+    config.paths.sdm_url,
     schema_sdm_url,
     "append",
     root_logger,

@@ -8,9 +8,7 @@ from pyspark.sql.dataframe import DataFrame
 
 import pyspark.sql.functions as F
 
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.process_loaded_interests import (
     process_loaded_interests,
 )
@@ -57,7 +55,7 @@ def tokenized_domains(df: DataFrame, entity, timestamp):
 
 
 df_sdm_tokenized_domains = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_tokenized_domains")
+    config.paths.df_sdm_tokenized_domains
 )
 df_tokenized_domains = tokenized_domains(
     df_sdm_tokenized_domains, "timestamp", widget_timestamp
@@ -79,8 +77,7 @@ def read_interests(df: DataFrame, tokens_version):
 
 
 df_interests_definition = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "interests_definition")
-)
+    config.paths.interests_definition)
 dict_interests = read_interests(df_interests_definition, widget_tokens_version)
 
 # COMMAND ----------

@@ -21,23 +21,16 @@
 import numpy as np
 import pyspark.pandas as ps
 import pyspark.sql.functions as F
+
+from src.utils.helper_functions_defined_by_user._abcde_utils import standardize_column_sigmoid
+from src.utils.helper_functions_defined_by_user.table_writing_functions import write_dataframe_to_table
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+from src.utils.helper_functions_defined_by_user.feature_fetching_functions import fetch_fs_stage
+from src.utils.read_config import config
 from pyspark.ml.feature import VectorAssembler, StandardScaler
 from pyspark.ml.functions import vector_to_array
 from scipy.stats import boxcox
 
-from src.utils.helper_functions_defined_by_user._abcde_utils import (
-    standardize_column_sigmoid,
-)
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
-from src.utils.helper_functions_defined_by_user.table_writing_functions import (
-    write_dataframe_to_table,
-)
-from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-from src.utils.helper_functions_defined_by_user.feature_fetching_functions import (
-    fetch_fs_stage,
-)
 from src.schemas.education_schemas import get_education_interest_scores
 
 # COMMAND ----------
@@ -79,7 +72,7 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 # COMMAND ----------
 
 df_education_interest_coeffs = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "education_interest_coeffs")
+    config.paths.education_interest_coeffs
 )
 
 # COMMAND ----------
@@ -286,7 +279,7 @@ schema, info = get_education_interest_scores()
 
 write_dataframe_to_table(
     df_save_scores,
-    get_value_from_yaml("paths", "education_interest_scores"),
+    config.paths.education_interest_scores,
     schema,
     "overwrite",
     root_logger,

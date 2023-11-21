@@ -22,9 +22,7 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
     delta_table_exists,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 
 # COMMAND ----------
 
@@ -69,13 +67,16 @@ web_browsers = ["mozilla", "safari", "edge", "opera", "seznam", "chrome"]
 
 # COMMAND ----------
 
-if not delta_table_exists(get_value_from_yaml("paths", "sdm_session")):
+if not delta_table_exists(
+    config.paths.sdm_session
+):
+
     schema, info = get_schema_sdm_session()
     df_empty = spark.createDataFrame([], schema)
 
     write_dataframe_to_table(
         df_empty,
-        get_value_from_yaml("paths", "sdm_session"),
+        config.paths.sdm_session,
         schema,
         "default",
         root_logger,
@@ -85,13 +86,16 @@ if not delta_table_exists(get_value_from_yaml("paths", "sdm_session")):
 
 # COMMAND ----------
 
-if not delta_table_exists(get_value_from_yaml("paths", "sdm_pageview")):
+if not delta_table_exists(
+    config.paths.sdm_pageview
+):
+
     schema, info = get_schema_sdm_pageview()
     df_empty = spark.createDataFrame([], schema)
 
     write_dataframe_to_table(
         df_empty,
-        get_value_from_yaml("paths", "sdm_pageview"),
+        config.paths.sdm_pageview,
         schema,
         "default",
         root_logger,
@@ -175,10 +179,10 @@ def read_cleansed_data(df: DataFrame, df_pageview: DataFrame, logger: Logger):
 
 # reading path must be changed with the final path
 df_bronze_cpex_piano = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "cpex_table_piano")
+    config.paths.cpex_table_piano
 )
 df_silver_sdm_pageview = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_pageview")
+    config.paths.sdm_pageview
 )
 
 df_cleansed_data = read_cleansed_data(
@@ -593,7 +597,7 @@ schema_sdm_preprocessed, info_sdm_preprocessed = get_schema_sdm_preprocessed()
 
 write_dataframe_to_table(
     df_save_preprocessed_table,
-    get_value_from_yaml("paths", "sdm_preprocessed"),
+    config.paths.info_sdm_preprocessed,
     schema_sdm_preprocessed,
     "overwrite",
     root_logger,

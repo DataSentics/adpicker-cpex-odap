@@ -32,14 +32,13 @@ from src.utils.helper_functions_defined_by_user._abcde_utils import (
     standardize_column_sigmoid,
     calculate_count_coefficient,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
 )
 from src.schemas.income_schemas import get_income_url_scores
+
 
 # COMMAND ----------
 
@@ -104,12 +103,9 @@ def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str, logger: Logger)
     )
 
 
-df_sdm_pageview = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_pageview")
-)
-df_load_sdm_pageview = load_sdm_pageview(
-    df_sdm_pageview, widget_timestamp, widget_n_days, root_logger
-)
+
+df_sdm_pageview = spark.read.format("delta").load(config.paths.sdm_pageview)
+df_load_sdm_pageview = load_sdm_pageview(df_sdm_pageview, widget_timestamp, widget_n_days, root_logger)
 
 # COMMAND ----------
 
@@ -135,7 +131,7 @@ def load_sdm_url(df: DataFrame):
     )
 
 
-df_sdm_url = spark.read.format("delta").load(get_value_from_yaml("paths", "sdm_url"))
+df_sdm_url = spark.read.format("delta").load(config.paths.sdm_url)
 
 # COMMAND ----------
 
@@ -173,9 +169,7 @@ check_row_number_joined(df_join_datasets, root_logger)
 
 
 def load_url_scores():
-    df = spark.read.format("delta").load(
-        get_value_from_yaml("paths", "income_url_coeffs")
-    )
+    df = spark.read.format("delta").load(config.paths.income_url_coeffs) 
     return df.withColumnRenamed("domain", "URL_DOMAIN_2_LEVEL")
 
 
@@ -382,7 +376,7 @@ schema, info = get_income_url_scores()
 
 write_dataframe_to_table(
     df_save_scores,
-    get_value_from_yaml("paths", "income_url_scores"),
+    config.paths.income_url_scores,
     schema,
     "overwrite",
     root_logger,

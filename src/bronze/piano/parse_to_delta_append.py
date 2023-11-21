@@ -22,9 +22,7 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
     delta_table_exists,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 
 # COMMAND ----------
 
@@ -58,13 +56,13 @@ widget_series_length = dbutils.widgets.get("series_length")
 # create empty if not exists - releavnt only for long table (as append is used)
 def create_bronze_cpex_piano(series_length):
     if series_length == "long":
-        if not delta_table_exists(get_value_from_yaml("paths", "cpex_table_piano")):
+        if not delta_table_exists(config.paths.cpex_table_piano):
             schema, info = get_schema_cpex_piano_cleansed()
             df_empty = spark.createDataFrame([], schema)
 
             write_dataframe_to_table(
                 df_empty,
-                get_value_from_yaml("paths", "cpex_table_piano"),
+                config.paths.cpex_table_piano,
                 schema,
                 "default",
                 root_logger,
@@ -89,7 +87,7 @@ def max_upload_date(df: DataFrame, series_length):
 
 
 df_bronze_cpex_piano = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "cpex_table_piano")
+    config.paths.cpex_table_piano
 )
 df_max_upload_date = max_upload_date(df_bronze_cpex_piano, widget_series_length)
 
@@ -146,8 +144,8 @@ relevant_folders_list = get_relevant_folders(
     base_path,
     df_max_upload_date,
     widget_series_length,
-    get_value_from_yaml("tables_options", "series_length", "n_hours_short"),
-    get_value_from_yaml("jobs_config", "regular_optimization", "keep_history_n_days"),
+    config.tables_options.series_length.n_hours_short,
+    config.jobs_config.regular_optimization.keep_history_n_days,
 )
 
 # COMMAND ----------
@@ -355,7 +353,7 @@ df_raw_data = load_raw_delta(
     relevant_folders_list,
     widget_series_length,
     df_max_upload_date,
-    get_value_from_yaml("tables_options", "series_length", "n_hours_short"),
+    config.tables_options.series_length.n_hours_short,
     root_logger,
 )
 
@@ -372,7 +370,7 @@ def save(df: DataFrame, series_length):
     if series_length == "long":
         write_dataframe_to_table(
             df,
-            get_value_from_yaml("paths", "cpex_table_piano"),
+            config.paths.cpex_table_piano,
             schema,
             "append",
             root_logger,
@@ -383,7 +381,7 @@ def save(df: DataFrame, series_length):
     if series_length == "short":
         write_dataframe_to_table(
             df,
-            get_value_from_yaml("paths", "cpex_table_short_piano"),
+            config.paths.cpex_table_short_piano,
             schema,
             "overwrite",
             root_logger,

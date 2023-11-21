@@ -8,9 +8,7 @@ import pyspark.sql.functions as F
 from logging import Logger
 from pyspark.sql.dataframe import DataFrame
 
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.feature_fetching_functions import (
     fetch_fs_stage,
@@ -47,7 +45,7 @@ timestamp = dbutils.widgets.get("timestamp")
 
 
 def get_defined_lookalikes():
-    lookalike_path = get_value_from_yaml("paths", "lookalike_path")
+    lookalike_path = config.paths.lookalike_path
     df_lookalike = spark.read.format("delta").load(lookalike_path)
     df_lookalike = (
         df_lookalike.withColumn(
@@ -85,7 +83,7 @@ df_fs = read_fs(timestamp)
 
 
 def get_user_segments():
-    user_segments_path = get_value_from_yaml("paths", "user_segments_path")
+    user_segments_path = config.paths.user_segments_path
     df_segments = spark.read.format("delta").load(user_segments_path)
 
     return df_segments

@@ -29,9 +29,7 @@ from pyspark.sql.window import Window
 
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user._functions_ml import ith
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.feature_fetching_functions import (
     fetch_fs_stage,
 )
@@ -125,7 +123,7 @@ def join_url_scores(df_fs: DataFrame, url_path: str, logger: Logger):
     return df_joined
 
 
-url_path = get_value_from_yaml("paths", "income_url_scores")
+url_path = config.paths.income_url_scores
 df_joined = join_url_scores(df_fs, url_path, root_logger)
 
 # COMMAND ----------
@@ -154,8 +152,8 @@ def get_schemas(models_dict: dict):
 
 
 # COMMAND ----------
-
-models_dict = get_value_from_yaml("paths", "models", "sociodemo", os.getenv("APP_ENV"))
+app_env = os.getenv('APP_ENV')
+models_dict = config.paths.models.sociodemo.get(app_env)
 schemas_both = get_schemas(models_dict)
 
 # COMMAND ----------

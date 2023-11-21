@@ -7,9 +7,7 @@ import pyspark.sql.functions as F
 
 from pyspark.sql.dataframe import DataFrame
 
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.feature_fetching_functions import (
     fetch_fs_stage,
 )
@@ -42,7 +40,7 @@ timestamp = dbutils.widgets.get("timestamp")
 # COMMAND ----------
 
 df_sdm_sociodemo_targets = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_sociodemo_targets")
+    config.paths.sdm_sociodemo_targets
 )
 
 # COMMAND ----------

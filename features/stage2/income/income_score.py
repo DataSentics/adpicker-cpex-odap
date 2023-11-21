@@ -24,9 +24,7 @@ from pyspark.sql.window import Window
 from src.utils.helper_functions_defined_by_user._abcde_utils import (
     standardize_column_positive,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 # COMMAND ----------
@@ -86,7 +84,7 @@ timestamp = dbutils.widgets.get("timestamp")
 
 
 def check_for_daily_run(scores_table, timestamp):
-    path = get_value_from_yaml("paths", scores_table)
+    path = config.paths.get(scores_table)
     df_scores = (
         spark.read.format("delta").load(path).filter(F.col("timestamp") == timestamp)
     )
@@ -159,13 +157,13 @@ def join_all_tables(interest_final, url_final, other_final, logger):
 
 
 df_income_interest_scores = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "income_interest_scores")
+    config.paths.income_interest_scores
 )
 df_income_url_scores = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "income_url_scores")
+    config.paths.incole_url_scores
 )
 df_income_other_scores = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "income_other_scores")
+    config.paths.income_other_scores
 )
 
 df_join_all_tables = join_all_tables(
@@ -266,10 +264,8 @@ metadata = get_features(INCOME_MODELS_SUFFIXES, "user", "income_score_features")
 
 def features_income_model(df, features_name):
     return df.select(
-        get_value_from_yaml(
-            "featurestorebundle", "entities", "user_entity", "id_column"
-        ),
-        get_value_from_yaml("featurestorebundle", "entity_time_column"),
+        config.featurestorebundle.entities.user_entity.id_column,
+        config.featurestorebundle.entity_time_column,
         *features_name,
     )
 
