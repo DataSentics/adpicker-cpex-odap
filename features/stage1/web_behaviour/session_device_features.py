@@ -7,46 +7,45 @@
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Imports & config
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
 import re
+import pyspark.sql.functions as F
 
-from pyspark.sql.window import Window
-
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Load table & fetch config values
 
 # COMMAND ----------
 
-df_sdm_session =  spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_session")
+df_sdm_session = spark.read.format("delta").load(
+    config.paths.sdm_session
 )
 
-time_window_str = get_value_from_yaml("featurestorebundle", "time_windows")[0]
-time_window_int = int(re.search(r'\d+', time_window_str).group())
+time_window_str = config.featurestorebundle.time_windows[0]
+time_window_int = int(re.search(r"\d+", time_window_str).group())
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC #### Filter table
 
 # COMMAND ----------
 
-df_session_filtered = df_sdm_session.filter(F.col("session_date") >= F.current_date() - time_window_int)
+df_session_filtered = df_sdm_session.filter(
+    F.col("session_date") >= F.current_date() - time_window_int
+)
 
 # COMMAND ----------
+
 
 def calculate_device_features(df):
     distinct_columns = [
@@ -55,16 +54,19 @@ def calculate_device_features(df):
         "device_brand_name",
     ]
 
-    df_grouped = df_session_filtered.na.fill(
-            "unknown", subset=distinct_columns
-        ).groupby("user_id").agg(
-        F.count_distinct("device_category").alias(
-            f"web_analytics_num_distinct_device_categories_{time_window_str}"
-        ),
-        F.count_distinct(*distinct_columns).alias(
+    df_grouped = (
+        df.na.fill("unknown", subset=distinct_columns)
+        .groupby("user_id")
+        .agg(
+            F.count_distinct("device_category").alias(
+                f"web_analytics_num_distinct_device_categories_{time_window_str}"
+            ),
+            F.count_distinct(*distinct_columns).alias(
                 f"web_analytics_channel_device_count_distinct_{time_window_str}"
-            )
-    ).withColumn("timestamp", F.lit(F.current_date()))
+            ),
+        )
+        .withColumn("timestamp", F.lit(F.current_date()))
+    )
     return df_grouped
 
 

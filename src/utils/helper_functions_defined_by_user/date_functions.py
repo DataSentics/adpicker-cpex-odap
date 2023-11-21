@@ -1,6 +1,7 @@
 import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
 
+
 def get_max_date(df: DataFrame, date_col: str, datetime_col: str, last_n_days=20):
     """
     Get the maximum datetime value from a DataFrame within the last N days.
@@ -18,8 +19,10 @@ def get_max_date(df: DataFrame, date_col: str, datetime_col: str, last_n_days=20
     Returns:
         datetime.datetime: The maximum datetime value within the specified date range.
     """
-    return (df
-            .filter(F.col(date_col) >= F.date_add(F.current_date(), -last_n_days)) # just last n days (to avoid loading whole table)
-            .agg(F.max(datetime_col))
-            .collect()[0][0]
-           )
+    return (
+        df.filter(
+            F.col(date_col) >= F.date_add(F.current_date(), -last_n_days)
+        )  # just last n days (to avoid loading whole table)
+        .agg(F.max(datetime_col))
+        .collect()[0][0]
+    )

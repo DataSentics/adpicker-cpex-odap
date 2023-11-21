@@ -4,12 +4,8 @@ from pyspark.sql import functions as F
 
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
-    delta_table_exists,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
-
+from src.utils.read_config import config
 from src.schemas.sdm_schemas import get_schema_sdm_session
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
@@ -24,7 +20,7 @@ root_logger = instantiate_logger()
 # COMMAND ----------
 
 df_preprocessed = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_preprocessed")
+    config.paths.sdm_preprocessed 
 )
 
 # COMMAND ----------
@@ -32,6 +28,7 @@ df_preprocessed = spark.read.format("delta").load(
 # MAGIC %md #### Select relevant fields
 
 # COMMAND ----------
+
 
 def get_relevant_fields(df: DataFrame):
     return df.withColumn("flag_active_session", F.lit(True)).select(
@@ -56,6 +53,7 @@ df_relevant_fields = get_relevant_fields(df_preprocessed)
 # MAGIC %md #### Append to pageview table
 
 # COMMAND ----------
+
 
 def session_table(
     df_session: DataFrame,
@@ -101,13 +99,13 @@ def session_table(
 
 
 df_silver_sdm_browser = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_browser")
+    config.paths.sdm_browser
 )
 df_silver_sdm_device = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_device")
+    config.paths.sdm_device
 )
 df_silver_sdm_os = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_os")
+    config.paths.sdm_os
 )
 
 df_session_table = session_table(
@@ -119,7 +117,7 @@ schema_sdm_session, info_sdm_session = get_schema_sdm_session()
 df_session_table.printSchema()
 write_dataframe_to_table(
     df_session_table,
-    get_value_from_yaml("paths", "sdm_session"),
+    config.paths.sdm_session,
     schema_sdm_session,
     "append",
     root_logger,

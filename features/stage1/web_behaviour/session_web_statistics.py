@@ -8,46 +8,45 @@
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Imports & config
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
 import re
 
-from pyspark.sql.window import Window
+import pyspark.sql.functions as F
 
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
-
+from src.utils.read_config import config
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Load table & fetch config values
 
 # COMMAND ----------
 
-df_sdm_session =  spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_session")
+df_sdm_session = spark.read.format("delta").load(
+    config.paths.sdm_session
 )
 
-time_window_str = get_value_from_yaml("featurestorebundle", "time_windows")[0]
-time_window_int = int(re.search(r'\d+', time_window_str).group())
+time_window_str = config.featurestorebundle.time_windows[0]
+time_window_int = int(re.search(r"\d+", time_window_str).group())
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC #### Filter table
 
 # COMMAND ----------
 
-df_session_filtered = df_sdm_session.filter(F.col("session_date") >= F.current_date() - time_window_int)
+df_session_filtered = df_sdm_session.filter(
+    F.col("session_date") >= F.current_date() - time_window_int
+)
 
 # COMMAND ----------
+
 
 def calculate_web_statistics(df):
     df_temp_features = df.withColumn(
@@ -83,7 +82,11 @@ def calculate_web_statistics(df):
         ),
     ).withColumn("timestamp", F.lit(F.current_date()))
 
-    cols_to_drop = [f"distinct_cookies_{time_window_str}", f"min_session_start_{time_window_str}", f"max_session_start_{time_window_str}"]
+    cols_to_drop = [
+        f"distinct_cookies_{time_window_str}",
+        f"min_session_start_{time_window_str}",
+        f"max_session_start_{time_window_str}",
+    ]
     return df_web_statistics.drop(*cols_to_drop)
 
 

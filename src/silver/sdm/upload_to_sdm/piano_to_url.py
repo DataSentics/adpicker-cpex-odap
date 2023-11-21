@@ -11,9 +11,7 @@ from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     delta_table_exists,
 )
 from src.utils.helper_functions_defined_by_user.date_functions import get_max_date
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user._functions_nlp import (
     df_stemming,
     df_url_normalization,
@@ -45,9 +43,10 @@ col_to_concat_stemmed = [f"{col}_STEMMED" for col in col_to_concat]
 
 # COMMAND ----------
 
+
 def create_url_table():
     if not delta_table_exists(
-        get_value_from_yaml("paths", "sdm_url")
+        config.paths.sdm_url
     ):
 
         schema, info = get_schema_sdm_url()
@@ -55,7 +54,7 @@ def create_url_table():
 
         write_dataframe_to_table(
             df_empty,
-            get_value_from_yaml("paths", "sdm_url"),
+            config.paths.sdm_url,
             schema,
             "default",
             root_logger,
@@ -73,10 +72,11 @@ create_url_table()
 # COMMAND ----------
 
 df_silver_sdm_url = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_url")
+    config.paths.sdm_url
 )
 
 # COMMAND ----------
+
 
 def read_cleansed_data(df_silver: DataFrame, df_url: DataFrame, logger: Logger):
     # get max date in table
@@ -106,7 +106,7 @@ def read_cleansed_data(df_silver: DataFrame, df_url: DataFrame, logger: Logger):
 
 
 df_bronze_cpex_piano = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "cpex_table_piano")
+    config.paths.cpex_table_piano
 )
 
 
@@ -126,6 +126,7 @@ df_cleansed_data = read_cleansed_data(
 
 # COMMAND ----------
 
+
 def normalize_url_data(df: DataFrame):
     return df_url_normalization(
         df.withColumn("URL_NORMALIZED", F.col("rp_pageurl")), "URL_NORMALIZED"
@@ -135,6 +136,7 @@ def normalize_url_data(df: DataFrame):
 df_normalize_url_data = normalize_url_data(df_cleansed_data)
 
 # COMMAND ----------
+
 
 # select only new URL_NORMALIZED and keep one row per URL_NORMALIZED
 def get_unique_url(df_cleansed: DataFrame, df_url: DataFrame):
@@ -161,7 +163,8 @@ df_unique_url = get_unique_url(df_normalize_url_data, df_silver_sdm_url)
 
 # COMMAND ----------
 
-def check_for_duplicates(df, logger: Logger):
+
+def check_for_duplicates(df: DataFrame, logger: Logger):
     logger.info(f"Found {df.count()} new URLs to append.")
     num_unique = (
         df.groupby("URL_NORMALIZED").count().select(F.max("count")).collect()[0][0]
@@ -172,13 +175,14 @@ def check_for_duplicates(df, logger: Logger):
         logger.info("Some duplicates created/no data found! Investigate please!")
 
 
-df_check_for_duplicates = check_for_duplicates(df_unique_url, root_logger)
+check_for_duplicates(df_unique_url, root_logger)
 
 # COMMAND ----------
 
 # MAGIC %md URL processing
 
 # COMMAND ----------
+
 
 def extract_url_formats(df: DataFrame):
     # GET URL WITH DIFFERENT DOMAIN LEVELS
@@ -207,6 +211,7 @@ df_extract_url_formats = extract_url_formats(df_unique_url)
 
 # COMMAND ----------
 
+
 def extract_page_info(df: DataFrame):
     return (
         df.withColumnRenamed("rp_c_p_pageclass", "PAGE_TYPE")
@@ -218,6 +223,7 @@ def extract_page_info(df: DataFrame):
 df_extract_page_info = extract_page_info(df_extract_url_formats)
 
 # COMMAND ----------
+
 
 def extract_url_title(df: DataFrame):
     return df_stemming(
@@ -233,6 +239,7 @@ def extract_url_title(df: DataFrame):
 df_extract_url_title = extract_url_title(df_extract_page_info)
 
 # COMMAND ----------
+
 
 def extract_url_keywords(df: DataFrame):
     df = df.withColumnRenamed("rp_pagekeywords", "URL_KEYWORDS")
@@ -251,6 +258,7 @@ df_extract_url_keywords = extract_url_keywords(df_extract_url_title)
 
 # COMMAND ----------
 
+
 def extract_url_description(df: DataFrame):
     df = df.withColumnRenamed("rp_pagedescription", "URL_DESCRIPTIONS")
 
@@ -268,6 +276,7 @@ df_extract_url_description = extract_url_description(df_extract_url_keywords)
 
 # COMMAND ----------
 
+
 def extracting_url_keywords(df: DataFrame):
     return df_stemming(
         df=df,
@@ -282,6 +291,7 @@ def extracting_url_keywords(df: DataFrame):
 df_extracting_url_keywords = extracting_url_keywords(df_extract_url_description)
 
 # COMMAND ----------
+
 
 def get_url_tokens_all(df_augmented: DataFrame):
     # collecting tokens
@@ -306,6 +316,7 @@ def get_url_tokens_all(df_augmented: DataFrame):
 df_get_url_tokens_all = get_url_tokens_all(df_extracting_url_keywords)
 
 # COMMAND ----------
+
 
 def get_bigrams(df: DataFrame, suffix="BIGRAMS"):
     # cols with tokens
@@ -341,6 +352,7 @@ df_get_bigrams = get_bigrams(df_get_url_tokens_all)
 # MAGIC %md ### Combine the results with current URL table
 
 # COMMAND ----------
+
 
 def save_url_table(df: DataFrame):
     return df.select(
@@ -389,7 +401,7 @@ schema_sdm_url, info_sdm_url = get_schema_sdm_url()
 
 write_dataframe_to_table(
     df_save_url_table,
-    get_value_from_yaml("paths", "sdm_url"),
+    config.paths.sdm_url,
     schema_sdm_url,
     "append",
     root_logger,

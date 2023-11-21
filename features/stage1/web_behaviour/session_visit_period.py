@@ -6,46 +6,46 @@
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Imports & config
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
 import re
 
-from pyspark.sql.window import Window
+import pyspark.sql.functions as F
 
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Load table & fetch config values
 
 # COMMAND ----------
 
-df_sdm_session =  spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_session")
+df_sdm_session = spark.read.format("delta").load(
+    config.paths.sdm_session
 )
 
-time_window_str = get_value_from_yaml("featurestorebundle", "time_windows")[0]
-time_window_int = int(re.search(r'\d+', time_window_str).group())
+time_window_str = config.featurestorebundle.time_windows[0]
+time_window_int = int(re.search(r"\d+", time_window_str).group())
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC #### Filter table
 
 # COMMAND ----------
 
-df_session_filtered = df_sdm_session.filter(F.col("session_date") >= F.current_date() - time_window_int)
+df_session_filtered = df_sdm_session.filter(
+    F.col("session_date") >= F.current_date() - time_window_int
+)
 
 # COMMAND ----------
+
 
 def web_with_visit_period(df):
     return df.withColumn(
@@ -66,13 +66,18 @@ df_session_with_visit_period = web_with_visit_period(df_session_filtered)
 
 # COMMAND ----------
 
-def calculate_visit_time_most_common(df_session_with_visit_period):
-    df = df_session_with_visit_period.groupby("user_id").agg(
-        F.mode("visit_period").alias(
-            f"web_analytics_visit_time_most_common_{time_window_str}"
+
+def calculate_visit_time_most_common(df):
+    df_visit_period = (
+        df.groupby("user_id")
+        .agg(
+            F.mode("visit_period").alias(
+                f"web_analytics_visit_time_most_common_{time_window_str}"
+            )
         )
-    ).withColumn("timestamp", F.lit(F.current_date()))
-    return df
+        .withColumn("timestamp", F.lit(F.current_date()))
+    )
+    return df_visit_period
 
 
 df_final = calculate_visit_time_most_common(df_session_with_visit_period)

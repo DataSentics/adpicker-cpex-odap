@@ -9,46 +9,47 @@
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Imports & config
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
 import re
+import pyspark.sql.functions as F
 
 from pyspark.sql.window import Window
 
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC
 # MAGIC #### Load table & fetch config values
 
 # COMMAND ----------
 
-df_sdm_pageview =  spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_pageview")
+df_sdm_pageview = spark.read.format("delta").load(
+    config.paths.sdm_pageview
 )
 
-time_window_str = get_value_from_yaml("featurestorebundle", "time_windows")[0]
-time_window_int = int(re.search(r'\d+', time_window_str).group())
+time_window_str = config.featurestorebundle.time_windows[0]
+time_window_int = int(re.search(r"\d+", time_window_str).group())
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC #### Filter table
 
 # COMMAND ----------
 
-df_pageview_filtered = df_sdm_pageview.filter(F.col("page_screen_view_date") >= F.current_date() - time_window_int)
+df_pageview_filtered = df_sdm_pageview.filter(
+    F.col("page_screen_view_date") >= F.current_date() - time_window_int
+)
 
 # COMMAND ----------
+
 
 def page_screen_with_search_engine(df):
     return df.withColumn(
@@ -60,12 +61,13 @@ def page_screen_with_search_engine(df):
         .when(F.col("search_engine").contains("bing"), "bing")
         .when(F.col("search_engine").contains("yahoo"), "yahoo")
         .otherwise(None),
-    )  # replacement of other categories by NULL 
+    )  # replacement of other categories by NULL
 
 
 df_pageview_with_search_engine = page_screen_with_search_engine(df_pageview_filtered)
 
 # COMMAND ----------
+
 
 def calculate_pageview_misc(df):
     window_spec = Window.partitionBy("user_id").orderBy(
@@ -73,7 +75,7 @@ def calculate_pageview_misc(df):
     )
 
     df_windowed = df.withColumn(
-        f"search_engine_last_used", F.max("search_engine").over(window_spec)
+        "search_engine_last_used", F.max("search_engine").over(window_spec)
     )
 
     df_grouped = (
@@ -124,7 +126,7 @@ metadata = {
         },
         "owner_names_{time_window_str}": {
             "description": "List of publishers in last {time_window_str}.",
-            "fillna_with": "unknown"
+            "fillna_with": "unknown",
         },
     },
 }

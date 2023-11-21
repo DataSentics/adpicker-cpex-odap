@@ -6,9 +6,7 @@ from src.schemas.sdm_schemas import get_schema_sdm_pageview
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
+from src.utils.read_config import config
 from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 
 # COMMAND ----------
@@ -22,10 +20,11 @@ root_logger = instantiate_logger()
 # COMMAND ----------
 
 df_silver_sdm_preprocessed = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_preprocessed")
+    config.paths.sdm_preprocessed
 )
 
 # COMMAND ----------
+
 
 def add_pageview_ids_and_empty_cols(df: DataFrame):
     return (
@@ -52,6 +51,7 @@ df_added_pageview_ids_and_empty_cols = add_pageview_ids_and_empty_cols(
 # MAGIC %md #### Append
 
 # COMMAND ----------
+
 
 def save_pageview_table(df: DataFrame):
     return df.select(
@@ -82,7 +82,7 @@ schema_sdm_pageview, info_sdm_pageview = get_schema_sdm_pageview()
 
 write_dataframe_to_table(
     df_pageview_table,
-    get_value_from_yaml("paths", "sdm_pageview"),
+    config.paths.info_sdm_pageview,
     schema_sdm_pageview,
     "append",
     root_logger,

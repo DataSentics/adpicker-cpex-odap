@@ -20,3 +20,5 @@ For both packages / functions the default path (when you not specify it differen
 
 ### Tip
 There is quite a high possibility that showed commands for local run  wouldn't work, in that case try to use them with "prefix" `python -m` so they will look like `python -m pylint <path to folder or file>` and `python -m black --check --verbose <path to folder or file>`
+
+You can also face issue with running `pylint` locally with error that looks similar to `[Errno 2] No such file or directory: '__init__.py' (parse-error)` - it's caused by running `pylint` on whole package/project where recursive run can be tricky (for `pylint` at least). So to solve it, there's an argument `--recursive=y` that you add to runnable command that in it's final form can look like `python -m pylint --recursive=y .` and it should work like a charm.

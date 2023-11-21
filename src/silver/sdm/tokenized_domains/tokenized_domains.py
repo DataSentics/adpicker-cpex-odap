@@ -4,26 +4,23 @@
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
-import pyspark.sql.types as T
-from pyspark.sql.dataframe import DataFrame
-from pyspark.sql import SparkSession
 from collections import namedtuple
 from datetime import date, datetime, timedelta
 from logging import Logger
 
+import pyspark.sql.functions as F
+import pyspark.sql.types as T
+from pyspark.sql.dataframe import DataFrame
+
+from src.schemas.sdm_schemas import get_schema_sdm_tokenized_domains
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
 from src.utils.helper_functions_defined_by_user.process_loaded_interests import (
     process_loaded_interests,
 )
 from src.utils.helper_functions_defined_by_user.table_writing_functions import (
     write_dataframe_to_table,
 )
-from src.utils.helper_functions_defined_by_user.yaml_functions import (
-    get_value_from_yaml,
-)
-from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
-
-from src.schemas.sdm_schemas import get_schema_sdm_tokenized_domains
+from src.utils.read_config import config
 
 Interest = namedtuple("Interest", ["keywords", "general_interest"])
 
@@ -61,11 +58,12 @@ widget_tokens_version = dbutils.widgets.get("tokens_version")
 
 # COMMAND ----------
 
+
 def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str):
     # process end date
     try:
         end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
-    except:
+    except BaseException:
         end_date = date.today()
 
     # calculate start date
@@ -86,12 +84,13 @@ def load_sdm_pageview(df: DataFrame, end_date: str, n_days: str):
 # if no end date provided then current date is taken
 
 df_silver_sdm_pageview = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_pageview")
+    config.paths.sdm_pageview
 )
 
 df_pageview = load_sdm_pageview(df_silver_sdm_pageview, widget_end_date, widget_n_days)
 
 # COMMAND ----------
+
 
 def load_sdm_url(df: DataFrame, tokens_version, use_bigrams, logger: Logger):
     # take cleaned unique as default option
@@ -120,7 +119,7 @@ def load_sdm_url(df: DataFrame, tokens_version, use_bigrams, logger: Logger):
 
 
 df_silver_sdm_url = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "sdm_url")
+    config.paths.sdm_url
 )
 
 df_sdm_url = load_sdm_url(
@@ -128,6 +127,7 @@ df_sdm_url = load_sdm_url(
 )
 
 # COMMAND ----------
+
 
 def read_interests(df: DataFrame, tokens_version):
     loaded_interests = process_loaded_interests(
@@ -138,7 +138,7 @@ def read_interests(df: DataFrame, tokens_version):
 
 
 df_interests = spark.read.format("delta").load(
-    get_value_from_yaml("paths", "interests_definition")
+    config.paths.interests_definition
 )
 
 subinterests = read_interests(df_interests, widget_tokens_version)
@@ -148,6 +148,7 @@ subinterests = read_interests(df_interests, widget_tokens_version)
 # MAGIC %md Combine SDM tables
 
 # COMMAND ----------
+
 
 def url_tokenized(df_pageview: DataFrame, df_url: DataFrame):
     return df_pageview.join(df_url, on="URL_NORMALIZED", how="left")
@@ -161,10 +162,11 @@ df_url_tokenized = url_tokenized(df_pageview, df_sdm_url)
 
 # COMMAND ----------
 
+
 def create_tokenized_domains(df_url_tokenized: DataFrame, subinterests):
     interest_keywords = [interest.keywords for interest in subinterests.values()]
 
-    vocabulary = list(set([item for sublist in interest_keywords for item in sublist]))
+    vocabulary = list({item for sublist in interest_keywords for item in sublist})
     vocabulary = spark.createDataFrame(vocabulary, T.StringType())
 
     output = df_url_tokenized.select(
@@ -182,7 +184,7 @@ schema, info = get_schema_sdm_tokenized_domains()
 
 write_dataframe_to_table(
     df_tokenized_domains,
-    get_value_from_yaml("paths", "sdm_tokenized_domains"),
+    config.paths.sdm_tokenized_domains,
     schema,
     "overwrite",
     root_logger,
