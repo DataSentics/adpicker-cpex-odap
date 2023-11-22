@@ -45,4 +45,4 @@ path = config.paths.some_key
 
 Add new value to the config object:
 Go to src/config/config.yaml and edit the yaml file, the changes will be reflected in
-the config object
+the config object when you import it anew (this might require detaching and reatching running notebook).
