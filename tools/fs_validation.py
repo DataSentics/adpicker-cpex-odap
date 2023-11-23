@@ -213,10 +213,7 @@ def validate_data_between_two_sources(
 
 # COMMAND ----------
 
-"""
-    No need to run, these two "sources" link the same data
-"""
-
+# No need to run, these two "sources" link the same data
 # for tab, path in tables_to_validate.items():
 #     print("------------------------")
 #     print(tab)
