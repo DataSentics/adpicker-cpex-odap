@@ -213,12 +213,16 @@ def validate_data_between_two_sources(
 
 # COMMAND ----------
 
-for tab, path in tables_to_validate.items():
-    print("------------------------")
-    print(tab)
-    x, y = validate_data_between_two_sources(tab, path, SAMPLE_COEF, NUMBER_OF_ROWS)
-    print(x)
-    display(y)  # pylint: disable=undefined-variable
+"""
+    No need to run, these two "sources" link the same data
+"""
+
+# for tab, path in tables_to_validate.items():
+#     print("------------------------")
+#     print(tab)
+#     x, y = validate_data_between_two_sources(tab, path, SAMPLE_COEF, NUMBER_OF_ROWS)
+#     print(x)
+#     display(y)  # pylint: disable=undefined-variable
 
 # COMMAND ----------
 
