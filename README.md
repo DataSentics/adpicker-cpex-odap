@@ -22,3 +22,27 @@ For both packages / functions the default path (when you not specify it differen
 There is quite a high possibility that showed commands for local run  wouldn't work, in that case try to use them with "prefix" `python -m` so they will look like `python -m pylint <path to folder or file>` and `python -m black --check --verbose <path to folder or file>`
 
 You can also face issue with running `pylint` locally with error that looks similar to `[Errno 2] No such file or directory: '__init__.py' (parse-error)` - it's caused by running `pylint` on whole package/project where recursive run can be tricky (for `pylint` at least). So to solve it, there's an argument `--recursive=y` that you add to runnable command that in it's final form can look like `python -m pylint --recursive=y .` and it should work like a charm.
+
+### Config
+Why? 
+Using OmegaConf makes it easier to access values from nested yaml.
+
+How?
+The src/utils/read_config.py file returns the config file as an object 
+stored in the variable "config".
+
+Usage
+Import the config object from the read config file
+from src.utils.read_config import config
+
+To access the value stored at a certain key OmegaConf provides object 
+style access of dictionary elements.
+paths:
+  some_key : "some_path"
+
+To access the value stored at the key "some_key" you can use the following example
+path = config.paths.some_key 
+
+Add new value to the config object:
+Go to src/config/config.yaml and edit the yaml file, the changes will be reflected in
+the config object when you import it anew (this might require detaching and reatching running notebook).
