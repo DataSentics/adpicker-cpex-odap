@@ -3,7 +3,6 @@
 
 # COMMAND ----------
 
-import pyspark.sql.functions as F
 import os
 import logging
 from pyspark.sql.utils import AnalysisException
@@ -15,6 +14,7 @@ from pyspark.sql.utils import AnalysisException
 # COMMAND ----------
 
 dbutils.widgets.text("n_days_to_keep", "")
+dbutils.widgets.text("n_hours_to_vacuum", "")
 
 # COMMAND ----------
 
@@ -33,10 +33,24 @@ environment = os.environ["APP_ENV"]
 try:
     N_DAYS_TO_KEEP = int(dbutils.widgets.get("n_days_to_keep"))
     # keep at least 60 days
-    if N_DAYS_TO_KEEP < 60:
-        N_DAYS_TO_KEEP = 60
-except TypeError, ValueError as e:
-    logger.error(f"Wrongly entered value, check if is it 'int' and if is it NOT empty. Check {e}")
+    N_DAYS_TO_KEEP = max(N_DAYS_TO_KEEP, 60)
+except (TypeError, ValueError) as e:
+    logger.error(
+        "Wrongly entered value, check if is it 'int' and if is it NOT empty. Check %s",
+        e,
+    )
+    raise
+
+try:
+    N_HOURS_TO_VACUUM = int(dbutils.widgets.get("n_hours_to_vacuum"))
+    # keep at least 20 days (480 hours)
+    N_HOURS_TO_VACUUM = max(N_HOURS_TO_VACUUM, 480)
+except (TypeError, ValueError) as e:
+    logger.error(
+        "Wrongly entered value, check if is it 'int' and if is it NOT empty. Check %s",
+        e,
+    )
+    raise
 
 # COMMAND ----------
 
@@ -50,14 +64,28 @@ def featurestore_keep_n_days(full_table_path: str, n_days: int):
         date_column = "timestamp"
 
         # minimal date to be kept in table
-        min_date = spark.sql(f"SELECT date_add(max({date_column}), -{n_days}) from delta.`{full_table_path}`").collect()[0][0]
+        min_date = spark.sql(
+            f"SELECT date_add(max({date_column}), -{n_days}) from delta.`{full_table_path}`"
+        ).collect()[0][0]
 
         # perform delete
-        spark.sql(f"DELETE FROM delta.`{full_table_path}` WHERE {date_column} < '{min_date}'")
+        spark.sql(
+            f"DELETE FROM delta.`{full_table_path}` WHERE {date_column} < '{min_date}'"
+        )
 
-        logger.info(f"Deleting old records from table {full_table_path}. New minimal date in table is: {min_date}")
-    except AnalysisException as e:
-        logger.error(f"ERROR: Can`t delete records from {full_table_path} to keep only {n_days} days of history, {e}")
+        logger.info(
+            "Deleting old records from table %s. New minimal date in table is: %s",
+            full_table_path,
+            min_date,
+        )
+    except AnalysisException as e:  # pylint: disable=redefined-outer-name
+        logger.error(
+            "ERROR: Can`t delete records from %s to keep only %s days of history, %s",
+            full_table_path,
+            n_days,
+            e,
+        )
+        raise
 
 # COMMAND ----------
 
@@ -72,18 +100,17 @@ featurestore_keep_n_days(fs_path, N_DAYS_TO_KEEP)
 
 def featurestore_perform_vacuum(full_table_path: str, vacuum_time: int):
     try:
-        # keep at least 20 days
-        if vacuum_time < 480 or vacuum_time is None:
-            vacuum_time = 480
-
         # perform vacuum
         spark.sql(f"VACUUM delta.`{full_table_path}` RETAIN {vacuum_time} HOURS")
 
-        print(f"Vacuuming table: {full_table_path}")
-    except BaseException as e:
-        print(f"ERROR: Can`t vacuum {full_table_path}, {e}")
+        logger.info("Vacuuming table: %s", full_table_path)
+    except AnalysisException as e:  # pylint: disable=redefined-outer-name
+        logger.error(
+            "ERROR: Can`t vacuum %s, check following error: %s", full_table_path, e
+        )
+        raise
 
 # COMMAND ----------
 
 # do vacuuming itself
-# featurestore_perform_vacuum(fs_path, N_DAYS_TO_VACUUM)
+featurestore_perform_vacuum(fs_path, N_HOURS_TO_VACUUM)
