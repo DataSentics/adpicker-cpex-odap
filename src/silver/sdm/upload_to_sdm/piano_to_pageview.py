@@ -82,7 +82,7 @@ schema_sdm_pageview, info_sdm_pageview = get_schema_sdm_pageview()
 
 write_dataframe_to_table(
     df_pageview_table,
-    config.paths.info_sdm_pageview,
+    config.paths.sdm_pageview,
     schema_sdm_pageview,
     "append",
     root_logger,
