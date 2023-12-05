@@ -1,4 +1,4 @@
-name: Black formating and deploy
+name: Testing DBX configuration
 
 on:
   pull_request:
