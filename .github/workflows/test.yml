@@ -1,9 +1,8 @@
 name: Black formating and deploy
 
-on: 
-  push:
-    branches:
-      - develop
+on:
+  pull_request:
+    types: [assigned, opened, synchronize, reopened, edited]
 
 jobs:
   # format every Python file using 'black' formatting - shouldn't be necessary but to keep it nice
