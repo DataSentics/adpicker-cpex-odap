@@ -1,15 +1,45 @@
-name: Manual workflow for testing
+name: Black formating and deploy
 
-on: [workflow_dispatch]
+on: 
+  push:
+    branches:
+      - develop
 
 jobs:
-  example:
-    name: Example Job
+  # format every Python file using 'black' formatting - shouldn't be necessary but to keep it nice
+  black:
+    name: Black formatting
     runs-on: ubuntu-latest
     steps:
-      - name: Clone Repository
+      - uses: actions/checkout@v3
+      - uses: psf/black@stable
+        with:
+          options: "--verbose"
+          src: "."
+          version: "23.10.1"
+
+  # update repository on DBX workspace
+  deploy:
+    name: Deployment into DBX
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COMMIT_HASH: "${{ github.sha }}"
+    steps:
+      - name: Clone repo
         uses: actions/checkout@v2
-      - name: Read file and print it
+
+      - name: Install Databricks CLI
         run: |
-          DATA=$(cat config.yaml)
-          echo "CONTENT=$DATA"
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Setup Databricks CLI access for DEV workspace
+        run: |
+          echo -e "[DEFAULT]\nhost = $DBX_HOST\ntoken = $DBX_ACCESS_TOKEN" > ~/.databrickscfg
+        env:
+          DBX_HOST: ${{ secrets.DBX_ACCESS_TOKEN_DEV }}
+          DBX_ACCESS_TOKEN: ${{ secrets.DBX_HOST_DEV }}
+      # instead of path to the repo '/Repos/adpicker-cpex-odap/develop' has to be 'repo_id' - 3844953836266953
+      - name: Update adpicker repo 'adpicker-cpex-odap' with branch 'develop'
+        run: |
+          databricks repos update 3844953836266953 --branch develop
