@@ -5,18 +5,6 @@ on:
     types: [assigned, opened, synchronize, reopened, edited]
 
 jobs:
-  # format every Python file using 'black' formatting - shouldn't be necessary but to keep it nice
-  black:
-    name: Black formatting
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: psf/black@stable
-        with:
-          options: "--verbose"
-          src: "."
-          version: "23.10.1"
-
   # update repository on DBX workspace
   deploy:
     name: Deployment into DBX
@@ -28,9 +16,15 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v2
 
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9 #install the python version needed
+
+      #curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
       - name: Install Databricks CLI
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+        run: |        
+          python -m pip install --upgrade databricks-cli
 
       - name: Setup Databricks CLI access for DEV workspace
         run: |
@@ -39,18 +33,6 @@ jobs:
           DBX_HOST: ${{ secrets.DBX_ACCESS_TOKEN_DEV }}
           DBX_ACCESS_TOKEN: ${{ secrets.DBX_HOST_DEV }}
       # instead of path to the repo '/Repos/adpicker-cpex-odap/develop' has to be 'repo_id' - 3844953836266953
-      - name: Get ~/.databrickscfg content
-        run: |
-          echo "$(cat ~/.databrickscfg)"
-      - name: Get configuration
-        run: |
-          databricks auth profiles
-      - name: Get repos list
-        run: |
-          databricks repos list
-      - name: Get jobs list
-        run: |
-          databricks jobs list
       - name: Update adpicker repo 'adpicker-cpex-odap' with branch 'develop'
         run: |
-          databricks repos update 3844953836266953 --branch develop
+          databricks repos update --repo-id 3844953836266953 --branch develop
