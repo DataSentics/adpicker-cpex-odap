@@ -41,7 +41,13 @@ jobs:
       # instead of path to the repo '/Repos/adpicker-cpex-odap/develop' has to be 'repo_id' - 3844953836266953
       - name: Get configuration
         run: |
-          databricks auth profiles      
+          databricks auth profiles
+      - name: Get repos list
+        run: |
+          databricks repos list
+      - name: Get jobs list
+        run: |
+          databricks jobs list
       - name: Update adpicker repo 'adpicker-cpex-odap' with branch 'develop'
         run: |
           databricks repos update 3844953836266953 --branch develop
