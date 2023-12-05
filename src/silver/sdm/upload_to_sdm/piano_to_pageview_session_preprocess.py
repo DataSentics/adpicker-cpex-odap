@@ -597,7 +597,7 @@ schema_sdm_preprocessed, info_sdm_preprocessed = get_schema_sdm_preprocessed()
 
 write_dataframe_to_table(
     df_save_preprocessed_table,
-    config.paths.info_sdm_preprocessed,
+    config.paths.sdm_preprocessed,
     schema_sdm_preprocessed,
     "overwrite",
     root_logger,
