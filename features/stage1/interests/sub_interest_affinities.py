@@ -55,7 +55,7 @@ def tokenized_domains(df: DataFrame, entity, timestamp):
 
 
 df_sdm_tokenized_domains = spark.read.format("delta").load(
-    config.paths.df_sdm_tokenized_domains
+    config.paths.sdm_tokenized_domains
 )
 df_tokenized_domains = tokenized_domains(
     df_sdm_tokenized_domains, "timestamp", widget_timestamp
