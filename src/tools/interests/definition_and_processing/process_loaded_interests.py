@@ -9,8 +9,8 @@ import pyspark.sql.functions as F
 from pyspark.sql.dataframe import DataFrame
 from collections import namedtuple
 
-from adpickercpex.solutions._functions_nlp import df_stemming
-from adpickercpex.solutions._stop_words import unwanted_tokens
+from src.utils.helper_functions_defined_by_user._functions_nlp import df_stemming
+from src.utils.helper_functions_defined_by_user._stop_words import unwanted_tokens
 
 chars_from = (
     "ÀÁÂÃÄÅČÇĎÈÉÊËÍÌÏÎĹĽŇÑÒÓÔÕÖŔŘŠŤÙÚŮÛŰÜÝŸŽàáâãäåčçďèéêëíìïîĺľňñòóôõöŕřšťùúůûűüýÿž"

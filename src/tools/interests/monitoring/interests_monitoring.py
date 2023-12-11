@@ -55,14 +55,15 @@ from logging import Logger
 
 
 # project-level imports
+# TODO this should not be needed
 from adpickercpex.lib.FeatureStoreTimestampGetter import FeatureStoreTimestampGetter
 from adpickercpex.lib.display_result import display_result
 
-from adpickercpex.utils.processing_pipelines import process
+from src.utils.processing_pipelines import process
 
-import adpickercpex.utils.interests.format as interests_format
+import src.tools.interests.format as interests_format
 
-from adpickercpex.solutions._functions_helper import (
+from src.utils.helper_functions_defined_by_user._functions_helper import (
     filter_list_by_regex,
     str_split_safe,
     get_stats_for_column,
@@ -70,7 +71,7 @@ from adpickercpex.solutions._functions_helper import (
 
 
 # local imports
-from adpickercpex.utils.interests.monitoring.utils_interests_monitoring import (
+from src.tools.interests.monitoring.utils_interests_monitoring import (
     get_affinities_hit_ratio,
     get_correlation_between,
     affinity_correlations_above_threhsold,

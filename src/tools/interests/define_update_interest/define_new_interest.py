@@ -58,10 +58,10 @@ from pyspark.ml.feature import Word2VecModel
 
 
 # project level imports
-from adpickercpex.solutions._stop_words import unwanted_tokens
-from adpickercpex.solutions._functions_nlp import strip_diacritic
-from adpickercpex.solutions._functions_udf import udf_reverse_word_order
-from adpickercpex.solutions._functions_helper import (
+from src.utils.helper_functions_defined_by_user._stop_words import unwanted_tokens
+from src.utils.helper_functions_defined_by_user._functions_nlp import strip_diacritic
+from src.utils.helper_functions_defined_by_user._functions_udf import udf_reverse_word_order
+from src.utils.helper_functions_defined_by_user._functions_helper import (
     add_binary_flag_widget,
     check_binary_flag_widget, 
     get_top_n_sorted,
@@ -69,18 +69,19 @@ from adpickercpex.solutions._functions_helper import (
     format_fraction,
 )
 
-from adpickercpex.utils.processing_pipelines import process
-import adpickercpex.utils.interests.format as interests_format 
+from src.utils.processing_pipelines import process
+import src.tools.interests.format as interests_format
 
+# TODO this should not be needed
 from adpickercpex.lib.display_result import display_result
 
 
 # local imports
-from adpickercpex.utils.interests.define_update_interest.interest_definitions import (
+from src.tools.interests.define_update_interest.interest_definitions import (
     InterestDefinition, 
     get_interest_definition,
 )
-from adpickercpex.utils.interests.define_update_interest.utils_interest_definition import (
+from src.tools.interests.define_update_interest.utils_interest_definition import (
     get_most_frequent_per_column, 
     jlh,
     url_hits_for_group,

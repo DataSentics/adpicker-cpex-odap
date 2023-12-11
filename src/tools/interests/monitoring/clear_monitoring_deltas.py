@@ -18,6 +18,7 @@
 # COMMAND ----------
 
 # global imports
+# TODO this should not be needed
 import daipe as dp
 
 from logging import Logger
@@ -25,7 +26,7 @@ from collections import namedtuple
 
 
 # project-level imports
-from adpickercpex.solutions._functions_helper import (
+from src.utils.helper_functions_defined_by_user._functions_helper import (
     add_binary_flag_widget,
     check_binary_flag_widget,
 )

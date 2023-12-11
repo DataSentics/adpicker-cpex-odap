@@ -27,9 +27,10 @@ from pyspark.dbutils import DBUtils
 
 
 # project-level imports
+# TODO this should not be needed
 from adpickercpex.lib.display_result import display_result
 
-from adpickercpex.solutions._DB_connection_functions import overwrite_mysql_table_by_df
+from src.utils.helper_functions_defined_by_user._DB_connection_functions import overwrite_mysql_table_by_df
 
 # COMMAND ----------
 

@@ -37,9 +37,10 @@ from logging import Logger
 
 
 # project-level imports
+# TODO this should not be needed
 from adpickercpex.lib.display_result import display_result
 
-from adpickercpex.solutions._functions_helper import (
+from src.utils.helper_functions_defined_by_user._functions_helper import (
     add_binary_flag_widget,
     check_binary_flag_widget, 
     display_list_as_dataframe,

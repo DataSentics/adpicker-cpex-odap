@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from adpickercpex.solutions._functions_helper import flatten_string_iterable
+from src.utils.helper_functions_defined_by_user._functions_helper import flatten_string_iterable
 
 
 # TODO: it might be good to apply processing (diacritics strip...) to InterestDefinition

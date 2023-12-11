@@ -35,18 +35,19 @@ from logging import Logger
 
 
 # project-level imports
-from adpickercpex.utils.processing_pipelines import process
+from src.utils.processing_pipelines import process
 
-from adpickercpex.solutions._functions_helper import (
+from src.utils.helper_functions_defined_by_user._functions_helper import (
     display_list_as_dataframe,
     format_fraction,
 )
 
-import adpickercpex.utils.interests.format as interests_format
+import src.tools.interests.format as interests_format
+# TODO this should not be needed
 from adpickercpex.lib.display_result import display_result
 
 # local imports
-from adpickercpex.utils.interests.monitoring.utils_interests_monitoring import (
+from src.tools.interests.monitoring.utils_interests_monitoring import (
     get_latest_record,
     get_row_for_interest,
     get_interest_field,

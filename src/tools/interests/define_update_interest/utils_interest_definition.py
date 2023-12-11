@@ -5,7 +5,7 @@ from pyspark.sql.dataframe import DataFrame
 import pyspark.sql.functions as F
 
 
-from adpickercpex.solutions._functions_udf import udf_values_count_str
+from src.utils.helper_functions_defined_by_user._functions_udf import udf_values_count_str
 
 
 # -------------------------------- token frequency computation --------------------------------

@@ -18,6 +18,7 @@
 # COMMAND ----------
 
 # global imports
+# TODO this should not be needed
 import daipe as dp
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql import functions as F
@@ -26,7 +27,7 @@ from logging import Logger
 
 
 # project-level imports
-from adpickercpex.solutions._functions_helper import (
+from src.utils.helper_functions_defined_by_user._functions_helper import (
     add_binary_flag_widget,
     check_binary_flag_widget, 
 )
