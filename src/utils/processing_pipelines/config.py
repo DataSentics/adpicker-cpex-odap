@@ -2,7 +2,7 @@
 Config of included pipeline stages based on the version of the processing used
 """
 
-from adpickercpex.utils.processing_pipelines._processing_strategy import ProcessingStrategy
+from src.utils.processing_pipelines._processing_strategy import ProcessingStrategy
 
     
 # ---------------------------------------- stages config ----------------------------------------

@@ -8,12 +8,12 @@ from collections.abc import Iterable
 from pyspark.sql.dataframe import DataFrame
 import pyspark.sql.functions as F
 
-from adpickercpex.utils.processing_pipelines import config
-from adpickercpex.utils.processing_pipelines.pipeline import (
+from src.utils.processing_pipelines import config
+from src.utils.processing_pipelines.pipeline import (
     run_data_processing_pipeline,
     run_bigram_processing_pipeline,
 )
-from adpickercpex.utils.processing_pipelines._processing_strategy import (
+from src.utils.processing_pipelines._processing_strategy import (
     ProcessingStrategy,
     FLAG_STEMMING,
     FLAG_BIGRAM,

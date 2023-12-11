@@ -12,9 +12,9 @@ from pyspark.ml.feature import NGram
 from pyspark.ml import Transformer, Pipeline 
 from pyspark.ml.feature import StopWordsRemover, RegexTokenizer
 
-from adpickercpex.solutions._stop_words import unwanted_tokens
+from src.utils.helper_functions_defined_by_user._stop_words import unwanted_tokens
 
-from adpickercpex.utils.processing_pipelines._transformers import (
+from src.utils.processing_pipelines._transformers import (
     StringImputer,
     DiacriticsStripper, 
     WordStemmer, 
@@ -23,7 +23,7 @@ from adpickercpex.utils.processing_pipelines._transformers import (
     NGramStemmer,
 )
 
-from adpickercpex.utils.processing_pipelines import config
+from src.utils.processing_pipelines import config
 
 # ---------------------------------------- Processing pipeline builders ----------------------------------------
 

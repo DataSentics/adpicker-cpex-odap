@@ -14,8 +14,8 @@ from pyspark import keyword_only
 from pyspark.ml import Transformer 
 from pyspark.ml.feature import StopWordsRemover
     
-import adpickercpex.solutions._functions_nlp as nlp
-import adpickercpex.solutions._functions_udf as adpudf
+import src.utils.helper_functions_defined_by_user._functions_nlp as nlp
+import src.utils.helper_functions_defined_by_user._functions_udf as adpudf
     
 
 # ---------------------------------------- helper functions definitions ----------------------------------------
