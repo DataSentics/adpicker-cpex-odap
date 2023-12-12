@@ -161,7 +161,7 @@ def read_cleansed_data(df: DataFrame, df_pageview: DataFrame, logger: Logger):
     # If it hasn't been run for long, process only the last 7 days from the bronze_cpex_piano    
     elif destination_max_date is None:
         last_n_days = 7
-        df_bronze_cpex_piano = df_bronze_cpex_piano.filter(
+        df = df.filter(
                     F.col("day") >= F.date_add(F.current_date(), -last_n_days))    
     df = df.withColumnRenamed("EVENT_TIME", "TIMESTAMP")
     df = df.withColumn("DATE", F.to_date(F.col("TIMESTAMP")))
