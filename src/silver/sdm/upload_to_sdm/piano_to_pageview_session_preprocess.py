@@ -158,6 +158,11 @@ def read_cleansed_data(df: DataFrame, df_pageview: DataFrame, logger: Logger):
         df = df.filter(
             F.col("day") >= F.to_date(F.lit(destination_max_date.date()))
         ).filter(F.col("EVENT_TIME") > destination_max_date)
+    # If it hasn't been run for long, process only the last 7 days from the bronze_cpex_piano    
+    elif destination_max_date is None:
+        last_n_days = 7
+        df_bronze_cpex_piano = df_bronze_cpex_piano.filter(
+                    F.col("day") >= F.date_add(F.current_date(), -last_n_days))    
     df = df.withColumnRenamed("EVENT_TIME", "TIMESTAMP")
     df = df.withColumn("DATE", F.to_date(F.col("TIMESTAMP")))
     df = df.withColumn("USER_AGENT", F.lower(F.col("userAgent")))
@@ -597,7 +602,7 @@ schema_sdm_preprocessed, info_sdm_preprocessed = get_schema_sdm_preprocessed()
 
 write_dataframe_to_table(
     df_save_preprocessed_table,
-    config.paths.info_sdm_preprocessed,
+    config.paths.sdm_preprocessed,
     schema_sdm_preprocessed,
     "overwrite",
     root_logger,
