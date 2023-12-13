@@ -11,7 +11,7 @@ import daipe as dp
 from daipecore.widgets.Widgets import Widgets
 from pyspark.sql.dataframe import DataFrame
 
-from adpickercpex.utils.mlops.mlflow_tools import retrieve_model, viable_stages
+from src.utils.mlops.mlflow_tools import retrieve_model, viable_stages
 
 # COMMAND ----------
 

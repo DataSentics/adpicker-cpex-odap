@@ -30,9 +30,9 @@ from pyspark.sql import DataFrame as D
 from pyspark.sql.window import Window
 
 import daipe as dp
-from adpickercpex.solutions.lookalikes_training.preprocessing import IGNORED_COLS, interpolate_unknowns, \
+from src.solutions.lookalikes_training.preprocessing import IGNORED_COLS, interpolate_unknowns, \
     get_relevant_colnames
-from adpickercpex.utils.monitoring.monitoring_functions import calculate_lift, fi_plot
+from src.monitoring.monitoring_functions import calculate_lift, fi_plot
 
 # COMMAND ----------
 
