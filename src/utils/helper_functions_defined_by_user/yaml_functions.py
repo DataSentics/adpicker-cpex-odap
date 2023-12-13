@@ -12,7 +12,7 @@ def find_and_replace_percent_substrings(source_string):
             source_string = re.sub(f"%{find}%", os.getenv(find), source_string)
         except TypeError as e:
             raise BaseException(
-                "Could not replace special substring; check if substring is defined in cluster environment variables."
+                    "Could not replace special substring; check if substring is defined in cluster environment variables."
             ) from e
 
     return source_string
