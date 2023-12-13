@@ -36,17 +36,17 @@ paths:
   user_entity_fs: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/features/user_entity.delta"
   metadata: "abfss://gold@cpexstorageblobdev.dfs.core.windows.net/feature_store/metadata/metadata.delta"
 
-  models:
-    sociodemo:
-      dev:
-        ageGroup_0_17: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_0'
-        ageGroup_18_24: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_1'
-        ageGroup_25_34: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_2'
-        ageGroup_35_44: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_3'
-        ageGroup_45_54: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_4'
-        ageGroup_55_64: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_5'
-        ageGroup_65_100: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_6'
-        gender_male: 'dbfs:/databricks/mlflow-tracking/3954795528264193/73d32166c9e04c0594775e0397dc0031/artifacts/model_gender_Logreg'
+models:
+  sociodemo:
+    dev:
+      ageGroup_0_17: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_0'
+      ageGroup_18_24: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_1'
+      ageGroup_25_34: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_2'
+      ageGroup_35_44: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_3'
+      ageGroup_45_54: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_4'
+      ageGroup_55_64: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_5'
+      ageGroup_65_100: 'dbfs:/databricks/mlflow-tracking/3954795528263881/d8ecf6ea998c433e9ba8021fe5795ed5/artifacts/model_age_LogReg_6'
+      gender_male: 'dbfs:/databricks/mlflow-tracking/3954795528264193/73d32166c9e04c0594775e0397dc0031/artifacts/model_gender_Logreg'
 
 jobs_config:
   regular_optimization:
@@ -143,6 +143,13 @@ featurestorebundle:
 
   checkpointing:
     base_dir: '/mnt/aam-cpex-%kernel.environment%/gold/feature_store/checkpoints'
+
+slack_webhooks:
+  applications:
+    "AdPicker Reporting":
+      channel_hooks:
+        "adpicker-notifications": "https://hooks.slack.com/services/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"
+        "adpicker-errors": "https://hooks.slack.com/services/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"
 
 tables_options:
   series_length:
