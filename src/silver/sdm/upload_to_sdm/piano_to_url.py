@@ -92,6 +92,10 @@ def read_cleansed_data(df_silver: DataFrame, df_url: DataFrame, logger: Logger):
         df_silver = df_silver.filter(F.col("day") >= destination_max_date_safe).filter(
             F.col("EVENT_TIME") > destination_max_date
         )
+    elif destination_max_date is None:
+        last_n_days = 7
+        df_silver = df_silver.filter(
+                    F.col("day") >= F.date_add(F.current_date(), -last_n_days))     
 
     return df_silver.filter(F.col("rp_pageurl").isNotNull()).select(
         "rp_pageurl",

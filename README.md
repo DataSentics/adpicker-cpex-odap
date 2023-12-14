@@ -1,5 +1,54 @@
-# adpicker-cpex-odap
+# Adpicker CPEX  ODAP
 AdPicker project for CPEx client using _ODAP light_ for managing features and feature store in more comfortable way.
+
+## Structure
+
+```
+.
+├── .github
+│   └── workflows ... deployment and PR workflows
+├── _orchestration  ...  ODAP orchestration notebooks, part of the framework
+├── features  ...  notebooks for feature calculation
+│   ├── stage1
+│   │   ├── interests
+│   │   └── web_behaviour
+│   ├── stage2
+│   │   ├── edu
+│   │   ├── income
+│   │   ├── lookalikes
+│   │   └── sociodemo
+│   └── stage3
+│       └── abcde_score.py
+├── init  
+│   ├── odap.py  ...  init notebook for ODAP
+│   └── requirements_pylint.txt  ...   and pylint requirements
+├── src
+│   ├── bronze
+│   │   ├── piano  ...  Piano raw -> bronze
+│   │   └── test_notebook.py  ...  TODO remove
+│   ├── config  ...  actual paths and pipeline configs!
+│   │   └── config.yaml  ...  do not read directly, use src.utils.read_config
+│   ├── monitoring  ...  regularly run monitoring notebooks
+│   ├── schemas  ... schemas required in various notebooks
+│   ├── silver   ...   silver layer
+│   │   ├── piano
+|   │   |   └─ piano_user_segments.py  ...  download piano segments
+│   │   └── sdm  ...   Smart Data Model
+│   ├── solutions  ...  ML and other solutions
+│   │   ├── education  ...  education scores
+│   │   └── income  ...  income scores
+│   ├── tools  ...  various INTERACTIVE notebooks
+│   │   └── interests  ... interest creation and management
+│   └── utils  ...  library of useful functions
+│       ├── helper_functions_defined_by_user  ...  TODO refactor
+│       ├── processing_pipelines  ...  ???
+│       ├── config_parser.py  ... utils for finding and parsing config
+│       └── read_config.py  ...  import config from here!
+├── use_cases  ...  part of ODAP framework
+├── config.yaml  ...  ODAP framework config, do not touch!
+├── .pylintrc  ...  PyLint config, its annoying but do not touch
+└─ README.md  ... this readme yayyy!
+```
 
 ## Github actions
 There are few automatic [Github Actions](https://github.com/DataSentics/adpicker-cpex-odap/actions), maily for following procedures:
@@ -23,26 +72,29 @@ There is quite a high possibility that showed commands for local run  wouldn't w
 
 You can also face issue with running `pylint` locally with error that looks similar to `[Errno 2] No such file or directory: '__init__.py' (parse-error)` - it's caused by running `pylint` on whole package/project where recursive run can be tricky (for `pylint` at least). So to solve it, there's an argument `--recursive=y` that you add to runnable command that in it's final form can look like `python -m pylint --recursive=y .` and it should work like a charm.
 
-### Config
+# Config
 Why? 
-Using OmegaConf makes it easier to access values from nested yaml.
+Using [OmegaConf](https://omegaconf.readthedocs.io/en/latest/index.html) makes it easier to access values from nested yaml it also provides string interpolation enabling you to use
+values defined within the `config.yaml` itself and environment variables.
 
 How?
-The src/utils/read_config.py file returns the config file as an object 
-stored in the variable "config".
+The `src/utils/read_config.py` file returns the config file as an object 
+stored in the variable `config`.
 
-Usage
+Usage:
 Import the config object from the read config file
-from src.utils.read_config import config
+`from src.utils.read_config import config`
 
 To access the value stored at a certain key OmegaConf provides object 
 style access of dictionary elements.
+```yaml
 paths:
   some_key : "some_path"
+```
 
 To access the value stored at the key "some_key" you can use the following example
-path = config.paths.some_key 
+`path = config.paths.some_key` 
 
 Add new value to the config object:
-Go to src/config/config.yaml and edit the yaml file, the changes will be reflected in
-the config object when you import it anew (this might require detaching and reatching running notebook).
+Go to `src/config/config.yaml` and edit the yaml file, the changes will be reflected in
+the config object when you import it anew (this might require detaching and reattaching running notebook).
