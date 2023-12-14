@@ -160,7 +160,7 @@ df_income_interest_scores = spark.read.format("delta").load(
     config.paths.income_interest_scores
 )
 df_income_url_scores = spark.read.format("delta").load(
-    config.paths.incole_url_scores
+    config.paths.income_url_scores
 )
 df_income_other_scores = spark.read.format("delta").load(
     config.paths.income_other_scores
