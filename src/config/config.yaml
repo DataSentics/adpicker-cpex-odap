@@ -147,3 +147,28 @@ featurestorebundle:
 tables_options:
   series_length:
     n_hours_short: 72
+
+web_features_list:
+ - web_analytics_device_os_last_used_7d
+ - web_analytics_channel_device_count_distinct_7d
+ - web_analytics_mobile_user_7d
+ - web_analytics_smart_tv_user_7d
+ - web_analytics_web_active_7d
+ - web_analytics_device_type_most_common_7d
+ - owner_names_7d
+ - web_analytics_total_visits_7d
+ - web_analytics_device_browser_most_common_7d
+ - web_analytics_device_browser_last_used_7d
+ - web_analytics_blog_days_since_last_visit_7d
+ - web_analytics_visit_time_most_common_7d
+ - web_analytics_device_type_last_used_7d
+ - web_analytics_device_os_most_common_7d
+ - web_analytics_pageviews_sum_7d
+ - web_analytics_time_on_site_avg_7d
+ - web_analytics_web_security_affinity_7d
+ - web_analytics_desktop_user_7d
+ - web_analytics_num_distinct_device_categories_7d
+ - web_analytics_tablet_user_7d
+ - web_analytics_page_search_engine_most_common_7d
+ - web_analytics_page_search_engine_last_used_7d
+
