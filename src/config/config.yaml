@@ -33,8 +33,6 @@ paths:
 
   location_traits_map: "/mnt/aam-cpex-dev/silver/location/location_traits_map.delta"
 
-  user_entity_fs: "/mnt/aam-cpex-dev/gold/feature_store/features/user_entity.delta"
-  metadata: "/mnt/aam-cpex-dev/gold/feature_store/metadata/metadata.delta"
 
   models:
     sociodemo:
