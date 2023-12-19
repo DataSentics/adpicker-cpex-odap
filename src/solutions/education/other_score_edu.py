@@ -81,13 +81,8 @@ widget_timestamp = dbutils.widgets.get("timestamp")
 # COMMAND ----------
 
 
-def get_web_features_list(df):
-    feat_list = df.filter(F.col("category").isin(DEVICES))
-    return [element.feature for element in feat_list.collect()]
 
-df_metadata = spark.read.format("delta").load(config.paths.metadata)
-web_features_list = get_web_features_list(df_metadata)
-
+web_features_list = config.web_features_list
 # COMMAND ----------
 
 
@@ -98,7 +93,7 @@ def read_fs(timestamp, web_features_list):
     return df
 
 
-df_read_web_features = read_fs(widget_timestamp, web_features_list)
+df_read_web_features = read_fs(widget_timestamp, config.web_features_list)
 
 # COMMAND ----------
 
