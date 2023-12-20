@@ -14,6 +14,10 @@ from datalakebundle.table.parameters.TableParametersManager import TableParamete
 from pyspark.sql import SparkSession
 from logging import Logger
 
+from src.utils.helper_functions_defined_by_user.logger import instantiate_logger
+
+logger = instantiate_logger()
+
 # COMMAND ----------
 
 # MAGIC %md
