@@ -39,34 +39,15 @@ else:
 # COMMAND ----------
 
 # MAGIC %md Define tables and their paths
+# MAGIC - firstly table from local DBX storage
+# MAGIC - secondly table from Azure storage
+# MAGIC
+# MAGIC
 
 # COMMAND ----------
 
-# Specify path into "old" data from non-up-to-date-odap pipeline
 tables_to_validate = {
-    "income_interest_scores": f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/income/income_interest_scores.delta",
-    # "income_interest_coeffs",
-    "income_url_scores": f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/income/income_url_scores.delta",
-    # "income_url_coeffs",
-    "income_other_scores": f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/income/income_other_scores.delta",
-    # "income_other_coeffs",
-    "education_interest_scores": f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/education/education_interest_scores.delta",
-    # "education_interest_coeffs",
-    "education_url_scores": f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/education/education_url_scores.delta",
-    # "education_url_coeffs",
-    "education_other_scores": f"abfss://silver@cpexstorageblob{APP_ENV}.dfs.core.windows.net/education/education_other_scores.delta",
-    # "education_other_coeffs",
-    # "user_entity_fs":f"abfss://gold@cpexstorageblob{APP_ENV}.dfs.core.windows.net/feature_store/features/user_entity",
-}
-
-# COMMAND ----------
-
-special_tables_to_validate = {
     "odap_features_user.latest": f"abfss://gold@cpexstorageblob{APP_ENV}.dfs.core.windows.net/feature_store/features/user_entity.delta",
-    # "odap_features_user.user",
-    # "odap_features_user.user_stage1",
-    # "odap_features_user.user_stage2",
-    # "odap_features_user.user_stage3",
 }
 
 # COMMAND ----------
@@ -75,21 +56,16 @@ special_tables_to_validate = {
 
 # COMMAND ----------
 
-
-def _get_columns_to_compare(df: DataFrame) -> []:
+def _get_columns_to_compare_non_fs(df: DataFrame) -> []:
     return [col_name for col_name in df.columns if "final" in col_name]
 
 
 # COMMAND ----------
 
-
-def _get_columns_to_compare_special(df: DataFrame, df_2: DataFrame) -> []:
-    # words = ["affinity", "score", "perc", "prob"]
-    # print("ad_interest_affinity_cosmetics" in df.columns)
-    # print("ad_interest_affinity_cosmetics" in df_2.columns)
+def _get_columns_to_compare(df_1: DataFrame, df_2: DataFrame) -> []:
     words = ["score", "perc", "prob"]
     column_list = []
-    for col_name in (df.columns)[:5]:
+    for col_name in (df_1.columns)[:5]:
         for word in words:
             if word in col_name and col_name in (df_2.columns):
                 column_list.append(col_name)
@@ -101,7 +77,6 @@ def _get_columns_to_compare_special(df: DataFrame, df_2: DataFrame) -> []:
 # MAGIC %md Main function
 
 # COMMAND ----------
-
 
 def validate_data_between_two_sources(
     df_name: str,
@@ -131,7 +106,7 @@ def validate_data_between_two_sources(
             df_path_old_pipeline
         )  # read "old" pipeline results
 
-        columns_to_validate = _get_columns_to_compare(df_1)
+        columns_to_validate = _get_columns_to_compare_non_fs(df_1)
 
     # loading table from table catalog
     else:
@@ -140,13 +115,13 @@ def validate_data_between_two_sources(
             df_path_old_pipeline
         )  # read "old" pipeline results
 
-        columns_to_validate = _get_columns_to_compare_special(df_1, df_2)
+        columns_to_validate = _get_columns_to_compare(df_1, df_2)
 
     # get random sample of last version table
     if limit_of_rows is None:
-        df_1_s = df_1.sample(False, 0.1)
+        df_1_s = df_1.sample(False, coef)
     else:
-        df_1_s = df_1.sample(False, 0.1).limit(limit_of_rows)
+        df_1_s = df_1.sample(False, coef).limit(limit_of_rows)
 
     df_join = (
         df_1_s.alias("df_1")
@@ -169,7 +144,11 @@ def validate_data_between_two_sources(
         )
 
     print(
-        f"There were comparison done for {df_diff.count()} columns, {df_1.count()} from df_1 and {df_2.count()} from df_2"
+        f"There are totally {df_diff.count()} columns, {df_1.count()} from df_1 and {df_2.count()} from df_2"
+    )
+
+    print(
+        f"There were comparison done for {df_diff.count()} columns, {df_1_s.count()} from df_1 and {df_2.count()} from df_2"
     )
 
     df_diff = df_diff.filter(F.col("diff") == F.lit(1))
@@ -213,17 +192,7 @@ def validate_data_between_two_sources(
 
 # COMMAND ----------
 
-# No need to run, these two "sources" link the same data
-# for tab, path in tables_to_validate.items():
-#     print("------------------------")
-#     print(tab)
-#     x, y = validate_data_between_two_sources(tab, path, SAMPLE_COEF, NUMBER_OF_ROWS)
-#     print(x)
-#     display(y)  # pylint: disable=undefined-variable
-
-# COMMAND ----------
-
-for tab, path in special_tables_to_validate.items():
+for tab, path in tables_to_validate.items():
     print("------------------------")
     print(tab)
     x, y = validate_data_between_two_sources(tab, path, SAMPLE_COEF, NUMBER_OF_ROWS)
