@@ -56,11 +56,13 @@ tables_to_validate = {
 
 # COMMAND ----------
 
+
 def _get_columns_to_compare_non_fs(df: DataFrame) -> []:
     return [col_name for col_name in df.columns if "final" in col_name]
 
 
 # COMMAND ----------
+
 
 def _get_columns_to_compare(df_1: DataFrame, df_2: DataFrame) -> []:
     words = ["score", "perc", "prob"]
@@ -77,6 +79,7 @@ def _get_columns_to_compare(df_1: DataFrame, df_2: DataFrame) -> []:
 # MAGIC %md Main function
 
 # COMMAND ----------
+
 
 def validate_data_between_two_sources(
     df_name: str,
