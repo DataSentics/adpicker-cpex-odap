@@ -49,7 +49,7 @@ paths:
 jobs_config:
   regular_optimization:
     keep_history_n_days: 7
-    vacuum_n_hours: 240
+    vacuum_keep_n_hours: 240
     tables_options:
       cpex_table_piano:
         vacuum: True
