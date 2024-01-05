@@ -1,7 +1,7 @@
 parameters:
   featurefactory:
     catalog: "hive_metastore"
-    database: "odap_features_{entity}"
+    database: "feature_store"
     features:
       latest_table: "latest"
 
@@ -13,7 +13,7 @@ parameters:
           id_column: "user_id"
           id_column_type: "string"
 
-    checkpoint_dir: "dbfs:/user/hive/warehouse/odap_features_user.db/checkpoints"
+    checkpoint_dir: "dbfs:/mnt/aam-cpex-dev/gold/feature_store/checkpoints"
     checkpoint_interval: 5
 
 
