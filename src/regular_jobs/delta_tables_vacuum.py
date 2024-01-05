@@ -27,8 +27,8 @@ for table_name in tables_options:
             # perform vacuum
             spark.sql(f"VACUUM {full_table_path} RETAIN {vacuum_time} HOURS")
             # perform vacuum
-            logger.info(f"Vacuuming table: {table_name}")
+            logger.info("Vacuuming table: %s", table_name)
         except BaseException as e:
-            logger.error(f"ERROR: Can`t vacuum {table_name}, {e}")
+            logger.error("ERROR: Can`t vacuum %s, %s", table_name, e)
 
 

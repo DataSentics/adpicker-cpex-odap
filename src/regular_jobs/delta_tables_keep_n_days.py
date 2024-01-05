@@ -34,7 +34,7 @@ for table_name in tables_options:
             # perform delete
             spark.sql(f"DELETE FROM {full_table_path} WHERE {date_column} < '{min_date}'")
 
-            logger.info(f"Deleting old records from table {table_name}. New minimal date in table is: {min_date}")
+            logger.info("Deleting old records from table %s. New minimal date in table is: %s",table_name, min_date)
         except BaseException as e:
-            logger.error(f"ERROR: Can`t delete records from {table_name} to keep only {n_days} days of history, {e}")
+            logger.error("ERROR: Can`t delete records from %s to keep only %s days of history, %s", table_name, n_days, e)
 

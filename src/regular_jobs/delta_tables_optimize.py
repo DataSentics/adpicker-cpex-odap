@@ -31,8 +31,8 @@ for table_name in tables_options:
                 
             spark.sql(f"OPTIMIZE {full_table_path}")
 
-            logger.info(f"Optimizing table: {table_name}")
+            logger.info("Optimizing table: %s", table_name)
         except BaseException as e:
-            logger.error(f"ERROR: Can`t OPTIMIZE {table_name}, {e}")
+            logger.error("ERROR: Can`t OPTIMIZE %s, %s", table_name, e)
 
               
