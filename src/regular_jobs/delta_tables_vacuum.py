@@ -1,5 +1,4 @@
 # Databricks notebook source
-# MAGIC %run ./../../app/bootstrap
 
 # COMMAND ----------
 
