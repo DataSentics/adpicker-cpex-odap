@@ -3,6 +3,10 @@
 
 # COMMAND ----------
 
+# MAGIC %run ../init/packages
+
+# COMMAND ----------
+
 from odap.feature_factory.widgets import create_notebooks_widget
 
 create_notebooks_widget()

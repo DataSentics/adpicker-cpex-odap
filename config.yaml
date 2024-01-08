@@ -1,7 +1,10 @@
 parameters:
   featurefactory:
+    environment: "prod"
+
     catalog: "hive_metastore"
-    database: "feature_store"
+    database: "odap_features_{entity}_%environment%"
+    # featurestorebundle.db_name: '%kernel.environment%_feature_store' # 'old' config
     features:
       latest_table: "latest"
 
@@ -13,7 +16,10 @@ parameters:
           id_column: "user_id"
           id_column_type: "string"
 
-    checkpoint_dir: "dbfs:/mnt/aam-cpex-dev/gold/feature_store/checkpoints"
+    # checkpoint_dir: "dbfs:/mnt/aam-cpex-prod/gold/feature_store/checkpoints"
+    # checkpoint_dir: "dbfs:/mnt/aam-cpex-%parameters.featurefactory.environment%/gold/feature_store/checkpoints"
+    checkpoint_dir: "dbfs:/mnt/aam-cpex-dev/solutions/mt-test/checkpoints"
+    # featurestorebundle.checkpoint.default_checkpoint_dir: '/mnt/aam-cpex-%kernel.environment%/gold/feature_store/checkpoints' # 'old' config
     checkpoint_interval: 5
 
 
