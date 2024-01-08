@@ -24,7 +24,7 @@ for table_name in tables_options:
             # get full table path
             full_table_path = config.paths.get(table_name)
             # perform vacuum
-            spark.sql(f"VACUUM {full_table_path} RETAIN {vacuum_time} HOURS")
+            spark.sql(f"VACUUM delta.`{full_table_path}` RETAIN {vacuum_time} HOURS")
             # perform vacuum
             logger.info("Vacuuming table: %s", table_name)
         except BaseException as e:
