@@ -29,5 +29,3 @@ for table_name in tables_options:
             logger.info("Vacuuming table: %s", table_name)
         except BaseException as e:
             logger.error("ERROR: Can`t vacuum %s, %s", table_name, e)
-
-
