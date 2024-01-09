@@ -31,7 +31,7 @@ for table_name in tables_options:
             # minimal date to be kept in table
             min_date = spark.sql(f"SELECT date_add(max({date_column}), -{n_days}) from delta.`{full_table_path}`").collect()[0][0]
             # perform delete
-            spark.sql(f"DELETE FROM delta`.{full_table_path}` WHERE {date_column} < '{min_date}'")
+            spark.sql(f"DELETE FROM delta.`{full_table_path}` WHERE {date_column} < '{min_date}'")
 
             logger.info("Deleting old records from table %s. New minimal date in table is: %s",table_name, min_date)
         except BaseException as e:
