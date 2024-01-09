@@ -28,10 +28,8 @@ for table_name in tables_options:
             # firstly get full table name (e.g. dev_bronze.table_name)
             full_table_path = config.paths.get(table_name)
                 
-            spark.sql(f"OPTIMIZE {full_table_path}")
-
+            spark.sql(f"OPTIMIZE delta.`{full_table_path}`")
             logger.info("Optimizing table: %s", table_name)
         except BaseException as e:
             logger.error("ERROR: Can`t OPTIMIZE %s, %s", table_name, e)
 
-              
